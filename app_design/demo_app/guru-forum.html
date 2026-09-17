@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jadwal & Forum Privat — SD Plus Gembala Baik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['"Fira Sans"', 'sans-serif'] },
+      colors: {
+        cream: '#FAF7F2',
+        main: '#3A322C',
+        primary: { DEFAULT: '#A9784F', dark: '#7A5738' },
+        status: { success: '#4B7B5D', pending: '#C08A3E', danger: '#B0483A' },
+        role: { kepsek: '#7A5738', tu: '#5B7A99', bendahara: '#C08A3E', guru: '#4B7B5D', ortu: '#C97B63' }
+      }
+    }
+  }
+}
+</script>
+</head>
+<body class="bg-cream text-main font-sans antialiased">
+<div class="flex">
+<aside class="w-64 bg-white border-r border-gray-200 min-h-screen p-4 flex-shrink-0">
+  <div class="mb-6 px-2">
+    <p class="text-sm font-bold text-primary-dark leading-tight">SD Plus Gembala Baik</p>
+    <p class="text-xs text-gray-500">Portal Guru</p>
+  </div>
+  <nav class="space-y-1">
+    <a href="guru-forum.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 bg-primary/10 text-primary-dark border-primary">Jadwal & Forum Privat</a>
+  </nav>
+</aside>
+<div class="flex-1 min-h-screen flex flex-col">
+<header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+  <h1 class="text-lg font-bold text-primary-dark">Jadwal & Forum Privat</h1>
+  <div class="flex items-center gap-4">
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-role-guru text-white">Guru</span>
+    
+<div class="relative">
+  <select onchange="if(this.value) location.href=this.value" class="text-xs font-medium border border-gray-300 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+    <option value="">Ganti Peran (Demo)</option>
+    <option value="ortu-pendaftaran.html">Orang Tua</option>
+    <option value="tu-pendaftaran.html">Tata Usaha</option>
+    <option value="bendahara-approval.html">Bendahara</option>
+    <option value="kepsek-laporan.html">Kepala Sekolah</option>
+    <option value="guru-forum.html">Guru</option>
+  </select>
+</div>
+
+  </div>
+</header>
+<main class="flex-1 p-6 space-y-6">
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+    <h3 class="text-lg font-bold">Jadwal Mengajar Saya</h3>
+    <span class="text-xs text-gray-400">* Data akan terhubung otomatis ke Modul Jadwal Guru</span>
+  </div>
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left font-bold text-main">Hari</th>
+        <th class="px-6 py-3 text-left font-bold text-main">Jam</th>
+        <th class="px-6 py-3 text-left font-bold text-main">Kelas</th>
+        <th class="px-6 py-3 text-left font-bold text-main">Kegiatan</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      <tr>
+        <td class="px-6 py-4">Senin</td>
+        <td class="px-6 py-4 text-gray-600">1–4</td>
+        <td class="px-6 py-4 text-gray-600">Koridor Lt. 1</td>
+        <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-role-tu/10 text-role-tu border border-role-tu/20">Piket</span></td>
+      </tr>
+      <tr>
+        <td class="px-6 py-4">Selasa</td>
+        <td class="px-6 py-4 text-gray-600">1–3</td>
+        <td class="px-6 py-4 text-gray-600">3A</td>
+        <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary-dark border border-primary/20">Mengajar Utama — Matematika</span></td>
+      </tr>
+      <tr>
+        <td class="px-6 py-4">Rabu</td>
+        <td class="px-6 py-4 text-gray-600">5</td>
+        <td class="px-6 py-4 text-gray-600">1B</td>
+        <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Damping</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-lg p-5 flex flex-col min-h-[20rem]">
+  <h3 class="text-lg font-bold border-b border-gray-100 pb-2 mb-4">Forum Privat ke Kepala Sekolah</h3>
+  <div class="flex-1 space-y-3">
+    <div class="bg-gray-50 rounded-md p-3 max-w-md">
+      <p class="text-sm">Selamat siang Kepala Sekolah, saya ingin usul agar jadwal les tambahan kelas 3A digeser 30 menit lebih awal karena beberapa anak dijemput cepat.</p>
+      <p class="text-xs text-gray-400 mt-1">Anda &middot; 6 Sep 2026, 10.15</p>
+    </div>
+    <div class="bg-primary/10 rounded-md p-3 max-w-md ml-auto">
+      <p class="text-sm">Baik Bu Ratna, akan saya koordinasikan dengan TU untuk penyesuaian jadwalnya.</p>
+      <p class="text-xs text-gray-400 mt-1">Kepala Sekolah &middot; 6 Sep 2026, 11.02</p>
+    </div>
+  </div>
+  <div class="mt-4">
+    <textarea rows="2" placeholder="Tulis pesan atau masukan..." class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"></textarea>
+    <div class="flex justify-end mt-2">
+      <button class="bg-primary hover:bg-primary-dark text-white text-sm font-medium px-4 py-2 rounded-md">Kirim Pesan</button>
+    </div>
+  </div>
+</div>
+</main><p class="text-xs text-gray-400 text-center py-6">Prototipe UI — data pada halaman ini adalah contoh untuk keperluan demo.</p></div></div></body></html>
