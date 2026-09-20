@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Approval Laporan — SD Plus Gembala Baik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['"Fira Sans"', 'sans-serif'] },
+      colors: {
+        cream: '#FAF7F2',
+        main: '#3A322C',
+        primary: { DEFAULT: '#A9784F', dark: '#7A5738' },
+        status: { success: '#4B7B5D', pending: '#C08A3E', danger: '#B0483A' },
+        role: { kepsek: '#7A5738', tu: '#5B7A99', bendahara: '#C08A3E', guru: '#4B7B5D', ortu: '#C97B63' }
+      }
+    }
+  }
+}
+</script>
+</head>
+<body class="bg-cream text-main font-sans antialiased">
+<div class="flex">
+<aside class="w-64 bg-white border-r border-gray-200 min-h-screen p-4 flex-shrink-0">
+  <div class="mb-6 px-2">
+    <p class="text-sm font-bold text-primary-dark leading-tight">SD Plus Gembala Baik</p>
+    <p class="text-xs text-gray-500">Portal Bendahara</p>
+  </div>
+  <nav class="space-y-1">
+    <a href="bendahara-approval.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 bg-primary/10 text-primary-dark border-primary">Approval Laporan</a>
+    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 mt-6 px-3">Jadwal Guru</div>
+    <a href="Waktu-Pelajaran.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 text-gray-600 hover:bg-gray-50 hover:text-main border-transparent">Waktu Pelajaran</a>
+    <a href="KisiKisiTugas.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 text-gray-600 hover:bg-gray-50 hover:text-main border-transparent">Kisi-Kisi Tugas</a>
+    <a href="Pembagian-Jadwal-Guru.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 text-gray-600 hover:bg-gray-50 hover:text-main border-transparent">Pembagian Jadwal</a>
+    <a href="Hasil_Jadwal.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 text-gray-600 hover:bg-gray-50 hover:text-main border-transparent">Hasil Jadwal</a>
+  </nav>
+</aside>
+<div class="flex-1 min-h-screen flex flex-col">
+<header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+  <h1 class="text-lg font-bold text-primary-dark">Approval Laporan</h1>
+  <div class="flex items-center gap-4">
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-role-bendahara text-white">Bendahara</span>
+    
+<div class="relative">
+  <select onchange="if(this.value) location.href=this.value" class="text-xs font-medium border border-gray-300 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+    <option value="">Ganti Peran (Demo)</option>
+    <option value="ortu-pendaftaran.html">Orang Tua</option>
+    <option value="tu-pendaftaran.html">Tata Usaha</option>
+    <option value="bendahara-approval.html">Bendahara</option>
+    <option value="kepsek-laporan.html">Kepala Sekolah</option>
+    <option value="guru-forum.html">Guru</option>
+  </select>
+</div>
+
+  </div>
+</header>
+<main class="flex-1 p-6 space-y-6">
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100">
+    <h3 class="text-lg font-bold">Laporan Harian Menunggu Approval</h3>
+    <p class="text-xs text-gray-500 mt-0.5">Klik tanggal untuk melihat rincian transaksi. Transaksi transfer dapat di-approve tersendiri setelah dicocokkan ke mutasi rekening.</p>
+  </div>
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left font-bold text-main">Tanggal</th>
+        <th class="px-6 py-3 text-left font-bold text-main">Diajukan Oleh</th>
+        <th class="px-6 py-3 text-left font-bold text-main">Total Transaksi</th>
+        <th class="px-6 py-3 text-left font-bold text-main">Status</th>
+        <th class="px-6 py-3 text-left font-bold text-main">Aksi</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      <tr class="cursor-pointer hover:bg-gray-50" onclick="document.getElementById('detail-6sep').classList.toggle('hidden')">
+        <td class="px-6 py-4 font-medium">6 Sep 2026 <span class="text-gray-400 text-xs">&#9662;</span></td>
+        <td class="px-6 py-4 text-gray-600">TU — Miss Fui</td>
+        <td class="px-6 py-4">Rp225.000 (2 transaksi)</td>
+        <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-pending/10 text-status-pending border border-status-pending/20">Menunggu Approval</span></td>
+        <td class="px-6 py-4 flex gap-2" onclick="event.stopPropagation()">
+          <button class="bg-primary hover:bg-primary-dark text-white text-xs font-medium px-3 py-1.5 rounded-md">Setujui</button>
+          <button class="bg-white border border-status-danger text-status-danger hover:bg-red-50 text-xs font-medium px-3 py-1.5 rounded-md">Tolak</button>
+        </td>
+      </tr>
+      <tr id="detail-6sep" class="hidden bg-gray-50">
+        <td colspan="5" class="px-6 py-4">
+          <table class="min-w-full text-xs border border-gray-200 rounded-md overflow-hidden">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="px-4 py-2 text-left font-medium text-gray-500">Siswa</th>
+                <th class="px-4 py-2 text-left font-medium text-gray-500">Metode</th>
+                <th class="px-4 py-2 text-left font-medium text-gray-500">Nominal</th>
+                <th class="px-4 py-2 text-left font-medium text-gray-500">Status TU</th>
+                <th class="px-4 py-2 text-left font-medium text-gray-500">Approval Bendahara</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-100">
+              <tr>
+                <td class="px-4 py-2 font-medium">Budi Santoso</td>
+                <td class="px-4 py-2 text-gray-600">Cash</td>
+                <td class="px-4 py-2">Rp150.000</td>
+                <td class="px-4 py-2"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Terverifikasi</span></td>
+                <td class="px-4 py-2 text-gray-400">Tidak berlaku (cash)</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-2 font-medium">Siti Aminah</td>
+                <td class="px-4 py-2 text-gray-600">Transfer</td>
+                <td class="px-4 py-2">Rp75.000</td>
+                <td class="px-4 py-2"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Terverifikasi</span></td>
+                <td class="px-4 py-2">
+                  <button onclick="approveTransaksiBendahara(this)" class="bg-white border border-primary text-primary-dark hover:bg-primary/10 text-xs font-medium px-2.5 py-1 rounded-md">Cocokkan & Approve</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      <tr class="cursor-pointer hover:bg-gray-50" onclick="document.getElementById('detail-5sep').classList.toggle('hidden')">
+        <td class="px-6 py-4 font-medium">5 Sep 2026 <span class="text-gray-400 text-xs">&#9662;</span></td>
+        <td class="px-6 py-4 text-gray-600">TU — Miss Fui</td>
+        <td class="px-6 py-4">Rp400.000 (3 transaksi)</td>
+        <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Disetujui</span></td>
+        <td class="px-6 py-4 text-gray-400 text-xs">—</td>
+      </tr>
+      <tr id="detail-5sep" class="hidden bg-gray-50">
+        <td colspan="5" class="px-6 py-4">
+          <table class="min-w-full text-xs border border-gray-200 rounded-md overflow-hidden">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="px-4 py-2 text-left font-medium text-gray-500">Siswa</th>
+                <th class="px-4 py-2 text-left font-medium text-gray-500">Metode</th>
+                <th class="px-4 py-2 text-left font-medium text-gray-500">Nominal</th>
+                <th class="px-4 py-2 text-left font-medium text-gray-500">Status TU</th>
+                <th class="px-4 py-2 text-left font-medium text-gray-500">Approval Bendahara</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-100">
+              <tr>
+                <td class="px-4 py-2 font-medium">Andi Wijaya</td>
+                <td class="px-4 py-2 text-gray-600">Cash</td>
+                <td class="px-4 py-2">Rp100.000</td>
+                <td class="px-4 py-2"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Terverifikasi</span></td>
+                <td class="px-4 py-2 text-gray-400">Tidak berlaku (cash)</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-2 font-medium">Rani Puspita</td>
+                <td class="px-4 py-2 text-gray-600">Transfer</td>
+                <td class="px-4 py-2">Rp150.000</td>
+                <td class="px-4 py-2"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Terverifikasi</span></td>
+                <td class="px-4 py-2"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Disetujui</span></td>
+              </tr>
+              <tr>
+                <td class="px-4 py-2 font-medium">Doni Saputra</td>
+                <td class="px-4 py-2 text-gray-600">Transfer</td>
+                <td class="px-4 py-2">Rp150.000</td>
+                <td class="px-4 py-2"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Terverifikasi</span></td>
+                <td class="px-4 py-2"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Disetujui</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+    <div>
+      <h3 class="text-lg font-bold">Laporan Bulanan</h3>
+      <p class="text-xs text-gray-500 mt-0.5">Total pemasukan dihitung otomatis dari transaksi di bawah — tidak dapat diedit manual sebagai angka bebas.</p>
+    </div>
+    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-pending/10 text-status-pending border border-status-pending/20">Menunggu Approval</span>
+  </div>
+
+  <div class="px-5 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+    <p class="text-sm font-medium">Periode 22 Jul – 22 Agu 2026</p>
+    <p class="text-sm font-bold" id="total-pemasukan-bulanan">Total: Rp18.500.000</p>
+  </div>
+
+  <div class="divide-y divide-gray-100">
+
+    <div>
+      <button onclick="document.getElementById('bln-27jul').classList.toggle('hidden')" class="w-full flex items-center justify-between px-5 py-3 hover:bg-gray-50 text-left">
+        <span class="text-sm font-medium">Senin, 27 Juli 2026 <span class="text-gray-400 text-xs">&#9662;</span></span>
+        <span class="text-sm text-gray-600">Rp250.000 (2 transaksi)</span>
+      </button>
+      <div id="bln-27jul" class="hidden px-5 pb-4">
+        <table class="min-w-full text-xs border border-gray-200 rounded-md overflow-hidden">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left font-medium text-gray-500">Siswa</th>
+              <th class="px-4 py-2 text-left font-medium text-gray-500">Metode</th>
+              <th class="px-4 py-2 text-left font-medium text-gray-500">Nominal</th>
+              <th class="px-4 py-2 text-left font-medium text-gray-500">Sumber</th>
+              <th class="px-4 py-2 text-left font-medium text-gray-500">Approval Bendahara</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-100">
+            <tr>
+              <td class="px-4 py-2 font-medium">Budi Santoso</td>
+              <td class="px-4 py-2 text-gray-600">Cash</td>
+              <td class="px-4 py-2">Rp150.000</td>
+              <td class="px-4 py-2 text-gray-500">TU</td>
+              <td class="px-4 py-2 text-gray-400">Tidak berlaku (cash)</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2 font-medium">Andi Wijaya</td>
+              <td class="px-4 py-2 text-gray-600">Cash</td>
+              <td class="px-4 py-2">Rp100.000</td>
+              <td class="px-4 py-2 text-gray-500">TU</td>
+              <td class="px-4 py-2 text-gray-400">Tidak berlaku (cash)</td>
+            </tr>
+          </tbody>
+        </table>
+        <button onclick="bukaModalTambahTransaksi('27 Juli 2026', 'bln-27jul')" class="mt-2 text-xs font-medium text-primary hover:text-primary-dark">+ Tambah Transaksi ke Tanggal Ini</button>
+      </div>
+    </div>
+
+    <div>
+      <button onclick="document.getElementById('bln-28jul').classList.toggle('hidden')" class="w-full flex items-center justify-between px-5 py-3 hover:bg-gray-50 text-left">
+        <span class="text-sm font-medium">Selasa, 28 Juli 2026 <span class="text-gray-400 text-xs">&#9662;</span></span>
+        <span class="text-sm text-gray-600">Rp325.000 (3 transaksi)</span>
+      </button>
+      <div id="bln-28jul" class="hidden px-5 pb-4">
+        <table class="min-w-full text-xs border border-gray-200 rounded-md overflow-hidden">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left font-medium text-gray-500">Siswa</th>
+              <th class="px-4 py-2 text-left font-medium text-gray-500">Metode</th>
+              <th class="px-4 py-2 text-left font-medium text-gray-500">Nominal</th>
+              <th class="px-4 py-2 text-left font-medium text-gray-500">Sumber</th>
+              <th class="px-4 py-2 text-left font-medium text-gray-500">Approval Bendahara</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-100">
+            <tr>
+              <td class="px-4 py-2 font-medium">Siti Aminah</td>
+              <td class="px-4 py-2 text-gray-600">Transfer</td>
+              <td class="px-4 py-2">Rp75.000</td>
+              <td class="px-4 py-2 text-gray-500">TU</td>
+              <td class="px-4 py-2">
+                <button onclick="approveTransaksiBendahara(this)" class="bg-white border border-primary text-primary-dark hover:bg-primary/10 text-xs font-medium px-2.5 py-1 rounded-md">Cocokkan & Approve</button>
+              </td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2 font-medium">Rani Puspita</td>
+              <td class="px-4 py-2 text-gray-600">Cash</td>
+              <td class="px-4 py-2">Rp150.000</td>
+              <td class="px-4 py-2 text-gray-500">TU</td>
+              <td class="px-4 py-2 text-gray-400">Tidak berlaku (cash)</td>
+            </tr>
+            <tr class="bg-primary/5">
+              <td class="px-4 py-2 font-medium">Doni Saputra</td>
+              <td class="px-4 py-2 text-gray-600">Transfer</td>
+              <td class="px-4 py-2">Rp100.000</td>
+              <td class="px-4 py-2 text-primary-dark font-medium">Bendahara <span class="text-gray-400 font-normal">(mutasi rekening)</span></td>
+              <td class="px-4 py-2"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Disetujui</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-400 mt-2">Transaksi Doni Saputra ditambahkan langsung oleh Bendahara — ortu transfer tapi tidak mengirim bukti ke TU.</p>
+        <button onclick="bukaModalTambahTransaksi('28 Juli 2026', 'bln-28jul')" class="mt-2 text-xs font-medium text-primary hover:text-primary-dark">+ Tambah Transaksi ke Tanggal Ini</button>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="text-xs text-gray-400 text-center py-3 border-t border-gray-100">&middot; &middot; &middot; tanggal lainnya dalam periode ini tampil otomatis mengikuti data transaksi &middot; &middot; &middot;</p>
+
+  <div class="px-5 py-4 border-t border-gray-100 flex justify-end">
+    <button class="bg-primary hover:bg-primary-dark text-white text-sm font-medium px-4 py-2 rounded-md">Setujui &amp; Tutup Buku</button>
+  </div>
+</div>
+
+<div id="modal-tambah-transaksi" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-lg max-w-md w-full p-6 space-y-4">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-bold">Tambah Transaksi (Bendahara)</h3>
+      <button onclick="document.getElementById('modal-tambah-transaksi').classList.add('hidden')" class="text-gray-400 hover:text-main text-sm">&#10005;</button>
+    </div>
+    <p class="text-xs text-gray-500">Untuk transfer yang masuk ke rekening sekolah namun tidak dikirimkan buktinya ke TU. Tanggal: <span id="tambah-transaksi-tanggal" class="font-medium text-main">27 Juli 2026</span></p>
+    <div>
+      <label class="block text-sm font-medium text-main mb-1">Nama Siswa</label>
+      <input type="text" placeholder="Cari nama siswa..." class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-main mb-1">Nominal</label>
+      <input type="text" placeholder="Rp" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-main mb-1">Catatan Mutasi Rekening <span class="text-gray-400 font-normal">(opsional)</span></label>
+      <input type="text" placeholder="Contoh: TRSF E-BANKING 28/07 a.n. Ibu Wati" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+    </div>
+    <p class="text-xs text-gray-400">Transaksi ini otomatis berstatus Terverifikasi & Disetujui, karena sumbernya langsung dari mutasi rekening.</p>
+    <div class="flex justify-end gap-2">
+      <button onclick="document.getElementById('modal-tambah-transaksi').classList.add('hidden')" class="bg-white border border-gray-300 text-main hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded-md">Batal</button>
+      <button onclick="document.getElementById('modal-tambah-transaksi').classList.add('hidden'); document.getElementById('toast-tambah').classList.remove('hidden'); setTimeout(function(){document.getElementById('toast-tambah').classList.add('hidden')},3000)" class="bg-primary hover:bg-primary-dark text-white text-sm font-medium px-4 py-2 rounded-md">Simpan Transaksi</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-tambah" class="hidden fixed bottom-6 right-6 bg-status-success text-white text-sm font-medium px-4 py-3 rounded-md shadow-lg z-50">
+  Transaksi berhasil ditambahkan & disetujui.
+</div>
+
+<script>
+function approveTransaksiBendahara(btn){
+  var td = btn.closest('td');
+  td.innerHTML = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Disetujui</span>';
+}
+
+function bukaModalTambahTransaksi(tanggalLabel, idPanel){
+  document.getElementById('tambah-transaksi-tanggal').textContent = tanggalLabel;
+  document.getElementById('modal-tambah-transaksi').classList.remove('hidden');
+}
+</script>
+</main><p class="text-xs text-gray-400 text-center py-6">Prototipe UI — data pada halaman ini adalah contoh untuk keperluan demo.</p></div></div></body></html>

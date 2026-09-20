@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skema Honor — SD Plus Gembala Baik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['"Fira Sans"', 'sans-serif'] },
+      colors: {
+        cream: '#FAF7F2',
+        main: '#3A322C',
+        primary: { DEFAULT: '#A9784F', dark: '#7A5738' },
+        status: { success: '#4B7B5D', pending: '#C08A3E', danger: '#B0483A' },
+        role: { kepsek: '#7A5738', tu: '#5B7A99', bendahara: '#C08A3E', guru: '#4B7B5D', ortu: '#C97B63' }
+      }
+    }
+  }
+}
+</script>
+</head>
+<body class="bg-cream text-main font-sans antialiased">
+<div class="flex">
+<aside class="w-64 bg-white border-r border-gray-200 min-h-screen p-4 flex-shrink-0">
+  <div class="mb-6 px-2">
+    <p class="text-sm font-bold text-primary-dark leading-tight">SD Plus Gembala Baik</p>
+    <p class="text-xs text-gray-500">Portal Kepala Sekolah</p>
+  </div>
+  <nav class="space-y-1">
+    <a href="kepsek-laporan.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 text-gray-600 hover:bg-gray-50 hover:text-main border-transparent">Laporan Les & Ekskul</a>
+    <a href="kepsek-skema-honor.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 bg-primary/10 text-primary-dark border-primary">Skema Honor</a>
+    <a href="kepsek-rekap-honor.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 text-gray-600 hover:bg-gray-50 hover:text-main border-transparent">Rekap Honor</a>
+    <a href="kepsek-forum-guru.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 text-gray-600 hover:bg-gray-50 hover:text-main border-transparent">Forum Guru</a>
+  </nav>
+</aside>
+<div class="flex-1 min-h-screen flex flex-col">
+<header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+  <h1 class="text-lg font-bold text-primary-dark">Skema Honor</h1>
+  <div class="flex items-center gap-4">
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-role-kepsek text-white">Kepala Sekolah</span>
+    
+<div class="relative">
+  <select onchange="if(this.value) location.href=this.value" class="text-xs font-medium border border-gray-300 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+    <option value="">Ganti Peran (Demo)</option>
+    <option value="ortu-pendaftaran.html">Orang Tua</option>
+    <option value="tu-pendaftaran.html">Tata Usaha</option>
+    <option value="bendahara-approval.html">Bendahara</option>
+    <option value="kepsek-laporan.html">Kepala Sekolah</option>
+    <option value="guru-forum.html">Guru</option>
+  </select>
+</div>
+
+  </div>
+</header>
+<main class="flex-1 p-6 space-y-6">
+<div class="bg-primary/10 border border-primary/20 rounded-lg p-4">
+  <p class="text-sm text-primary-dark">Persentase yang diubah hanya berlaku untuk perhitungan honor bulan berikutnya. Bulan yang sudah dihitung tidak berubah karena tersimpan sebagai snapshot.</p>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100">
+    <h3 class="text-lg font-bold">Ekstrakurikuler — Pengajar Internal</h3>
+    <p class="text-xs text-gray-500 mt-0.5">Berlaku untuk pengajar yang juga berstatus guru SD Plus.</p>
+  </div>
+  <div class="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Pengajar</label>
+      <div class="relative"><input type="text" value="70" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Guru Pendamping</label>
+      <div class="relative"><input type="text" value="5" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Kas Sekolah</label>
+      <div class="relative"><input type="text" value="10" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Penanggung Jawab</label>
+      <div class="relative"><input type="text" value="7" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Bendahara</label>
+      <div class="relative"><input type="text" value="3" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Admin TU</label>
+      <div class="relative"><input type="text" value="3" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Admin IT</label>
+      <div class="relative"><input type="text" value="2" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div class="flex items-end">
+      <p class="text-xs text-gray-400 pb-2">Total: <span class="font-bold text-status-success">100%</span></p>
+    </div>
+  </div>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100">
+    <h3 class="text-lg font-bold">Ekstrakurikuler — Pengajar Eksternal</h3>
+    <p class="text-xs text-gray-500 mt-0.5">Berlaku untuk pengajar dari luar sekolah (bukan guru SD Plus).</p>
+  </div>
+  <div class="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Pengajar</label>
+      <div class="relative"><input type="text" value="80" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Guru Pendamping</label>
+      <div class="relative"><input type="text" value="5" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Kas Sekolah</label>
+      <div class="relative"><input type="text" value="5" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Penanggung Jawab</label>
+      <div class="relative"><input type="text" value="7" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Bendahara</label>
+      <div class="relative"><input type="text" value="1" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Admin TU</label>
+      <div class="relative"><input type="text" value="1" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Admin IT</label>
+      <div class="relative"><input type="text" value="1" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div class="flex items-end">
+      <p class="text-xs text-gray-400 pb-2">Total: <span class="font-bold text-status-success">100%</span></p>
+    </div>
+  </div>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100">
+    <h3 class="text-lg font-bold">Les Tambahan</h3>
+    <p class="text-xs text-gray-500 mt-0.5">Pengajar selalu wali kelas (guru internal) — tidak ada pembagian internal/eksternal. Termasuk porsi Yayasan.</p>
+  </div>
+  <div class="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Pengajar (Wali Kelas)</label>
+      <div class="relative"><input type="text" value="75" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Kas Sekolah</label>
+      <div class="relative"><input type="text" value="8" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Yayasan</label>
+      <div class="relative"><input type="text" value="8" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Penanggung Jawab</label>
+      <div class="relative"><input type="text" value="1" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Bendahara</label>
+      <div class="relative"><input type="text" value="3" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Admin TU</label>
+      <div class="relative"><input type="text" value="3" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-1">Admin IT</label>
+      <div class="relative"><input type="text" value="2" class="w-full px-3 py-2 pr-7 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"><span class="absolute right-3 top-2 text-xs text-gray-400">%</span></div>
+    </div>
+    <div class="flex items-end">
+      <p class="text-xs text-gray-400 pb-2">Total: <span class="font-bold text-status-success">100%</span></p>
+    </div>
+  </div>
+</div>
+
+<div class="bg-primary/10 border border-primary/20 rounded-lg p-4">
+  <p class="text-sm text-primary-dark">Honor kegiatan di bawah ini bersifat flat (bukan persentase) dan ditentukan manual oleh Kepala Sekolah. Setiap guru yang dipilih menerima nominal penuh — bukan dibagi rata.</p>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100">
+    <h3 class="text-lg font-bold">Honor Olimpiade (MTK/IPA/IPS)</h3>
+    <p class="text-xs text-gray-500 mt-0.5">Honor flat per guru pembimbing, di luar skema persentase (FR-25).</p>
+  </div>
+  <div class="p-5 space-y-4">
+    <div class="max-w-xs">
+      <label class="block text-xs font-medium text-main mb-1">Nominal per Guru</label>
+      <div class="relative">
+        <span class="absolute left-3 top-2 text-sm text-gray-400">Rp</span>
+        <input type="text" value="200.000" class="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+      </div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-2">Guru Penerima</label>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <label class="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" checked class="rounded border-gray-300 text-primary focus:ring-primary">
+          <span class="text-sm">Yuvensius Firdaus Gunardi, S.Pd., Gr.</span>
+        </label>
+        <label class="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary">
+          <span class="text-sm">Angela Genoveva Jeaneriska Geraan, S.Pd., Gr.</span>
+        </label>
+        <label class="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" checked class="rounded border-gray-300 text-primary focus:ring-primary">
+          <span class="text-sm">Lydia Angela, S.Kom., Gr.</span>
+        </label>
+      </div>
+      <p class="text-xs text-gray-400 mt-2">2 guru dipilih &middot; Total honor: <span class="font-medium text-main">Rp400.000</span></p>
+    </div>
+  </div>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100">
+    <h3 class="text-lg font-bold">Honor Bina Karakter</h3>
+    <p class="text-xs text-gray-500 mt-0.5">Kegiatan wajib otomatis Kelas 1–3 &middot; honor flat, di luar skema persentase & di luar `pendaftaran_les_ekskul` (FR-24).</p>
+  </div>
+  <div class="p-5 space-y-4">
+    <div class="max-w-xs">
+      <label class="block text-xs font-medium text-main mb-1">Nominal per Guru</label>
+      <div class="relative">
+        <span class="absolute left-3 top-2 text-sm text-gray-400">Rp</span>
+        <input type="text" value="200.000" class="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+      </div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-2">Guru Penerima</label>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <label class="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary">
+          <span class="text-sm">Yuvensius Firdaus Gunardi, S.Pd., Gr.</span>
+        </label>
+        <label class="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" checked class="rounded border-gray-300 text-primary focus:ring-primary">
+          <span class="text-sm">Angela Genoveva Jeaneriska Geraan, S.Pd., Gr.</span>
+        </label>
+        <label class="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" checked class="rounded border-gray-300 text-primary focus:ring-primary">
+          <span class="text-sm">Lydia Angela, S.Kom., Gr.</span>
+        </label>
+      </div>
+      <p class="text-xs text-gray-400 mt-2">2 guru dipilih &middot; Total honor: <span class="font-medium text-main">Rp400.000</span></p>
+    </div>
+  </div>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100">
+    <h3 class="text-lg font-bold">Honor Pramuka</h3>
+    <p class="text-xs text-gray-500 mt-0.5">Kegiatan wajib otomatis Kelas 4–6 &middot; honor flat, di luar skema persentase & di luar `pendaftaran_les_ekskul` (FR-24).</p>
+  </div>
+  <div class="p-5 space-y-4">
+    <div class="max-w-xs">
+      <label class="block text-xs font-medium text-main mb-1">Nominal per Guru</label>
+      <div class="relative">
+        <span class="absolute left-3 top-2 text-sm text-gray-400">Rp</span>
+        <input type="text" value="200.000" class="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+      </div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-2">Guru Penerima</label>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <label class="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" checked class="rounded border-gray-300 text-primary focus:ring-primary">
+          <span class="text-sm">Yuvensius Firdaus Gunardi, S.Pd., Gr.</span>
+        </label>
+        <label class="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary">
+          <span class="text-sm">Angela Genoveva Jeaneriska Geraan, S.Pd., Gr.</span>
+        </label>
+        <label class="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary">
+          <span class="text-sm">Lydia Angela, S.Kom., Gr.</span>
+        </label>
+      </div>
+      <p class="text-xs text-gray-400 mt-2">1 guru dipilih &middot; Total honor: <span class="font-medium text-main">Rp200.000</span></p>
+    </div>
+  </div>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-100">
+    <h3 class="text-lg font-bold">Honor Pembuat Soal Les</h3>
+    <p class="text-xs text-gray-500 mt-0.5">Honor flat per guru pembuat soal ujian les tambahan, di luar skema persentase.</p>
+  </div>
+  <div class="p-5 space-y-4">
+    <div class="max-w-xs">
+      <label class="block text-xs font-medium text-main mb-1">Nominal per Guru</label>
+      <div class="relative">
+        <span class="absolute left-3 top-2 text-sm text-gray-400">Rp</span>
+        <input type="text" value="40.000" class="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+      </div>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-main mb-2">Guru Penerima</label>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <label class="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" checked class="rounded border-gray-300 text-primary focus:ring-primary">
+          <span class="text-sm">Tjin Yanes</span>
+        </label>
+        <label class="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" checked class="rounded border-gray-300 text-primary focus:ring-primary">
+          <span class="text-sm">Maria Clara Cinthya</span>
+        </label>
+        <label class="flex items-center gap-2 border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" class="rounded border-gray-300 text-primary focus:ring-primary">
+          <span class="text-sm">Yuvensius Firdaus Gunardi, S.Pd., Gr.</span>
+        </label>
+      </div>
+      <p class="text-xs text-gray-400 mt-2">2 guru dipilih &middot; Total honor: <span class="font-medium text-main">Rp80.000</span></p>
+    </div>
+  </div>
+</div>
+
+<div class="flex justify-end">
+  <button onclick="document.getElementById('toast-simpan').classList.remove('hidden'); setTimeout(function(){document.getElementById('toast-simpan').classList.add('hidden')},3000)" class="bg-primary hover:bg-primary-dark text-white text-sm font-medium px-5 py-2.5 rounded-md transition-colors">Simpan Perubahan Skema Honor</button>
+</div>
+
+<div id="toast-simpan" class="hidden fixed bottom-6 right-6 bg-status-success text-white text-sm font-medium px-4 py-3 rounded-md shadow-lg z-50">
+  Skema honor berhasil disimpan — berlaku mulai perhitungan bulan berikutnya.
+</div>
+</main><p class="text-xs text-gray-400 text-center py-6">Prototipe UI — data pada halaman ini adalah contoh untuk keperluan demo.</p></div></div></body></html>

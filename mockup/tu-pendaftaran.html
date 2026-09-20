@@ -73,29 +73,46 @@ tailwind.config = {
         <th class="px-6 py-3 text-left font-bold text-main">Ekskul/Les</th>
         <th class="px-6 py-3 text-left font-bold text-main">Orang Tua</th>
         <th class="px-6 py-3 text-left font-bold text-main">Status</th>
+        <th class="px-6 py-3 text-left font-bold text-main">Aksi</th>
       </tr>
     </thead>
     <tbody id="tabel-pendaftaran-body" class="bg-white divide-y divide-gray-200">
       <tr>
         <td class="px-6 py-4 font-medium">Budi Santoso</td>
         <td class="px-6 py-4 text-gray-600">3A</td>
-        <td class="px-6 py-4 text-gray-600">Futsal</td>
+        <td class="px-6 py-4 text-gray-600">
+          English Club — Jumat
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-status-pending/10 text-status-pending border border-status-pending/20 ml-1">Belum di-assign kelas paralel</span>
+        </td>
         <td class="px-6 py-4 text-gray-600">0812xxxxxxx</td>
         <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Aktif</span></td>
+        <td class="px-6 py-4">
+          <button onclick="bukaModalParalel('Budi Santoso', '3A', 'English Club — Jumat')" class="text-primary hover:text-primary-dark font-medium text-xs">Assign Kelas Paralel</button>
+        </td>
       </tr>
       <tr>
         <td class="px-6 py-4 font-medium">Siti Aminah</td>
         <td class="px-6 py-4 text-gray-600">1B</td>
-        <td class="px-6 py-4 text-gray-600">Tari Tradisional</td>
+        <td class="px-6 py-4 text-gray-600">Mandarin Club</td>
         <td class="px-6 py-4 text-gray-600">0812xxxxxxx</td>
         <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Aktif</span></td>
+        <td class="px-6 py-4 text-gray-400 text-xs">—</td>
       </tr>
       <tr>
         <td class="px-6 py-4 font-medium">Andi Wijaya</td>
         <td class="px-6 py-4 text-gray-600">2A</td>
-        <td class="px-6 py-4 text-gray-600">Futsal</td>
+        <td class="px-6 py-4 text-gray-600">Basket</td>
         <td class="px-6 py-4 text-gray-600">0813xxxxxxx</td>
         <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">Pindah Ekskul</span></td>
+        <td class="px-6 py-4 text-gray-400 text-xs">—</td>
+      </tr>
+      <tr>
+        <td class="px-6 py-4 font-medium">Rani Puspita</td>
+        <td class="px-6 py-4 text-gray-600">4C</td>
+        <td class="px-6 py-4 text-gray-600">Dancing Club — Jumat (Class B)</td>
+        <td class="px-6 py-4 text-gray-600">0814xxxxxxx</td>
+        <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Aktif</span></td>
+        <td class="px-6 py-4 text-gray-400 text-xs">—</td>
       </tr>
     </tbody>
   </table>
@@ -118,9 +135,13 @@ tailwind.config = {
     <div>
       <label class="block text-sm font-medium text-main mb-1">Pilih Ekstrakurikuler / Les</label>
       <select id="input-ekskul-manual" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-        <option>Futsal</option>
-        <option>Tari Tradisional</option>
-        <option>Pramuka</option>
+        <option>English Club — Jumat</option>
+        <option>Dancing Club — Jumat</option>
+        <option>Gitar</option>
+        <option>Mandarin Club</option>
+        <option>Basket</option>
+        <option>Karate</option>
+        <option>Renang</option>
       </select>
     </div>
     <div class="flex justify-end gap-2">
@@ -134,24 +155,128 @@ tailwind.config = {
   Pendaftaran manual berhasil disimpan.
 </div>
 
+<div id="modal-paralel" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-lg max-w-md w-full p-6 space-y-4">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-bold">Assign Kelas Paralel</h3>
+      <button onclick="document.getElementById('modal-paralel').classList.add('hidden')" class="text-gray-400 hover:text-main text-sm">&#10005;</button>
+    </div>
+    <div class="bg-gray-50 rounded-md p-3">
+      <p class="text-sm font-medium" id="paralel-info-siswa">Budi Santoso — 3A</p>
+      <p class="text-xs text-gray-500" id="paralel-info-induk">Terdaftar di: English Club — Jumat</p>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-main mb-1">Pilih Kelas Paralel</label>
+      <p class="text-xs text-gray-400 mb-2">Pembagian kelas ditentukan oleh pengajar setelah melihat jumlah pendaftar. Koordinasikan dengan pengajar sebelum meng-assign.</p>
+      <div id="paralel-opsi" class="space-y-2">
+        <!-- diisi oleh JS sesuai kegiatan induk -->
+      </div>
+    </div>
+    <div class="flex justify-end gap-2">
+      <button onclick="document.getElementById('modal-paralel').classList.add('hidden')" class="bg-white border border-gray-300 text-main hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded-md">Batal</button>
+      <button onclick="simpanAssignParalel()" class="bg-primary hover:bg-primary-dark text-white text-sm font-medium px-4 py-2 rounded-md">Simpan Assignment</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-paralel" class="hidden fixed bottom-6 right-6 bg-status-success text-white text-sm font-medium px-4 py-3 rounded-md shadow-lg z-50">
+  Siswa berhasil di-assign ke kelas paralel.
+</div>
+
 <script>
+// Data kelas paralel per kegiatan induk berkelas-paralel (contoh demo, sesuai FR-26/FR-27)
+var dataParalel = {
+  'English Club — Jumat': [
+    { nama: 'Starter (Kelas 1–2)', kuota: '52/60 slot' },
+    { nama: 'Mover (Kelas 3–4)', kuota: '48/60 slot' },
+    { nama: 'Flyer (Kelas 5–6)', kuota: '35/60 slot' }
+  ],
+  'Dancing Club — Jumat': [
+    { nama: 'Class A', kuota: '18/20 slot' },
+    { nama: 'Class B', kuota: '15/20 slot' },
+    { nama: 'Class C', kuota: '9/20 slot' }
+  ],
+  'English Club — Sabtu': [
+    { nama: 'Kelas 1', kuota: '38/40 slot' },
+    { nama: 'Kelas 2', kuota: '25/40 slot' }
+  ]
+};
+
 function simpanPendaftaranManual(){
   var nama = document.getElementById('input-nama-manual').value || '(Nama belum diisi)';
   var kelas = document.getElementById('input-kelas-manual').value || '-';
   var ekskul = document.getElementById('input-ekskul-manual').value;
   var tbody = document.getElementById('tabel-pendaftaran-body');
   var tr = document.createElement('tr');
+  var kolomAksi = '<td class="px-6 py-4 text-gray-400 text-xs">—</td>';
+  var kolomEkskul = '<td class="px-6 py-4 text-gray-600">'+ekskul+'</td>';
+  if (dataParalel[ekskul]) {
+    kolomEkskul = '<td class="px-6 py-4 text-gray-600">'+ekskul+
+      ' <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-status-pending/10 text-status-pending border border-status-pending/20 ml-1">Belum di-assign kelas paralel</span></td>';
+    kolomAksi = '<td class="px-6 py-4"><button onclick="bukaModalParalel(\''+nama+'\', \''+kelas+'\', \''+ekskul+'\')" class="text-primary hover:text-primary-dark font-medium text-xs">Assign Kelas Paralel</button></td>';
+  }
   tr.innerHTML = '<td class="px-6 py-4 font-medium">'+nama+'</td>'+
                  '<td class="px-6 py-4 text-gray-600">'+kelas+'</td>'+
-                 '<td class="px-6 py-4 text-gray-600">'+ekskul+'</td>'+
+                 kolomEkskul+
                  '<td class="px-6 py-4 text-gray-600">Input Manual TU</td>'+
-                 '<td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Aktif</span></td>';
+                 '<td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success border border-status-success/20">Aktif</span></td>'+
+                 kolomAksi;
   tbody.appendChild(tr);
   document.getElementById('input-nama-manual').value = '';
   document.getElementById('input-kelas-manual').value = '';
   document.getElementById('modal-manual').classList.add('hidden');
   document.getElementById('toast-manual').classList.remove('hidden');
   setTimeout(function(){ document.getElementById('toast-manual').classList.add('hidden'); }, 3000);
+}
+
+var barisAktifParalel = null;
+
+function bukaModalParalel(nama, kelas, kegiatanInduk){
+  document.getElementById('paralel-info-siswa').textContent = nama+' — '+kelas;
+  document.getElementById('paralel-info-induk').textContent = 'Terdaftar di: '+kegiatanInduk;
+
+  var opsiContainer = document.getElementById('paralel-opsi');
+  opsiContainer.innerHTML = '';
+  var opsiList = dataParalel[kegiatanInduk] || [];
+  opsiList.forEach(function(opsi, idx){
+    var label = document.createElement('label');
+    label.className = 'flex items-center justify-between border border-gray-200 rounded-md px-4 py-3 hover:bg-gray-50 cursor-pointer';
+    label.innerHTML = '<div class="flex items-center gap-3">'+
+        '<input type="radio" name="pilihan-paralel" value="'+opsi.nama+'" '+(idx===0 ? 'checked' : '')+' class="text-primary focus:ring-primary">'+
+        '<span class="text-sm font-medium">'+opsi.nama+'</span>'+
+      '</div>'+
+      '<span class="text-xs text-gray-500">'+opsi.kuota+'</span>';
+    opsiContainer.appendChild(label);
+  });
+
+  // simpan referensi baris tabel yang sedang di-assign, dicari dari tombol yang diklik
+  barisAktifParalel = { nama: nama, kelas: kelas, kegiatanInduk: kegiatanInduk };
+  document.getElementById('modal-paralel').classList.remove('hidden');
+}
+
+function simpanAssignParalel(){
+  if (!barisAktifParalel) { return; }
+  var terpilih = document.querySelector('input[name="pilihan-paralel"]:checked');
+  var namaParalel = terpilih ? terpilih.value : '(belum dipilih)';
+
+  // cari tombol "Assign Kelas Paralel" yang cocok (nama siswa + kegiatan induk), lalu ganti isi barisnya
+  var tbody = document.getElementById('tabel-pendaftaran-body');
+  var tombolList = tbody.querySelectorAll('button');
+  tombolList.forEach(function(btn){
+    if (btn.textContent.trim() === 'Assign Kelas Paralel' &&
+        btn.getAttribute('onclick').indexOf("'"+barisAktifParalel.nama+"'") !== -1 &&
+        btn.getAttribute('onclick').indexOf("'"+barisAktifParalel.kegiatanInduk+"'") !== -1) {
+      var tdEkskul = btn.closest('tr').children[2];
+      tdEkskul.textContent = barisAktifParalel.kegiatanInduk + ' (' + namaParalel + ')';
+      var tdAksi = btn.closest('tr').children[5];
+      tdAksi.innerHTML = '<span class="text-gray-400 text-xs">—</span>';
+    }
+  });
+
+  document.getElementById('modal-paralel').classList.add('hidden');
+  document.getElementById('toast-paralel').classList.remove('hidden');
+  setTimeout(function(){ document.getElementById('toast-paralel').classList.add('hidden'); }, 3000);
+  barisAktifParalel = null;
 }
 </script>
 </main><p class="text-xs text-gray-400 text-center py-6">Prototipe UI — data pada halaman ini adalah contoh untuk keperluan demo.</p></div></div></body></html>

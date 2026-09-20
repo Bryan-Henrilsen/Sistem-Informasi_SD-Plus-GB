@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waktu Pelajaran - SD Plus Gembala Baik</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Fira Sans"', 'sans-serif'] },
+                    colors: {
+                        cream: '#FAF7F2', main: '#3A322C',
+                        primary: { DEFAULT: '#A9784F', dark: '#7A5738' },
+                        status: { success: '#4B7B5D', pending: '#C08A3E', danger: '#B0483A' },
+                        role: { kepsek: '#7A5738', tu: '#5B7A99', bendahara: '#C08A3E', guru: '#4B7B5D', ortu: '#C97B63' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+    </style>
+</head>
+<body class="bg-cream text-main font-sans antialiased">
+<div class="flex">
+<aside class="w-64 bg-white border-r border-gray-200 min-h-screen p-4 flex-shrink-0">
+  <div class="mb-6 px-2">
+    <p class="text-sm font-bold text-primary-dark leading-tight">SD Plus Gembala Baik</p>
+    <p class="text-xs text-gray-500">Portal Bendahara</p>
+  </div>
+  <nav class="space-y-1">
+    <a href="bendahara-approval.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 text-gray-600 hover:bg-gray-50 hover:text-main border-transparent">Approval Laporan</a>
+    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 mt-6 px-3">Jadwal Guru</div>
+    <a href="Waktu-Pelajaran.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 bg-primary/10 text-primary-dark border-primary">Waktu Pelajaran</a>
+    <a href="KisiKisiTugas.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 text-gray-600 hover:bg-gray-50 hover:text-main border-transparent">Kisi-Kisi Tugas</a>
+    <a href="Pembagian-Jadwal-Guru.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 text-gray-600 hover:bg-gray-50 hover:text-main border-transparent">Pembagian Jadwal</a>
+    <a href="Hasil_Jadwal.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 text-gray-600 hover:bg-gray-50 hover:text-main border-transparent">Hasil Jadwal</a>
+  </nav>
+</aside>
+<div class="flex-1 min-h-screen flex flex-col">
+<header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+  <h1 class="text-lg font-bold text-primary-dark">Waktu Pelajaran</h1>
+  <div class="flex items-center gap-4">
+    <span class="text-xs font-medium bg-gray-100 px-2 py-0.5 rounded text-gray-600">TA: 2026/2027</span>
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-role-bendahara text-white">Bendahara</span>
+
+<div class="relative">
+  <select onchange="if(this.value) location.href=this.value" class="text-xs font-medium border border-gray-300 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+    <option value="">Ganti Peran (Demo)</option>
+    <option value="ortu-pendaftaran.html">Orang Tua</option>
+    <option value="tu-pendaftaran.html">Tata Usaha</option>
+    <option value="bendahara-approval.html">Bendahara</option>
+    <option value="kepsek-laporan.html">Kepala Sekolah</option>
+    <option value="guru-forum.html">Guru</option>
+  </select>
+</div>
+
+  </div>
+</header>
+<main class="flex-1 p-6 space-y-6">
+<div class="flex justify-end gap-3">
+    <button class="bg-white border border-gray-300 text-main hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded-md flex items-center gap-2 transition-colors">Salin dari TA Sebelumnya</button>
+    <button class="bg-primary hover:bg-primary-dark text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm transition-colors" onclick="document.getElementById('modal-tambah').classList.remove('hidden')">+ Tambah Waktu</button>
+</div>
+        <!-- Content Body -->
+        <div>
+            <div class="max-w-6xl mx-auto">
+
+                <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 mb-6 flex gap-3 text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                    <p>Waktu pelajaran ini akan menjadi kerangka baris (sumbu vertikal) pada grid jadwal di menu <strong>Pembagian Jadwal</strong>. Tentukan hari berlakunya agar sistem menyesuaikan kemunculannya.</p>
+                </div>
+
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-20">Urutan</th>
+                                <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider">Jam Ke-</th>
+                                <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider">Waktu</th>
+                                <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider">Durasi</th>
+                                <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider">Jenis Kegiatan</th>
+                                <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider">Berlaku Untuk</th>
+                                <th scope="col" class="px-6 py-3 text-right font-bold text-main uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500 font-medium text-center">1</td>
+                                <td class="px-6 py-4 whitespace-nowrap font-bold text-main">Jam 1</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-700">07:00 - 07:35</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-700">35 Menit</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">KBM</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex gap-1.5">
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm" title="Senin">S</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm" title="Selasa">S</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm" title="Rabu">R</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm" title="Kamis">K</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm" title="Jumat">J</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-primary hover:text-primary-dark mr-3 transition-colors">Edit</button>
+                                    <button class="text-status-danger hover:text-red-700 transition-colors">Hapus</button>
+                                </td>
+                            </tr>
+                            
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500 font-medium text-center">2</td>
+                                <td class="px-6 py-4 whitespace-nowrap font-bold text-main">Jam 2</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-700">07:35 - 08:10</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-700">35 Menit</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">KBM</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex gap-1.5">
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">S</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">S</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">R</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">K</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">J</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-primary hover:text-primary-dark mr-3 transition-colors">Edit</button>
+                                    <button class="text-status-danger hover:text-red-700 transition-colors">Hapus</button>
+                                </td>
+                            </tr>
+
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500 font-medium text-center">3</td>
+                                <td class="px-6 py-4 whitespace-nowrap font-bold text-main">Jam 3</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-700">08:10 - 08:45</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-700">35 Menit</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">KBM</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex gap-1.5">
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">S</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">S</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">R</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">K</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">J</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-primary hover:text-primary-dark mr-3 transition-colors">Edit</button>
+                                    <button class="text-status-danger hover:text-red-700 transition-colors">Hapus</button>
+                                </td>
+                            </tr>
+
+                            <!-- Row: Istirahat -->
+                            <tr class="bg-orange-50/50 hover:bg-orange-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500 font-medium text-center">4</td>
+                                <td class="px-6 py-4 whitespace-nowrap font-bold text-orange-800">Istirahat 1</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-orange-800 font-medium">08:45 - 09:15</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-orange-800">30 Menit</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">Istirahat</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex gap-1.5">
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">S</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">S</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">R</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">K</span>
+                                        <span class="w-6 h-6 flex items-center justify-center rounded bg-primary text-white text-xs font-bold shadow-sm">J</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button class="text-primary hover:text-primary-dark mr-3 transition-colors">Edit</button>
+                                    <button class="text-status-danger hover:text-red-700 transition-colors">Hapus</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+</main><p class="text-xs text-gray-400 text-center py-6">Prototipe UI — data pada halaman ini adalah contoh untuk keperluan demo.</p></div></div>
+
+    <div id="modal-tambah" class="fixed inset-0 z-50 bg-gray-900/50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-bold text-main">Tambah Waktu Pelajaran</h3>
+                <button class="text-gray-400 hover:text-gray-600 transition-colors" onclick="document.getElementById('modal-tambah').classList.add('hidden'); document.getElementById('modal-tambah').classList.remove('flex')">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-main mb-1">Nama / Jam Ke-</label>
+                    <input type="text" placeholder="Contoh: Jam 1 atau Istirahat 2" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-main mb-1">Waktu Mulai</label>
+                        <input type="time" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-main mb-1">Waktu Selesai</label>
+                        <input type="time" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-main mb-1">Jenis Kegiatan</label>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary">
+                        <option value="kbm">Kegiatan Belajar Mengajar (KBM)</option>
+                        <option value="istirahat">Waktu Istirahat</option>
+                        <option value="upacara">Upacara / Apel</option>
+                    </select>
+                </div>
+                
+                <div class="pt-2">
+                    <label class="block text-sm font-medium text-main mb-2">Berlaku Untuk Hari</label>
+                    <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
+                        <label class="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                            <input type="checkbox" checked class="accent-primary w-4 h-4 rounded border-gray-300"> Senin
+                        </label>
+                        <label class="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                            <input type="checkbox" checked class="accent-primary w-4 h-4 rounded border-gray-300"> Selasa
+                        </label>
+                        <label class="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                            <input type="checkbox" checked class="accent-primary w-4 h-4 rounded border-gray-300"> Rabu
+                        </label>
+                        <label class="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                            <input type="checkbox" checked class="accent-primary w-4 h-4 rounded border-gray-300"> Kamis
+                        </label>
+                        <label class="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                            <input type="checkbox" checked class="accent-primary w-4 h-4 rounded border-gray-300"> Jumat
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3 bg-gray-50">
+                <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors" onclick="document.getElementById('modal-tambah').classList.add('hidden'); document.getElementById('modal-tambah').classList.remove('flex')">Batal</button>
+                <button class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-dark transition-colors" onclick="document.getElementById('modal-tambah').classList.add('hidden'); document.getElementById('modal-tambah').classList.remove('flex')">Simpan Waktu</button>
+            </div>
+        </div>
+    </div>
+    
+
+</body>
+</html>
