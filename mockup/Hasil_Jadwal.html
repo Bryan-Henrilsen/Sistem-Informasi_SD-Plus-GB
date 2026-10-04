@@ -46,6 +46,7 @@
     <a href="Hasil_Jadwal.html" class="flex items-center px-3 py-2 rounded-md text-sm font-medium border-l-4 bg-primary/10 text-primary-dark border-primary">Hasil Jadwal</a>
   </nav>
 </aside>
+
 <div class="flex-1 min-h-screen flex flex-col">
 <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
   <div>
@@ -55,302 +56,518 @@
   <div class="flex items-center gap-4">
     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-role-bendahara text-white">Bendahara</span>
 
-<div class="relative">
-  <select onchange="if(this.value) location.href=this.value" class="text-xs font-medium border border-gray-300 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
-    <option value="">Ganti Peran (Demo)</option>
-    <option value="ortu-pendaftaran.html">Orang Tua</option>
-    <option value="tu-pendaftaran.html">Tata Usaha</option>
-    <option value="bendahara-approval.html">Bendahara</option>
-    <option value="kepsek-laporan.html">Kepala Sekolah</option>
-    <option value="guru-forum.html">Guru</option>
-  </select>
-</div>
-
+    <div class="relative">
+      <select onchange="if(this.value) location.href=this.value" class="text-xs font-medium border border-gray-300 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-primary">
+        <option value="">Ganti Peran (Demo)</option>
+        <option value="ortu-pendaftaran.html">Orang Tua</option>
+        <option value="tu-pendaftaran.html">Tata Usaha</option>
+        <option value="bendahara-approval.html">Bendahara</option>
+        <option value="kepsek-laporan.html">Kepala Sekolah</option>
+        <option value="guru-forum.html">Guru</option>
+      </select>
+    </div>
   </div>
 </header>
+
 <main class="flex-1 p-6 space-y-6">
-            <div class="max-w-6xl mx-auto space-y-6">
-                
-                <!-- Toggle Mode View -->
-                <div class="flex p-1 bg-gray-200/60 rounded-lg w-full max-w-2xl mx-auto shadow-inner mb-6">
-                    <button id="btn-view-kelas" class="flex-1 py-2 text-sm font-bold bg-primary text-white rounded-md shadow transition-colors">Per Kelas</button>
-                    <button id="btn-view-guru" class="flex-1 py-2 text-sm font-bold text-gray-600 hover:text-main transition-colors">Per Guru</button>
-                </div>
+    <div class="max-w-6xl mx-auto space-y-6">
+        
+        <div class="flex p-1 bg-gray-200/60 rounded-lg w-full max-w-2xl mx-auto shadow-inner mb-6">
+            <button id="btn-view-kelas" class="flex-1 py-2 text-sm font-bold bg-primary text-white rounded-md shadow transition-colors">Per Kelas</button>
+            <button id="btn-view-guru" class="flex-1 py-2 text-sm font-bold text-gray-600 hover:text-main transition-colors">Per Guru</button>
+        </div>
 
-                <!-- ============================================== -->
-                <!-- PANEL VIEW: PER KELAS                          -->
-                <!-- ============================================== -->
-                <div id="panel-kelas" class="space-y-6">
-                    <!-- Panel Detail Kelas -->
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-5">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-4">
-                            <div>
-                                <h3 class="text-xl font-bold text-main">Kelas 1A</h3>
-                                <p class="text-xs text-gray-500 mt-0.5">30 siswa | Jadwal Pembelajaran Mingguan</p>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <div class="flex bg-gray-100 rounded border border-gray-200 p-0.5">
-                                    <button class="px-3 py-1.5 bg-white shadow-sm rounded text-xs font-bold text-primary border border-gray-200 flex items-center gap-1.5 transition-colors">
-                                        Tabel
-                                    </button>
-                                    <button class="px-3 py-1.5 text-gray-500 hover:text-main text-xs font-medium flex items-center gap-1.5 transition-colors">
-                                        Kalender
-                                    </button>
-                                </div>
-                                <select class="px-3 py-1.5 bg-white border border-gray-300 rounded text-sm text-gray-700 focus:outline-none focus:border-primary w-48 shadow-sm transition-colors">
-                                    <option>Kelas 1 - 1A (30 siswa)</option>
-                                    <option>Kelas 1 - 1B (28 siswa)</option>
-                                    <option>Kelas 2 - 2A (32 siswa)</option>
-                                </select>
-                                <button class="bg-primary hover:bg-primary-dark text-white px-4 py-1.5 rounded text-sm font-medium shadow-sm transition-colors flex items-center gap-2">
-                                    Export / Cetak
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Summary Grid Kelas -->
-                        <div class="grid grid-cols-6 gap-3">
-                            <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
-                                <div class="text-xs text-gray-500 font-medium mb-1">Senin</div>
-                                <div class="text-xl font-bold text-primary">10</div>
-                            </div>
-                            <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
-                                <div class="text-xs text-gray-500 font-medium mb-1">Selasa</div>
-                                <div class="text-xl font-bold text-primary">10</div>
-                            </div>
-                            <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
-                                <div class="text-xs text-gray-500 font-medium mb-1">Rabu</div>
-                                <div class="text-xl font-bold text-primary">10</div>
-                            </div>
-                            <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
-                                <div class="text-xs text-gray-500 font-medium mb-1">Kamis</div>
-                                <div class="text-xl font-bold text-primary">10</div>
-                            </div>
-                            <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
-                                <div class="text-xs text-gray-500 font-medium mb-1">Jumat</div>
-                                <div class="text-xl font-bold text-primary">9</div>
-                            </div>
-                            <div class="border border-primary bg-primary/5 rounded-lg p-3 text-center shadow-sm">
-                                <div class="text-xs text-primary-dark font-bold mb-1 uppercase tracking-wider">Total</div>
-                                <div class="text-xl font-bold text-primary-dark">49 <span class="text-sm font-medium">jam</span></div>
-                            </div>
-                        </div>
+        <!-- ============================================== -->
+        <!-- PANEL VIEW: PER KELAS                          -->
+        <!-- ============================================== -->
+        <div id="panel-kelas" class="space-y-6">
+            <!-- Panel Detail Kelas -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-5">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-main">Kelas 1A</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">30 siswa | Jadwal Pembelajaran Mingguan</p>
                     </div>
-
-                    <!-- Schedule Table Result Kelas -->
-                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                        <div class="p-4 border-b border-gray-200 bg-gray-50">
-                            <h4 class="font-bold text-main">Jadwal: Kelas 1 - 1A</h4>
+                    <div class="flex items-center gap-3">
+                        <!-- Toggle Tabel vs Kalender -->
+                        <div class="flex bg-gray-100 rounded border border-gray-200 p-0.5">
+                            <button id="btn-tabel-kelas" class="px-3 py-1.5 bg-white shadow-sm rounded text-xs font-bold text-primary border border-gray-200 flex items-center gap-1.5 transition-colors">
+                                Tabel
+                            </button>
+                            <button id="btn-kalender-kelas" class="px-3 py-1.5 text-gray-500 border border-transparent hover:text-main text-xs font-medium flex items-center gap-1.5 transition-colors">
+                                Kalender
+                            </button>
                         </div>
-                        <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-gray-100/50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-24">Hari</th>
-                                    <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-24">Jam ke</th>
-                                    <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-36">Waktu</th>
-                                    <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-64">Guru</th>
-                                    <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider">Mata Pelajaran</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td rowspan="4" class="px-6 py-4 font-bold text-main align-top bg-gray-50/30 border-r border-gray-100">Senin</td>
-                                    <td class="px-6 py-3 font-medium text-center">1</td>
-                                    <td class="px-6 py-3 text-gray-600">07:00 - 07:35</td>
-                                    <td class="px-6 py-3">
-                                        <div class="font-bold text-main">Lydia</div>
-                                        <div class="text-[10px] text-gray-400">LYD</div>
-                                    </td>
-                                    <td class="px-6 py-3 font-medium text-gray-700">TIK</td>
-                                </tr>
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-3 font-medium text-center border-t border-gray-100">2</td>
-                                    <td class="px-6 py-3 text-gray-600 border-t border-gray-100">07:35 - 08:10</td>
-                                    <td class="px-6 py-3 border-t border-gray-100">
-                                        <div class="font-bold text-main">Ayu</div>
-                                        <div class="text-[10px] text-gray-400">AY</div>
-                                    </td>
-                                    <td class="px-6 py-3 font-medium text-gray-700 border-t border-gray-100">B. Indonesia</td>
-                                </tr>
-                                <!-- BREAK ROW -->
-                                <tr class="bg-orange-50/60 transition-colors">
-                                    <td class="px-6 py-2 font-medium text-center text-gray-400 border-t border-orange-100">-</td>
-                                    <td class="px-6 py-2 text-orange-800 font-medium border-t border-orange-100">08:10 - 08:40</td>
-                                    <td colspan="2" class="px-6 py-2 text-center font-bold text-orange-800 tracking-widest border-t border-orange-100">ISTIRAHAT 1</td>
-                                </tr>
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-3 font-medium text-center border-t border-gray-100">3</td>
-                                    <td class="px-6 py-3 text-gray-600 border-t border-gray-100">08:40 - 09:15</td>
-                                    <td class="px-6 py-3 border-t border-gray-100">
-                                        <div class="font-bold text-main">Ayu</div>
-                                        <div class="text-[10px] text-gray-400">AY</div>
-                                    </td>
-                                    <td class="px-6 py-3 font-medium text-gray-700 border-t border-gray-100">B. Indonesia</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <select class="px-3 py-1.5 bg-white border border-gray-300 rounded text-sm text-gray-700 focus:outline-none focus:border-primary w-48 shadow-sm transition-colors">
+                            <option>Kelas 1 - 1A (30 siswa)</option>
+                            <option>Kelas 1 - 1B (28 siswa)</option>
+                            <option>Kelas 2 - 2A (32 siswa)</option>
+                        </select>
+                        <button class="bg-primary hover:bg-primary-dark text-white px-4 py-1.5 rounded text-sm font-medium shadow-sm transition-colors flex items-center gap-2">
+                            Export / Cetak
+                        </button>
                     </div>
                 </div>
 
-                <!-- ============================================== -->
-                <!-- PANEL VIEW: PER GURU (Hidden by default)       -->
-                <!-- ============================================== -->
-                <div id="panel-guru" class="space-y-6 hidden">
-                    <!-- Panel Detail Guru -->
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-5">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-4">
-                            <div>
-                                <h3 class="text-xl font-bold text-main">Ayu (AY)</h3>
-                                <p class="text-xs text-gray-500 mt-0.5">Guru Utama | B. Indonesia</p>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <div class="flex bg-gray-100 rounded border border-gray-200 p-0.5">
-                                    <button class="px-3 py-1.5 bg-white shadow-sm rounded text-xs font-bold text-primary border border-gray-200 flex items-center gap-1.5 transition-colors">
-                                        Tabel
-                                    </button>
-                                    <button class="px-3 py-1.5 text-gray-500 hover:text-main text-xs font-medium flex items-center gap-1.5 transition-colors">
-                                        Kalender
-                                    </button>
-                                </div>
-                                <select class="px-3 py-1.5 bg-white border border-gray-300 rounded text-sm text-gray-700 focus:outline-none focus:border-primary w-48 shadow-sm transition-colors">
-                                    <option>Ayu (AY)</option>
-                                    <option>Lydia (LYD)</option>
-                                    <option>Angela (A)</option>
-                                    <option>Ruben (RB)</option>
-                                    <option>Devi (DV)</option>
-                                </select>
-                                <button class="bg-primary hover:bg-primary-dark text-white px-4 py-1.5 rounded text-sm font-medium shadow-sm transition-colors flex items-center gap-2">
-                                    Export / Cetak
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Summary Grid Guru -->
-                        <div class="grid grid-cols-6 gap-3">
-                            <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
-                                <div class="text-xs text-gray-500 font-medium mb-1">Senin</div>
-                                <div class="text-xl font-bold text-primary">3</div>
-                            </div>
-                            <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
-                                <div class="text-xs text-gray-500 font-medium mb-1">Selasa</div>
-                                <div class="text-xl font-bold text-primary">3</div>
-                            </div>
-                            <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
-                                <div class="text-xs text-gray-500 font-medium mb-1">Rabu</div>
-                                <div class="text-xl font-bold text-gray-400">-</div>
-                            </div>
-                            <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
-                                <div class="text-xs text-gray-500 font-medium mb-1">Kamis</div>
-                                <div class="text-xl font-bold text-primary">2</div>
-                            </div>
-                            <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
-                                <div class="text-xs text-gray-500 font-medium mb-1">Jumat</div>
-                                <div class="text-xl font-bold text-primary">4</div>
-                            </div>
-                            <div class="border border-primary bg-primary/5 rounded-lg p-3 text-center shadow-sm">
-                                <div class="text-xs text-primary-dark font-bold mb-1 uppercase tracking-wider">Total</div>
-                                <div class="text-xl font-bold text-primary-dark">12 <span class="text-sm font-medium">jam</span></div>
-                            </div>
-                        </div>
+                <div class="grid grid-cols-6 gap-3">
+                    <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
+                        <div class="text-xs text-gray-500 font-medium mb-1">Senin</div>
+                        <div class="text-xl font-bold text-primary">10</div>
                     </div>
-
-                    <!-- Schedule Table Result Guru -->
-                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                        <div class="p-4 border-b border-gray-200 bg-gray-50">
-                            <h4 class="font-bold text-main">Jadwal: Ayu (AY)</h4>
-                        </div>
-                        <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-gray-100/50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-24">Hari</th>
-                                    <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-24">Jam ke</th>
-                                    <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-36">Waktu</th>
-                                    <!-- Header ini berubah menjadi Kelas/Area -->
-                                    <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-64">Kelas / Area</th>
-                                    <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider">Keterangan / Mapel</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td rowspan="5" class="px-6 py-4 font-bold text-main align-top bg-gray-50/30 border-r border-gray-100">Senin</td>
-                                    
-                                    <td class="px-6 py-3 font-medium text-center text-gray-400">1</td>
-                                    <td class="px-6 py-3 text-gray-400">07:00 - 07:35</td>
-                                    <td class="px-6 py-3 text-gray-400 italic" colspan="2">Kosong</td>
-                                </tr>
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-3 font-medium text-center border-t border-gray-100">2</td>
-                                    <td class="px-6 py-3 text-gray-600 border-t border-gray-100">07:35 - 08:10</td>
-                                    <td class="px-6 py-3 border-t border-gray-100">
-                                        <div class="font-bold text-main">Kelas 1A</div>
-                                    </td>
-                                    <td class="px-6 py-3 font-medium text-gray-700 border-t border-gray-100">B. Indonesia</td>
-                                </tr>
-                                <!-- BREAK ROW -->
-                                <tr class="bg-orange-50/60 transition-colors">
-                                    <td class="px-6 py-2 font-medium text-center text-gray-400 border-t border-orange-100">-</td>
-                                    <td class="px-6 py-2 text-orange-800 font-medium border-t border-orange-100">08:10 - 08:40</td>
-                                    <td colspan="2" class="px-6 py-2 text-center font-bold text-orange-800 tracking-widest border-t border-orange-100">ISTIRAHAT 1</td>
-                                </tr>
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-3 font-medium text-center border-t border-gray-100">3</td>
-                                    <td class="px-6 py-3 text-gray-600 border-t border-gray-100">08:40 - 09:15</td>
-                                    <td class="px-6 py-3 border-t border-gray-100">
-                                        <div class="font-bold text-main">Kelas 1A</div>
-                                    </td>
-                                    <td class="px-6 py-3 font-medium text-gray-700 border-t border-gray-100">B. Indonesia</td>
-                                </tr>
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-3 font-medium text-center border-t border-gray-100">4</td>
-                                    <td class="px-6 py-3 text-gray-600 border-t border-gray-100">09:15 - 09:50</td>
-                                    <td class="px-6 py-3 border-t border-gray-100">
-                                        <div class="font-bold text-purple-700">Area Piket</div>
-                                    </td>
-                                    <td class="px-6 py-3 font-medium text-gray-700 border-t border-gray-100">Piket Koridor Utama</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
+                        <div class="text-xs text-gray-500 font-medium mb-1">Selasa</div>
+                        <div class="text-xl font-bold text-primary">10</div>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
+                        <div class="text-xs text-gray-500 font-medium mb-1">Rabu</div>
+                        <div class="text-xl font-bold text-primary">10</div>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
+                        <div class="text-xs text-gray-500 font-medium mb-1">Kamis</div>
+                        <div class="text-xl font-bold text-primary">10</div>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
+                        <div class="text-xs text-gray-500 font-medium mb-1">Jumat</div>
+                        <div class="text-xl font-bold text-primary">9</div>
+                    </div>
+                    <div class="border border-primary bg-primary/5 rounded-lg p-3 text-center shadow-sm">
+                        <div class="text-xs text-primary-dark font-bold mb-1 uppercase tracking-wider">Total</div>
+                        <div class="text-xl font-bold text-primary-dark">49 <span class="text-sm font-medium">jam</span></div>
                     </div>
                 </div>
-
             </div>
-</main><p class="text-xs text-gray-400 text-center py-6">Prototipe UI — data pada halaman ini adalah contoh untuk keperluan demo.</p></div></div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const btnKelas = document.getElementById('btn-view-kelas');
-            const btnGuru = document.getElementById('btn-view-guru');
-            const panelKelas = document.getElementById('panel-kelas');
-            const panelGuru = document.getElementById('panel-guru');
+            <div id="view-tabel-kelas" class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                <div class="p-4 border-b border-gray-200 bg-gray-50">
+                    <h4 class="font-bold text-main">Tampilan Tabel: Kelas 1 - 1A</h4>
+                </div>
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-100/50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-24">Hari</th>
+                            <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-24">Jam ke</th>
+                            <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-36">Waktu</th>
+                            <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-64">Guru</th>
+                            <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider">Mata Pelajaran</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td rowspan="4" class="px-6 py-4 font-bold text-main align-top bg-gray-50/30 border-r border-gray-100">Senin</td>
+                            <td class="px-6 py-3 font-medium text-center">1</td>
+                            <td class="px-6 py-3 text-gray-600">07:00 - 07:35</td>
+                            <td class="px-6 py-3">
+                                <div class="font-bold text-main">Lydia</div>
+                                <div class="text-[10px] text-gray-400">LYD</div>
+                            </td>
+                            <td class="px-6 py-3 font-medium text-gray-700">TIK</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-3 font-medium text-center border-t border-gray-100">2</td>
+                            <td class="px-6 py-3 text-gray-600 border-t border-gray-100">07:35 - 08:10</td>
+                            <td class="px-6 py-3 border-t border-gray-100">
+                                <div class="font-bold text-main">Ayu</div>
+                                <div class="text-[10px] text-gray-400">AY</div>
+                            </td>
+                            <td class="px-6 py-3 font-medium text-gray-700 border-t border-gray-100">B. Indonesia</td>
+                        </tr>
+                        <tr class="bg-orange-50/60 transition-colors">
+                            <td class="px-6 py-2 font-medium text-center text-gray-400 border-t border-orange-100">-</td>
+                            <td class="px-6 py-2 text-orange-800 font-medium border-t border-orange-100">08:10 - 08:40</td>
+                            <td colspan="2" class="px-6 py-2 text-center font-bold text-orange-800 tracking-widest border-t border-orange-100">ISTIRAHAT 1</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-3 font-medium text-center border-t border-gray-100">3</td>
+                            <td class="px-6 py-3 text-gray-600 border-t border-gray-100">08:40 - 09:15</td>
+                            <td class="px-6 py-3 border-t border-gray-100">
+                                <div class="font-bold text-main">Ayu</div>
+                                <div class="text-[10px] text-gray-400">AY</div>
+                            </td>
+                            <td class="px-6 py-3 font-medium text-gray-700 border-t border-gray-100">B. Indonesia</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-            btnKelas.addEventListener('click', () => {
-                // Aktifkan styling tombol Kelas
-                btnKelas.classList.add('bg-primary', 'text-white', 'shadow');
-                btnKelas.classList.remove('text-gray-600', 'hover:text-main');
-                
-                // Non-aktifkan styling tombol Guru
-                btnGuru.classList.remove('bg-primary', 'text-white', 'shadow');
-                btnGuru.classList.add('text-gray-600', 'hover:text-main');
+            <div id="view-kalender-kelas" class="hidden bg-gray-50 rounded-xl border border-gray-200 overflow-x-auto p-4 shadow-inner">
+                <div class="min-w-[900px] grid grid-cols-6 gap-3">
+                    <!-- Headers -->
+                    <div class="flex items-end pb-2 justify-center">
+                        <span class="font-bold text-gray-400 text-xs uppercase tracking-wider">Jam & Waktu</span>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm py-2 text-center font-bold text-main">Senin</div>
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm py-2 text-center font-bold text-main">Selasa</div>
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm py-2 text-center font-bold text-main">Rabu</div>
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm py-2 text-center font-bold text-main">Kamis</div>
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm py-2 text-center font-bold text-main">Jumat</div>
 
-                // Tampilkan Panel
-                panelKelas.classList.remove('hidden');
-                panelGuru.classList.add('hidden');
-            });
+                    <!-- Row 1: Jam 1 -->
+                    <div class="flex flex-col items-center justify-center bg-white rounded-lg border border-gray-200 p-2 shadow-sm">
+                        <span class="font-bold text-main">1</span>
+                        <span class="text-xs text-gray-500 text-center">07:00<br>07:35</span>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                        <div class="font-bold text-blue-800 text-sm mb-1">TIK</div>
+                        <div class="text-xs text-blue-600 flex justify-between items-center">
+                            <span>Lydia</span><span class="bg-blue-100 px-1 rounded font-medium">LYD</span>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                        <div class="font-bold text-green-800 text-sm mb-1">Matematika</div>
+                        <div class="text-xs text-green-600 flex justify-between items-center">
+                            <span>Ruben</span><span class="bg-green-100 px-1 rounded font-medium">RB</span>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100/50 border border-dashed border-gray-200 rounded-lg flex items-center justify-center p-3">
+                        <span class="text-gray-400 text-xs">-</span>
+                    </div>
+                    <div class="bg-gray-100/50 border border-dashed border-gray-200 rounded-lg flex items-center justify-center p-3">
+                        <span class="text-gray-400 text-xs">-</span>
+                    </div>
+                    <div class="bg-gray-100/50 border border-dashed border-gray-200 rounded-lg flex items-center justify-center p-3">
+                        <span class="text-gray-400 text-xs">-</span>
+                    </div>
 
-            btnGuru.addEventListener('click', () => {
-                // Aktifkan styling tombol Guru
-                btnGuru.classList.add('bg-primary', 'text-white', 'shadow');
-                btnGuru.classList.remove('text-gray-600', 'hover:text-main');
-                
-                // Non-aktifkan styling tombol Kelas
-                btnKelas.classList.remove('bg-primary', 'text-white', 'shadow');
-                btnKelas.classList.add('text-gray-600', 'hover:text-main');
+                    <!-- Row 2: Jam 2 -->
+                    <div class="flex flex-col items-center justify-center bg-white rounded-lg border border-gray-200 p-2 shadow-sm">
+                        <span class="font-bold text-main">2</span>
+                        <span class="text-xs text-gray-500 text-center">07:35<br>08:10</span>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                        <div class="font-bold text-blue-800 text-sm mb-1">B. Indonesia</div>
+                        <div class="text-xs text-blue-600 flex justify-between items-center">
+                            <span>Ayu</span><span class="bg-blue-100 px-1 rounded font-medium">AY</span>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                        <div class="font-bold text-green-800 text-sm mb-1">Matematika</div>
+                        <div class="text-xs text-green-600 flex justify-between items-center">
+                            <span>Ruben</span><span class="bg-green-100 px-1 rounded font-medium">RB</span>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100/50 border border-dashed border-gray-200 rounded-lg flex items-center justify-center p-3">
+                        <span class="text-gray-400 text-xs">-</span>
+                    </div>
+                    <div class="bg-gray-100/50 border border-dashed border-gray-200 rounded-lg flex items-center justify-center p-3">
+                        <span class="text-gray-400 text-xs">-</span>
+                    </div>
+                    <div class="bg-gray-100/50 border border-dashed border-gray-200 rounded-lg flex items-center justify-center p-3">
+                        <span class="text-gray-400 text-xs">-</span>
+                    </div>
 
-                // Tampilkan Panel
-                panelGuru.classList.remove('hidden');
-                panelKelas.classList.add('hidden');
-            });
+                    <!-- Row 3: Istirahat -->
+                    <div class="flex flex-col items-center justify-center bg-orange-50 rounded-lg border border-orange-200 p-2 shadow-sm">
+                        <span class="font-bold text-orange-800">-</span>
+                        <span class="text-xs text-orange-600 text-center">08:10<br>08:40</span>
+                    </div>
+                    <div class="col-span-5 bg-orange-50/60 border border-orange-100 rounded-lg flex flex-col items-center justify-center py-2 shadow-inner">
+                        <span class="font-bold text-orange-800 tracking-widest text-sm">ISTIRAHAT 1</span>
+                        <span class="text-xs text-orange-600 mt-0.5">30 Menit</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- PANEL VIEW: PER GURU                           -->
+        <!-- ============================================== -->
+        <div id="panel-guru" class="space-y-6 hidden">
+            <!-- Panel Detail Guru -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-5">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-main">Ayu (AY)</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Guru Utama | B. Indonesia</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <!-- Toggle Tabel vs Kalender Guru -->
+                        <div class="flex bg-gray-100 rounded border border-gray-200 p-0.5">
+                            <button id="btn-tabel-guru" class="px-3 py-1.5 bg-white shadow-sm rounded text-xs font-bold text-primary border border-gray-200 flex items-center gap-1.5 transition-colors">
+                                Tabel
+                            </button>
+                            <button id="btn-kalender-guru" class="px-3 py-1.5 text-gray-500 border border-transparent hover:text-main text-xs font-medium flex items-center gap-1.5 transition-colors">
+                                Kalender
+                            </button>
+                        </div>
+                        <select class="px-3 py-1.5 bg-white border border-gray-300 rounded text-sm text-gray-700 focus:outline-none focus:border-primary w-48 shadow-sm transition-colors">
+                            <option>Ayu (AY)</option>
+                            <option>Lydia (LYD)</option>
+                            <option>Angela (A)</option>
+                            <option>Ruben (RB)</option>
+                            <option>Devi (DV)</option>
+                        </select>
+                        <button class="bg-primary hover:bg-primary-dark text-white px-4 py-1.5 rounded text-sm font-medium shadow-sm transition-colors flex items-center gap-2">
+                            Export / Cetak
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Grid Guru -->
+                <div class="grid grid-cols-6 gap-3">
+                    <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
+                        <div class="text-xs text-gray-500 font-medium mb-1">Senin</div>
+                        <div class="text-xl font-bold text-primary">3</div>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
+                        <div class="text-xs text-gray-500 font-medium mb-1">Selasa</div>
+                        <div class="text-xl font-bold text-primary">3</div>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
+                        <div class="text-xs text-gray-500 font-medium mb-1">Rabu</div>
+                        <div class="text-xl font-bold text-gray-400">-</div>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
+                        <div class="text-xs text-gray-500 font-medium mb-1">Kamis</div>
+                        <div class="text-xl font-bold text-primary">2</div>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg p-3 text-center bg-gray-50/50">
+                        <div class="text-xs text-gray-500 font-medium mb-1">Jumat</div>
+                        <div class="text-xl font-bold text-primary">4</div>
+                    </div>
+                    <div class="border border-primary bg-primary/5 rounded-lg p-3 text-center shadow-sm">
+                        <div class="text-xs text-primary-dark font-bold mb-1 uppercase tracking-wider">Total</div>
+                        <div class="text-xl font-bold text-primary-dark">12 <span class="text-sm font-medium">jam</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-tabel-guru" class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                <div class="p-4 border-b border-gray-200 bg-gray-50">
+                    <h4 class="font-bold text-main">Tampilan Tabel: Ayu (AY)</h4>
+                </div>
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead class="bg-gray-100/50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-24">Hari</th>
+                            <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-24">Jam ke</th>
+                            <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-36">Waktu</th>
+                            <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider w-64">Kelas / Area</th>
+                            <th scope="col" class="px-6 py-3 text-left font-bold text-main uppercase tracking-wider">Keterangan / Mapel</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td rowspan="5" class="px-6 py-4 font-bold text-main align-top bg-gray-50/30 border-r border-gray-100">Senin</td>
+                            
+                            <td class="px-6 py-3 font-medium text-center text-gray-400">1</td>
+                            <td class="px-6 py-3 text-gray-400">07:00 - 07:35</td>
+                            <td class="px-6 py-3 text-gray-400 italic" colspan="2">Kosong</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-3 font-medium text-center border-t border-gray-100">2</td>
+                            <td class="px-6 py-3 text-gray-600 border-t border-gray-100">07:35 - 08:10</td>
+                            <td class="px-6 py-3 border-t border-gray-100">
+                                <div class="font-bold text-main">Kelas 1A</div>
+                            </td>
+                            <td class="px-6 py-3 font-medium text-gray-700 border-t border-gray-100">B. Indonesia</td>
+                        </tr>
+                        <!-- BREAK ROW -->
+                        <tr class="bg-orange-50/60 transition-colors">
+                            <td class="px-6 py-2 font-medium text-center text-gray-400 border-t border-orange-100">-</td>
+                            <td class="px-6 py-2 text-orange-800 font-medium border-t border-orange-100">08:10 - 08:40</td>
+                            <td colspan="2" class="px-6 py-2 text-center font-bold text-orange-800 tracking-widest border-t border-orange-100">ISTIRAHAT 1</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-3 font-medium text-center border-t border-gray-100">3</td>
+                            <td class="px-6 py-3 text-gray-600 border-t border-gray-100">08:40 - 09:15</td>
+                            <td class="px-6 py-3 border-t border-gray-100">
+                                <div class="font-bold text-main">Kelas 1A</div>
+                            </td>
+                            <td class="px-6 py-3 font-medium text-gray-700 border-t border-gray-100">B. Indonesia</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-3 font-medium text-center border-t border-gray-100">4</td>
+                            <td class="px-6 py-3 text-gray-600 border-t border-gray-100">09:15 - 09:50</td>
+                            <td class="px-6 py-3 border-t border-gray-100">
+                                <div class="font-bold text-purple-700">Area Piket</div>
+                            </td>
+                            <td class="px-6 py-3 font-medium text-gray-700 border-t border-gray-100">Piket Koridor Utama</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="view-kalender-guru" class="hidden bg-gray-50 rounded-xl border border-gray-200 overflow-x-auto p-4 shadow-inner">
+                <div class="min-w-[900px] grid grid-cols-6 gap-3">
+                    <!-- Headers -->
+                    <div class="flex items-end pb-2 justify-center">
+                        <span class="font-bold text-gray-400 text-xs uppercase tracking-wider">Jam & Waktu</span>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm py-2 text-center font-bold text-main">Senin</div>
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm py-2 text-center font-bold text-main">Selasa</div>
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm py-2 text-center font-bold text-main">Rabu</div>
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm py-2 text-center font-bold text-main">Kamis</div>
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm py-2 text-center font-bold text-main">Jumat</div>
+
+                    <!-- Row 1: Jam 1 -->
+                    <div class="flex flex-col items-center justify-center bg-white rounded-lg border border-gray-200 p-2 shadow-sm">
+                        <span class="font-bold text-main">1</span>
+                        <span class="text-xs text-gray-500 text-center">07:00<br>07:35</span>
+                    </div>
+                    <div class="bg-gray-100/50 border border-dashed border-gray-200 rounded-lg flex items-center justify-center p-3">
+                        <span class="text-gray-400 text-xs text-center">Tidak ada jam</span>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                        <div class="font-bold text-blue-800 text-sm mb-1">Kelas 1B</div>
+                        <div class="text-xs text-blue-600 flex justify-between items-center">
+                            <span>B. Indonesia</span>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100/50 border border-dashed border-gray-200 rounded-lg flex items-center justify-center p-3">
+                        <span class="text-gray-400 text-xs text-center">Tidak ada jam</span>
+                    </div>
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                        <div class="font-bold text-purple-800 text-sm mb-1">Area Piket</div>
+                        <div class="text-xs text-purple-600 flex justify-between items-center">
+                            <span>Piket Umum</span>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                        <div class="font-bold text-blue-800 text-sm mb-1">Kelas 1A</div>
+                        <div class="text-xs text-blue-600 flex justify-between items-center">
+                            <span>B. Indonesia</span>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Jam 2 -->
+                    <div class="flex flex-col items-center justify-center bg-white rounded-lg border border-gray-200 p-2 shadow-sm">
+                        <span class="font-bold text-main">2</span>
+                        <span class="text-xs text-gray-500 text-center">07:35<br>08:10</span>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                        <div class="font-bold text-blue-800 text-sm mb-1">Kelas 1A</div>
+                        <div class="text-xs text-blue-600 flex justify-between items-center">
+                            <span>B. Indonesia</span>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                        <div class="font-bold text-blue-800 text-sm mb-1">Kelas 1B</div>
+                        <div class="text-xs text-blue-600 flex justify-between items-center">
+                            <span>B. Indonesia</span>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100/50 border border-dashed border-gray-200 rounded-lg flex items-center justify-center p-3">
+                        <span class="text-gray-400 text-xs">-</span>
+                    </div>
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                        <div class="font-bold text-purple-800 text-sm mb-1">Area Piket</div>
+                        <div class="text-xs text-purple-600 flex justify-between items-center">
+                            <span>Piket Umum</span>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                        <div class="font-bold text-blue-800 text-sm mb-1">Kelas 1A</div>
+                        <div class="text-xs text-blue-600 flex justify-between items-center">
+                            <span>B. Indonesia</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Row 3: Istirahat -->
+                    <div class="flex flex-col items-center justify-center bg-orange-50 rounded-lg border border-orange-200 p-2 shadow-sm">
+                        <span class="font-bold text-orange-800">-</span>
+                        <span class="text-xs text-orange-600 text-center">08:10<br>08:40</span>
+                    </div>
+                    <div class="col-span-5 bg-orange-50/60 border border-orange-100 rounded-lg flex flex-col items-center justify-center py-2 shadow-inner">
+                        <span class="font-bold text-orange-800 tracking-widest text-sm">ISTIRAHAT 1</span>
+                        <span class="text-xs text-orange-600 mt-0.5">30 Menit</span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+<p class="text-xs text-gray-400 text-center py-6">Prototipe UI — data pada halaman ini adalah contoh untuk keperluan demo.</p>
+</div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Main Tabs Toggle (Per Kelas vs Per Guru) ---
+        const btnViewKelas = document.getElementById('btn-view-kelas');
+        const btnViewGuru = document.getElementById('btn-view-guru');
+        const panelKelas = document.getElementById('panel-kelas');
+        const panelGuru = document.getElementById('panel-guru');
+
+        btnViewKelas.addEventListener('click', () => {
+            btnViewKelas.classList.add('bg-primary', 'text-white', 'shadow');
+            btnViewKelas.classList.remove('text-gray-600', 'hover:text-main');
+            
+            btnViewGuru.classList.remove('bg-primary', 'text-white', 'shadow');
+            btnViewGuru.classList.add('text-gray-600', 'hover:text-main');
+
+            panelKelas.classList.remove('hidden');
+            panelGuru.classList.add('hidden');
         });
-    </script>
+
+        btnViewGuru.addEventListener('click', () => {
+            btnViewGuru.classList.add('bg-primary', 'text-white', 'shadow');
+            btnViewGuru.classList.remove('text-gray-600', 'hover:text-main');
+            
+            btnViewKelas.classList.remove('bg-primary', 'text-white', 'shadow');
+            btnViewKelas.classList.add('text-gray-600', 'hover:text-main');
+
+            panelGuru.classList.remove('hidden');
+            panelKelas.classList.add('hidden');
+        });
+
+        // --- Sub Tabs for KELAS (Tabel vs Kalender) ---
+        const btnTabelKelas = document.getElementById('btn-tabel-kelas');
+        const btnKalenderKelas = document.getElementById('btn-kalender-kelas');
+        const viewTabelKelas = document.getElementById('view-tabel-kelas');
+        const viewKalenderKelas = document.getElementById('view-kalender-kelas');
+
+        btnTabelKelas.addEventListener('click', () => {
+            btnTabelKelas.classList.add('bg-white', 'shadow-sm', 'text-primary', 'border-gray-200');
+            btnTabelKelas.classList.remove('text-gray-500', 'hover:text-main', 'border-transparent');
+            
+            btnKalenderKelas.classList.remove('bg-white', 'shadow-sm', 'text-primary', 'border-gray-200');
+            btnKalenderKelas.classList.add('text-gray-500', 'hover:text-main', 'border-transparent');
+
+            viewTabelKelas.classList.remove('hidden');
+            viewKalenderKelas.classList.add('hidden');
+        });
+
+        btnKalenderKelas.addEventListener('click', () => {
+            btnKalenderKelas.classList.add('bg-white', 'shadow-sm', 'text-primary', 'border-gray-200');
+            btnKalenderKelas.classList.remove('text-gray-500', 'hover:text-main', 'border-transparent');
+            
+            btnTabelKelas.classList.remove('bg-white', 'shadow-sm', 'text-primary', 'border-gray-200');
+            btnTabelKelas.classList.add('text-gray-500', 'hover:text-main', 'border-transparent');
+
+            viewKalenderKelas.classList.remove('hidden');
+            viewTabelKelas.classList.add('hidden');
+        });
+
+        // --- Sub Tabs for GURU (Tabel vs Kalender) ---
+        const btnTabelGuru = document.getElementById('btn-tabel-guru');
+        const btnKalenderGuru = document.getElementById('btn-kalender-guru');
+        const viewTabelGuru = document.getElementById('view-tabel-guru');
+        const viewKalenderGuru = document.getElementById('view-kalender-guru');
+
+        btnTabelGuru.addEventListener('click', () => {
+            btnTabelGuru.classList.add('bg-white', 'shadow-sm', 'text-primary', 'border-gray-200');
+            btnTabelGuru.classList.remove('text-gray-500', 'hover:text-main', 'border-transparent');
+            
+            btnKalenderGuru.classList.remove('bg-white', 'shadow-sm', 'text-primary', 'border-gray-200');
+            btnKalenderGuru.classList.add('text-gray-500', 'hover:text-main', 'border-transparent');
+
+            viewTabelGuru.classList.remove('hidden');
+            viewKalenderGuru.classList.add('hidden');
+        });
+
+        btnKalenderGuru.addEventListener('click', () => {
+            btnKalenderGuru.classList.add('bg-white', 'shadow-sm', 'text-primary', 'border-gray-200');
+            btnKalenderGuru.classList.remove('text-gray-500', 'hover:text-main', 'border-transparent');
+            
+            btnTabelGuru.classList.remove('bg-white', 'shadow-sm', 'text-primary', 'border-gray-200');
+            btnTabelGuru.classList.add('text-gray-500', 'hover:text-main', 'border-transparent');
+
+            viewKalenderGuru.classList.remove('hidden');
+            viewTabelGuru.classList.add('hidden');
+        });
+    });
+</script>
 </body>
 </html>
