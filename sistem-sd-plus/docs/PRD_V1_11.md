@@ -1,9 +1,20 @@
 # Product Requirement Document (PRD)
 ## Aplikasi Jurnal Guru, Jadwal Guru, dan Les Tambahan & Ekstrakurikuler
 **Klien:** SD Plus Gembala Baik — Yayasan Pendidikan Gembala Baik, Pontianak
-**Versi:** 1.10 — menyelesaikan hampir seluruh Daftar Keputusan Terbuka (A6); memasukkan **pembayaran online lewat payment gateway** ke lingkup fase sekarang (berjalan berdampingan dengan transfer manual); alur penolakan transfer, transaksi retroaktif, impor siswa dua tahap (Juli & Oktober), klaim anak cukup nama + kelas, serta hak edit jadwal untuk Kepala Sekolah
-**Tanggal:** 27 Oktober 2026
+**Versi:** 1.11 — merapikan sisa teks yang sudah usang setelah v1.10, serta menetapkan format `jadwal_ekskul.hari`, `transaksi.diinput_oleh` untuk transaksi sistem, dan penanda "dicatat terlambat" sebelum migration Diagram 2 ditulis
+**Tanggal:** 28 Oktober 2026
 **Tim Pengembang:** 2 orang (pembagian modul dijelaskan di Bagian B; Pengembang 1 sebagai penanggung jawab skema database)
+
+---
+
+## Ringkasan Perubahan v1.11
+
+| # | Perubahan | Bagian terdampak |
+|---|---|---|
+| 1 | `jadwal_ekskul.hari` bertipe angka ISO (5 = Jumat, 6 = Sabtu), CHECK 1–6; saat ini ekskul hanya hari Jumat & Sabtu, sehingga form hanya menawarkan dua hari itu (hari lain cukup diubah di form, tanpa migration) | A4 Diagram 2, A5 konvensi #6 |
+| 2 | `transaksi.diinput_oleh` nullable, dijaga CHECK: NULL hanya untuk `sumber_input` = `sistem` (transaksi online dari webhook) | A4 Diagram 2, FR-30 |
+| 3 | Penanda "dicatat terlambat" tidak disimpan sebagai kolom — dihitung dari `transaksi.tanggal` < tanggal laporan hariannya | A4 (Catatan v1.11), FR-8c |
+| 4 | Perapian teks usang: B.1 Out of Scope (payment gateway), Kasus Khusus transfer tidak valid, rujukan FR-14b, rujukan ke A6 yang sudah selesai, dependency B.2, daftar diskusi B.3, tipe `decimal` pada diagram Diagram 2, urutan A6 | A4, A5, A6, B.1, B.2, B.3 |
 
 ---
 
@@ -159,10 +170,10 @@ ERD dibagi menjadi **3 diagram** agar terbaca dan sesuai pembagian kerja dua pen
 
 *Kegiatan & pendaftaran:*
 
-- **periode_pendaftaran** *(baru, v1.7)* — id, tahun_ajaran_id (FK), tanggal_mulai, tanggal_selesai *(jendela pendaftaran orang tua, mis. 15–22 Juli pada mockup; pengaruhnya pada input manual TU (FR-6) lihat A6 #19)*
+- **periode_pendaftaran** *(baru, v1.7)* — id, tahun_ajaran_id (FK), tanggal_mulai, tanggal_selesai *(jendela pendaftaran orang tua, mis. 15–22 Juli pada mockup; hanya membatasi pendaftaran oleh orang tua — TU tetap dapat input manual kapan saja (FR-6, A6 #19d))*
 - **les_tambahan** — id, kelas_id (FK), tahun_ajaran_id (FK), biaya *(pengajar = wali_kelas dari kelas terkait, tidak disimpan terpisah; tanpa kolom kuota)*
 - **ekstrakurikuler** — id, nama, biaya, kuota, tahun_ajaran_id (FK), guru_pendamping_id (FK → guru, nullable), kategori_pendamping (seni/olahraga, nullable — diisi manual oleh Kepala Sekolah per kegiatan), **parent_ekstrakurikuler_id** (FK → `ekstrakurikuler.id` sendiri, nullable — diisi hanya jika baris ini adalah kelas paralel dari kegiatan induk; baris induk selalu NULL di kolom ini — lihat A4 catatan kelas paralel & B.1 FR-26/FR-27), **wajib_otomatis** (boolean, default false — true khusus untuk kegiatan seperti Bina Karakter/Pramuka yang auto-assign per jenjang kelas, lihat FR-24), **jenjang_wajib_min** & **jenjang_wajib_max** (angka, nullable — *v1.8: menggantikan string `jenjang_wajib` "1-3"*; hanya diisi jika `wajib_otomatis` = true, menentukan kelas mana yang otomatis di-assign), **honor_flat** (boolean, default false — true untuk kegiatan seperti Olimpiade yang tetap terdaftar & berkuota tapi honornya di luar `skema_honor` persentase, ditentukan manual Kepala Sekolah — lihat FR-25)
-- **jadwal_ekskul** *(baru, v1.7)* — id, ekstrakurikuler_id (FK), hari, jam_mulai, jam_selesai, jenjang_min & jenjang_max (angka, nullable — *v1.8: menggantikan string "1-3"*; diisi jika jam berbeda per jenjang, mis. Basket), lokasi *(satu kegiatan bisa punya lebih dari satu baris; dipakai FR-5 untuk deteksi bentrok jadwal)*
+- **jadwal_ekskul** *(baru, v1.7)* — id, ekstrakurikuler_id (FK), **hari** (angka ISO seperti `dayOfWeekIso` Carbon, CHECK 1–6 — *v1.11*; saat ini ekskul hanya hari Jumat = 5 dan Sabtu = 6, sehingga form hanya menawarkan dua hari itu), jam_mulai, jam_selesai, jenjang_min & jenjang_max (angka, nullable — *v1.8: menggantikan string "1-3"*; diisi jika jam berbeda per jenjang, mis. Basket), lokasi *(satu kegiatan bisa punya lebih dari satu baris; dipakai FR-5 untuk deteksi bentrok jadwal)*
 - **pengajar_ekskul** — id, nama, jenis (internal/eksternal), guru_id (FK → guru, nullable, unique — satu guru tidak tercatat dua kali), no_hp, **status_aktif** (boolean — *baru, v1.8*) *(pengajar eksternal tidak memerlukan akun login; banyak pengajar ekstra berasal dari luar sekolah)*
 - **ekskul_pengajar** *(pivot N–N, PK komposit)* — ekstrakurikuler_id, pengajar_ekskul_id *(satu kegiatan bisa punya lebih dari 1 pengajar, mis. English Club 6 orang; honor pengajar dibagi rata sesuai jumlah baris di sini)*
 - **pendaftaran** *(sebelumnya `pendaftaran_les_ekskul`)* — id, siswa_id (FK), les_tambahan_id (FK, nullable), ekstrakurikuler_id (FK, nullable) — **CHECK tepat satu dari keduanya terisi** *(v1.7: menggantikan `tipe_kegiatan` + `kegiatan_id` polimorfik)*, tanggal_daftar, status (aktif/berhenti/pindah), tanggal_efektif_berhenti (nullable), pindah_ke_id (FK ke `pendaftaran.id` sendiri, nullable, diisi hanya jika status = pindah). *Satu siswa bisa memiliki banyak baris sekaligus — contoh: les tambahan + ekstra basket + ekstra renang + ekstra English Club, masing-masing baris independen dengan status sendiri-sendiri.*
@@ -173,7 +184,7 @@ ERD dibagi menjadi **3 diagram** agar terbaca dan sesuai pembagian kerja dua pen
 - **tagihan** *(baru, v1.7)* — id, pendaftaran_id (FK), **bulan_tagihan** (date, selalu tanggal 1 — *v1.8: menggantikan `periode_laporan_id`*), nominal (biaya penuh kegiatan), diskon (potongan dalam rupiah, mis. 50% anak guru — FR-9), status (belum/lunas/**dibatalkan** — *v1.8*; dibatalkan untuk kegiatan tidak berlangsung FR-23); unique(pendaftaran_id, bulan_tagihan) *(yang harus dibayar = nominal − diskon; tagihan bulan mendatang boleh dibuat lebih awal saat orang tua bayar di muka — lihat Catatan v1.8 & A6 #17)*
 - **periode_laporan** *(baru, v1.7 — menggantikan istilah "bulan" pada laporan bulanan & tutup buku)* — id, **bulan** (date tanggal 1, unique — *baru, v1.8*; mis. periode 22 Jul–22 Agu = bulan Agustus), tanggal_mulai, tanggal_selesai (periode custom, mis. 22 Jul–22 Agu), status (terbuka/diajukan/ditutup), ditutup_oleh (FK → users, Bendahara), ditutup_at, honor_diketahui_oleh (FK → users, nullable, Kepala Sekolah), honor_diketahui_at *(status "Sudah Diketahui" FR-20 disimpan di sini karena berlaku sekaligus untuk 3 layer rekap honor)*
 - **laporan_harian** *(baru, v1.7)* — id, periode_laporan_id (FK), tanggal, status (draft/diajukan/disetujui/ditolak), diajukan_oleh (FK → users, TU), disetujui_oleh (FK → users, Bendahara, nullable) *(satu baris per hari per periode; FR-12)*
-- **transaksi** *(sebelumnya `transaksi_pembayaran`; v1.7: tidak lagi menunjuk satu pendaftaran, terhubung ke tagihan lewat `alokasi_transaksi`)* — id, siswa_id (FK), laporan_harian_id (FK — laporan harian untuk tanggal transaksi; untuk transaksi retroaktif FR-8c lihat A6 #20), tanggal (tanggal uang masuk), metode (cash/transfer/**online** — *v1.10*), nominal (dana kegiatan, **tidak** termasuk biaya admin gateway), status (terverifikasi/pending/**ditolak** — cash & online selalu langsung `terverifikasi`; transfer mulai dari `pending` sampai diverifikasi TU; `ditolak` untuk transfer tidak valid, FR-8d), **alasan_ditolak** (text, nullable — *v1.10*), **ditolak_oleh** (FK → users, nullable — TU atau Bendahara, *v1.10*), **ditolak_at** (nullable — *v1.10*), catatan_transfer (nullable, teks pendek — *dikonfirmasi v1.10*, mis. nama pengirim/nomor referensi; menggantikan kolom `bukti_transfer` yang dihapus karena bukti tidak lagi diunggah ke aplikasi), diinput_oleh (FK → users), **sumber_input** (tu/bendahara/**sistem** — default `tu`; diisi `bendahara` khusus untuk transaksi transfer yang ditambahkan langsung oleh Bendahara dari hasil cek mutasi rekening, lihat FR-8c; `sistem` untuk transaksi online yang dibuat otomatis dari webhook gateway, FR-30), **status_approval_bendahara** (belum_dicek/disetujui, nullable — hanya relevan untuk metode transfer, lihat FR-8b; NULL untuk transaksi cash karena cash tidak melalui lapisan approval ini), **tanggal_approval_bendahara** (nullable), **diapprove_oleh** (FK → users, nullable, staf Bendahara yang approve)
+- **transaksi** *(sebelumnya `transaksi_pembayaran`; v1.7: tidak lagi menunjuk satu pendaftaran, terhubung ke tagihan lewat `alokasi_transaksi`)* — id, siswa_id (FK), laporan_harian_id (FK — laporan harian hari pencatatan; biasanya sama dengan `tanggal`, tetapi transaksi retroaktif FR-8c dan pembayaran online yang masuk setelah laporan harian tanggal itu disetujui masuk ke laporan harian hari pencatatan, A6 #20), tanggal (tanggal uang masuk), metode (cash/transfer/**online** — *v1.10*), nominal (dana kegiatan, **tidak** termasuk biaya admin gateway), status (terverifikasi/pending/**ditolak** — cash & online selalu langsung `terverifikasi`; transfer mulai dari `pending` sampai diverifikasi TU; `ditolak` untuk transfer tidak valid, FR-8d), **alasan_ditolak** (text, nullable — *v1.10*), **ditolak_oleh** (FK → users, nullable — TU atau Bendahara, *v1.10*), **ditolak_at** (nullable — *v1.10*), catatan_transfer (nullable, teks pendek — *dikonfirmasi v1.10*, mis. nama pengirim/nomor referensi; menggantikan kolom `bukti_transfer` yang dihapus karena bukti tidak lagi diunggah ke aplikasi), diinput_oleh (FK → users, **nullable** — *v1.11*; CHECK: NULL hanya jika `sumber_input` = `sistem`), **sumber_input** (tu/bendahara/**sistem** — default `tu`; diisi `bendahara` khusus untuk transaksi transfer yang ditambahkan langsung oleh Bendahara dari hasil cek mutasi rekening, lihat FR-8c; `sistem` untuk transaksi online yang dibuat otomatis dari webhook gateway, FR-30), **status_approval_bendahara** (belum_dicek/disetujui, nullable — hanya relevan untuk metode transfer, lihat FR-8b; NULL untuk transaksi cash karena cash tidak melalui lapisan approval ini), **tanggal_approval_bendahara** (nullable), **diapprove_oleh** (FK → users, nullable, staf Bendahara yang approve)
 - **alokasi_transaksi** *(pivot, baru, v1.7)* — transaksi_id (FK), tagihan_id (FK), nominal, **diakui_periode_id** (FK → `periode_laporan`, nullable — *baru, v1.8*; diisi saat tutup buku, menandai periode honor yang mengakui alokasi ini; NULL = belum masuk honor); PK komposit *(satu transaksi bisa melunasi beberapa tagihan — beberapa kegiatan sekaligus atau bayar di muka multi-bulan; satu tagihan bisa dilunasi beberapa transaksi)*
 - **pembayaran_online** *(baru, v1.10)* — id, order_id (string, unique — dikirim ke gateway), siswa_id (FK), dibuat_oleh (FK → users, orang tua), nominal (bigint — total tagihan yang dibayar), biaya_admin (bigint — ditanggung orang tua, bukan pendapatan kegiatan), total_bayar (bigint = nominal + biaya_admin), metode_gateway (string, nullable — mis. `bca_va`, diisi dari respons gateway), kode_bayar (string, nullable — mis. nomor VA), gateway_ref (string, nullable — id transaksi di sisi gateway), status (menunggu/lunas/kedaluwarsa/gagal), kedaluwarsa_at, dibayar_at (nullable), transaksi_id (FK → transaksi, nullable, unique — diisi saat lunas), payload_terakhir (jsonb, nullable — isi notifikasi webhook terakhir, untuk penelusuran), timestamps *(satu baris = satu order pembayaran; transaksi baru dibuat setelah gateway menyatakan lunas)*
 - **pembayaran_online_tagihan** *(pivot, baru, v1.10)* — pembayaran_online_id (FK, cascade), tagihan_id (FK), nominal (bigint — sisa tagihan saat order dibuat); PK komposit *(daftar tagihan yang dipilih orang tua; disalin menjadi `alokasi_transaksi` saat lunas)*
@@ -192,6 +203,12 @@ ERD dibagi menjadi **3 diagram** agar terbaca dan sesuai pembagian kerja dua pen
 - **Tabel jadwal:** `waktu_pelajaran`, `waktu_pelajaran_hari`, `kisi_kisi_tugas`, `jadwal_mengajar` — kolom lengkap, constraint, dan aturan validasi ada di B.3 (skema final v1.9, ditetapkan Pengembang 1; diimplementasikan Pengembang 2)
 - **forum_pesan** — id, guru_id (FK — pemilik thread), pengirim_id (FK → users), isi, dibaca_at (nullable — penanda "pesan baru"), created_at — rincian di B.2 (Pengembang 1)
 
+
+**Catatan tambahan v1.11 — Penetapan Sebelum Migration Diagram 2:**
+
+1. **Hari ekskul.** Kegiatan ekstrakurikuler saat ini hanya berlangsung hari Jumat dan Sabtu. `jadwal_ekskul.hari` memakai angka ISO yang sama dengan Modul Jadwal Guru (1 = Senin, sama dengan `dayOfWeekIso` Carbon), sehingga Jumat = 5 dan Sabtu = 6. Database cukup membatasi CHECK 1–6 (Senin–Sabtu); pembatasan ke Jumat/Sabtu dilakukan di form, agar penambahan hari ekskul kelak tidak memerlukan migration.
+2. **Transaksi buatan sistem.** Transaksi online dibuat otomatis dari webhook (FR-30), sehingga tidak ada pengguna yang menginputnya. `transaksi.diinput_oleh` dibuat nullable dengan CHECK `diinput_oleh IS NOT NULL OR sumber_input = 'sistem'` — transaksi TU dan Bendahara tetap wajib mencatat penginputnya.
+3. **Penanda "dicatat terlambat"** (FR-8c, Catatan v1.10 #6) tidak disimpan sebagai kolom, melainkan dihitung: sebuah transaksi dicatat terlambat jika `transaksi.tanggal` lebih awal dari `laporan_harian.tanggal` tempat transaksi itu tercatat. Dengan begitu penanda tidak mungkin berbeda dengan datanya.
 
 **Catatan tambahan v1.10 — Pembayaran Online & Keputusan A6:**
 
@@ -439,7 +456,7 @@ erDiagram
         int id PK
         int kelas_id FK
         int tahun_ajaran_id FK
-        decimal biaya
+        bigint biaya
     }
     EKSTRAKURIKULER {
         int id PK
@@ -447,7 +464,7 @@ erDiagram
         int parent_ekstrakurikuler_id FK "null = induk"
         int guru_pendamping_id FK "nullable"
         string nama
-        decimal biaya
+        bigint biaya
         int kuota
         string kategori_pendamping "seni/olahraga"
         boolean wajib_otomatis
@@ -458,7 +475,7 @@ erDiagram
     JADWAL_EKSKUL {
         int id PK
         int ekstrakurikuler_id FK
-        string hari
+        int hari "1-6, saat ini 5=Jumat/6=Sabtu"
         time jam_mulai
         time jam_selesai
         int jenjang_min "nullable, mis. Basket"
@@ -518,7 +535,7 @@ erDiagram
         int id PK
         int siswa_id FK
         int laporan_harian_id FK
-        int diinput_oleh FK
+        int diinput_oleh FK "nullable, hanya untuk sumber sistem"
         int diapprove_oleh FK "nullable"
         date tanggal
         string metode "cash/transfer/online"
@@ -567,7 +584,7 @@ erDiagram
         string jenis_penyesuaian
         int periode_asal_id FK
         int periode_tujuan_id FK "nullable"
-        decimal nominal
+        bigint nominal
         string status "selesai/proses/berhasil"
         date tanggal_proses
         text keterangan
@@ -601,7 +618,7 @@ erDiagram
         int penerima_user_id FK "nullable"
         int penerima_pengajar_id FK "nullable"
         string peran
-        decimal nominal
+        bigint nominal
     }
     HONOR_FLAT_JENIS {
         int id PK
@@ -691,9 +708,9 @@ erDiagram
 - *`jenis_tugas` dimiliki Diagram 1 tetapi dipakai oleh Diagram 3. Pada Diagram 2 dan 3, entitas yang muncul tanpa atribut (mis. `GURU`, `KELAS`, `SISWA`, `USERS`) didefinisikan di Diagram 1.*
 - *Kolom pada pivot yang ditulis `PK, FK` membentuk primary key komposit.*
 
-- *Kolom uang ditulis `decimal` pada diagram lama; sejak v1.8 seluruh kolom nominal memakai bilangan bulat rupiah (`bigint`, lihat konvensi A5).*
+- *Seluruh kolom uang memakai bilangan bulat rupiah (`bigint`, lihat konvensi A5); hanya kolom persentase `skema_honor` yang `decimal` (diagram diselaraskan v1.11).*
 
-*Detail kolom dan aturan per tabel ada pada daftar entitas di atas; constraint tambahan (CHECK "tepat satu terisi" pada `pendaftaran`, `honor_kegiatan`, dan `honor_detail`; CHECK email/no_hp pada `users`; CHECK jenjang 1–6; partial unique tahun ajaran aktif; unique pada tabel jadwal) diterapkan di migration memakai `DB::statement`, karena tidak didukung Schema Builder Laravel.*
+*Detail kolom dan aturan per tabel ada pada daftar entitas di atas; constraint tambahan (CHECK "tepat satu terisi" pada `pendaftaran`, `honor_kegiatan`, dan `honor_detail`; CHECK email/no_hp pada `users`; CHECK jenjang 1–6; CHECK `jadwal_ekskul.hari` 1–6 dan CHECK `transaksi.diinput_oleh` hanya NULL untuk `sumber_input` = `sistem` (v1.11); partial unique tahun ajaran aktif; unique pada tabel jadwal) diterapkan di migration memakai `DB::statement`, karena tidak didukung Schema Builder Laravel.*
 
 ## A5. Arsitektur & Keputusan Teknis
 
@@ -714,7 +731,7 @@ erDiagram
   1. *Fondasi dulu* (perkiraan 1–2 hari, berdua atau satu orang): migration Diagram 1, seeder data contoh, login, dan role (`spatie/laravel-permission`); di-merge ke branch utama. *Status v1.9: migration, model, dan seeder Diagram 1 selesai dikerjakan Pengembang 1 — lihat "Status implementasi" di bawah.*
   2. *Kerja paralel:* Pengembang 1 di `app/Domains/LesEkskul` dan `app/Domains/JurnalGuru`, Pengembang 2 di `app/Domains/JadwalGuru`; satu Git branch per orang, merge ke branch utama secara rutin (mis. tiap fitur selesai).
   3. *Tabel master* (Diagram 1) ditetapkan dan diubah oleh Pengembang 1 sebagai penanggung jawab skema; setiap perubahan diinformasikan ke Pengembang 2 sebelum di-merge.
-  4. *Forum Jurnal Guru* (B.2 FR-2 s/d FR-4) tidak menunggu Modul Jadwal Guru; FR-1 (lihat jadwal sendiri) memakai data seeder sampai skema `jadwal_mengajar` final (A6 #7).
+  4. *Forum Jurnal Guru* (B.2 FR-2 s/d FR-4) tidak menunggu Modul Jadwal Guru; FR-1 (lihat jadwal sendiri) memakai data seeder sampai tabel `jadwal_mengajar` diimplementasikan Pengembang 2 (skemanya sudah final di B.3).
 
 - **Status implementasi (v1.9):**
   - Migration Diagram 1 + tabel `spatie/laravel-permission` sudah berjalan di Supabase.
@@ -734,6 +751,7 @@ erDiagram
   3. *Enum* (status, jenis, metode) disimpan sebagai string, dipetakan ke PHP Enum (`app/Enums`) lewat cast di model — bukan tipe enum Postgres, agar nilai baru tidak memerlukan migration.
   4. *Soft delete* untuk data master yang dirujuk data keuangan (`siswa`, `guru`, `kelas`); FK dari data keuangan memakai perilaku default (restrict), bukan cascade. Cascade hanya untuk tabel pivot murni.
   5. *Data acuan* dicari lewat kolom `kode` (mis. `jenis_tugas.kode = 'piket'`), bukan lewat id, karena id bisa berbeda antara database lokal dan produksi.
+  6. *Hari* disimpan sebagai angka ISO (1 = Senin, sama dengan `dayOfWeekIso` Carbon): 1–5 untuk Modul Jadwal Guru (`waktu_pelajaran_hari`, `jadwal_mengajar`), 1–6 untuk `jadwal_ekskul` *(v1.11)*.
 
 ## A6. Daftar Keputusan Terbuka
 
@@ -758,6 +776,7 @@ erDiagram
 | 17 *(baru, v1.7)* | ~~Kapan baris `tagihan` dibuat~~ | Tim | **Selesai (v1.10) — usulan (a), (b), (c) diterima; tagihan bulanan dibuat saat periode laporan baru dibuka oleh pengguna (tanpa cron job)** |
 | 18 *(baru, v1.7)* | ~~`honor_kegiatan.kegiatan_id` dibiarkan polimorfik atau dipecah menjadi dua FK nullable~~ | Tim | **Selesai (v1.8) — dua FK nullable + CHECK tepat satu** |
 | 19 *(baru, v1.7)* | ~~Asumsi ERD v1.7 (a)–(e)~~ | Tim | **Selesai — (a), (b), (c), (e) v1.8; (d) v1.10: periode pendaftaran membatasi pendaftaran orang tua, TU tetap dapat input kapan saja (FR-6)** |
+| 20 *(baru, v1.7)* | ~~Transaksi retroaktif ke tanggal yang laporan hariannya sudah disetujui~~ | Klien / Tim | **Selesai (v1.10) — masuk laporan harian hari pencatatan dengan `tanggal` asli tetap tercatat; laporan yang sudah disetujui tidak dibuka kembali (lihat Catatan v1.10); penanda "dicatat terlambat" dihitung, bukan kolom (Catatan v1.11)** |
 | 21 *(baru, v1.8)* | ~~Pencocokan siswa lama saat impor~~ | Tim | **Selesai (v1.10) — impor dua tahap (lihat FR-28): Juli dicocokkan lewat nama + jenjang tahun lalu, Oktober (Dapodik) lewat nama + kelas tahun berjalan; mulai tahun kedua pembaruan Oktober dicocokkan lewat NISN; hasil pencocokan selalu ditinjau TU** |
 | 22 *(baru, v1.8)* | ~~Penanda siswa sebagai anak guru~~ | Klien / Tim | **Selesai (v1.10) — ditandai manual oleh TU di halaman data siswa (kurang dari 5 siswa)** |
 | 23 *(baru, v1.9)* | ~~Konfirmasi tanggal lahir saat klaim anak~~ | Tim | **Selesai (v1.10) — tidak dipakai; klaim cukup nama + kelas, karena tanggal lahir baru tersedia dari Dapodik ±Oktober sedangkan pendaftaran les/ekstra berlangsung Juli–Agustus** |
@@ -765,7 +784,6 @@ erDiagram
 | 25 *(baru, v1.10)* | Setelah pembayaran online aktif: tetap dua opsi (transfer manual + online) atau semua transfer wajib lewat aplikasi | Klien | Terbuka |
 | 26 *(baru, v1.10)* | Apakah transaksi online tetap melalui approval Bendahara (FR-8b). Usulan: otomatis `disetujui` karena sudah dikonfirmasi gateway lewat webhook yang terverifikasi; Bendahara cukup mencocokkan laporan pencairan (settlement) gateway di luar aplikasi | Klien / Tim | Terbuka |
 | 27 *(baru, v1.10)* | Metode pembayaran online yang dibuka: Virtual Account BCA saja, atau juga metode lain (VA bank lain, QRIS) — biaya admin tiap metode berbeda | Klien | Terbuka |
-| 20 *(baru, v1.7)* | ~~Transaksi retroaktif ke tanggal yang laporan hariannya sudah disetujui~~ | Klien / Tim | **Selesai (v1.10) — masuk laporan harian hari pencatatan dengan `tanggal` asli tetap tercatat; laporan yang sudah disetujui tidak dibuka kembali (lihat Catatan v1.10)** |
 
 ## A7. Glosarium
 
@@ -835,7 +853,7 @@ TU mengubah status baris `pendaftaran` siswa dari `aktif` menjadi `berhenti` ata
 - FR-7: TU catat transaksi cash (auto-approved) atau transfer (status pending; bukti transfer **tidak** diunggah ke aplikasi — dicek TU & Bendahara lewat grup WhatsApp, lihat Catatan v1.6 & v1.10; TU dapat mengisi `catatan_transfer`, mis. nama pengirim)
 - FR-8: TU ubah status transfer pending → verified
 - FR-8b *(baru, v1.4)*: Bendahara dapat meng-approve transaksi transfer secara individual (`status_approval_bendahara` dari `belum_dicek` menjadi `disetujui`) sebagai lapisan verifikasi kedua di luar verifikasi TU (lihat FR-8 dan Catatan v1.4), berdasarkan pengecekan mandiri ke mutasi rekening bank; hanya berlaku untuk transaksi transfer yang statusnya sudah `terverifikasi` TU; tidak berlaku untuk transaksi cash (auto-approved, tidak melalui lapisan ini); approval ini dapat dilakukan kapan saja dan tidak menghalangi TU mengajukan laporan
-- FR-8c *(baru, v1.4)*: Bendahara dapat menambahkan transaksi transfer baru secara langsung ke tanggal tertentu (retroaktif dalam periode berjalan), untuk kasus transfer yang tidak dikirimkan buktinya ke TU sama sekali; transaksi ini ditandai `sumber_input` = `bendahara` dan otomatis berstatus `terverifikasi` + `status_approval_bendahara` = `disetujui` (karena sumbernya sudah dari mutasi rekening asli); transaksi ini akan muncul di rincian transaksi harian pada tanggal yang dipilih, sehingga tetap terlihat oleh TU (lihat FR-13). *(v1.10)* Jika laporan harian tanggal tersebut sudah `disetujui`, transaksi masuk ke laporan harian hari pencatatan dengan `tanggal` asli tetap tercatat dan penanda "dicatat terlambat" (A6 #20)
+- FR-8c *(baru, v1.4)*: Bendahara dapat menambahkan transaksi transfer baru secara langsung ke tanggal tertentu (retroaktif dalam periode berjalan), untuk kasus transfer yang tidak dikirimkan buktinya ke TU sama sekali; transaksi ini ditandai `sumber_input` = `bendahara` dan otomatis berstatus `terverifikasi` + `status_approval_bendahara` = `disetujui` (karena sumbernya sudah dari mutasi rekening asli); transaksi ini akan muncul di rincian transaksi harian pada tanggal yang dipilih, sehingga tetap terlihat oleh TU (lihat FR-13). *(v1.10)* Jika laporan harian tanggal tersebut sudah `disetujui`, transaksi masuk ke laporan harian hari pencatatan dengan `tanggal` asli tetap tercatat dan penanda "dicatat terlambat" (A6 #20; penanda dihitung dari `tanggal` < tanggal laporan harian, bukan kolom — Catatan v1.11)
 - FR-8d *(baru, v1.10)*: TU atau Bendahara dapat menolak transaksi transfer yang tidak valid (status `ditolak`, alasan wajib diisi, tercatat siapa & kapan). Transaksi tidak dihapus; alokasinya dilepas sehingga tagihan terkait kembali `belum`; orang tua melihat status ditolak beserta alasannya (FR-15). Transaksi `ditolak` tidak menghalangi approval laporan bulanan (FR-14b)
 - FR-9: Hitung tagihan otomatis per anak per bulan tagihan (lihat A6 #17 untuk waktu pembuatan; pembayaran di muka membuat tagihan bulan-bulan mendatang), termasuk diskon 50% untuk anak dari guru yang bekerja di SD Plus (berlaku untuk les tambahan **dan** ekstrakurikuler; tidak berlaku untuk guru unit yayasan lain maupun pengajar ekskul eksternal); siswa yang baru gabung di tengah bulan tetap membayar penuh 1 bulan (tanpa prorata)
 - FR-10: Tangani pemberhentian les tambahan/ekstrakurikuler:
@@ -847,7 +865,7 @@ TU mengubah status baris `pendaftaran` siswa dari `aktif` menjadi `berhenti` ata
 - FR-12: Generate laporan harian untuk approval TU → Bendahara, dapat dilihat Kepala Sekolah
 - FR-13: Generate rekap bulanan periode custom + honor pengajar — ditampilkan sebagai rincian per hari (bukan satu baris ringkasan), setiap hari dapat dibuka untuk melihat transaksi individualnya (konsisten dengan tampilan yang sudah ada di sisi TU); total pemasukan bulanan dihitung otomatis dari penjumlahan transaksi yang tercatat, **tidak** dapat diedit manual sebagai angka bebas — koreksi hanya dilakukan lewat transaksi individual (lihat FR-8b, FR-8c)
 - FR-14: Mekanisme tutup buku bulanan
-- FR-14b *(baru, v1.6)*: Bendahara hanya dapat meng-approve laporan bulanan (dan memicu tutup buku, FR-14) jika **seluruh** transaksi transfer pada periode tersebut sudah selesai, yaitu berstatus `terverifikasi` oleh TU **dan** `status_approval_bendahara` = `disetujui`. Transaksi transfer yang masih `pending` di TU atau masih `belum_dicek` di Bendahara menghalangi approval; tombol "Setujui & Tutup Buku" dinonaktifkan beserta keterangan jumlah transaksi yang tersisa. Transaksi cash tidak terdampak. Lihat A6 #13 untuk jalur transfer yang tidak valid
+- FR-14b *(baru, v1.6)*: Bendahara hanya dapat meng-approve laporan bulanan (dan memicu tutup buku, FR-14) jika **seluruh** transaksi transfer pada periode tersebut sudah selesai, yaitu berstatus `terverifikasi` oleh TU **dan** `status_approval_bendahara` = `disetujui`. Transaksi transfer yang masih `pending` di TU atau masih `belum_dicek` di Bendahara menghalangi approval; tombol "Setujui & Tutup Buku" dinonaktifkan beserta keterangan jumlah transaksi yang tersisa. Transaksi cash tidak terdampak. Transaksi transfer berstatus `ditolak` (FR-8d) tidak dihitung, sehingga transfer yang tidak valid tidak mengunci tutup buku
 - FR-15: Orang tua lihat status pembayaran & tunggakan *(v1.10: termasuk transfer yang ditolak beserta alasannya, dan pembayaran online yang masih menunggu)*
 - FR-16: Sistem hitung otomatis pembagian honor per kegiatan (ekstrakurikuler & les tambahan) berdasarkan `skema_honor` yang berlaku, dipicu setelah Bendahara approve laporan bulanan. *(v1.8)* Dasar perhitungan adalah alokasi pembayaran yang diakui di periode tersebut: tagihan bulan berjalan yang sudah dibayar + tunggakan bulan sebelumnya yang dibayar dalam periode ini; pembayaran di muka untuk bulan mendatang belum dihitung (dicicil per bulan tagihan) — lihat Catatan v1.8 poin 3
 - FR-16b *(baru, v1.5)*: Untuk ekstrakurikuler berkelas-paralel, sistem menjumlahkan pembayaran dari seluruh kelas paralel di bawah induk yang sama (termasuk lintas hari bila induk tersedia di lebih dari satu hari) sebelum menghitung persentase `skema_honor`, lalu membagi rata porsi pengajar dari hasil tersebut ke seluruh pengajar unik yang mengajar minimal satu kelas paralel di bawah induk itu (satu pengajar yang mengajar lebih dari satu kelas paralel tetap dihitung sekali dalam pembagian) — lihat Catatan v1.5
@@ -888,7 +906,7 @@ TU mengubah status baris `pendaftaran` siswa dari `aktif` menjadi `berhenti` ata
 - Pembayaran online masuk malam hari setelah laporan harian tanggal itu disetujui — masuk laporan hari berikutnya dengan `tanggal` asli (Catatan v1.10)
 - Transaksi transfer sudah `terverifikasi` TU tapi ternyata tidak cocok dengan mutasi rekening asli (bukti dipalsukan/salah) — perlu ditelusuri manual oleh Bendahara di luar aplikasi; sistem hanya menampilkan status `belum_dicek` selama belum di-approve Bendahara, tidak ada mekanisme otomatis mendeteksi ketidakcocokan
 - Bendahara belum sempat approve transaksi transfer individual sebelum TU mengajukan laporan bulanan — TU tetap boleh mengajukan laporan (lihat Catatan v1.4), tetapi Bendahara baru dapat menyetujui laporan bulanan setelah semua transfer periode itu selesai (lihat FR-14b)
-- Transfer yang tidak valid (tidak ada di mutasi rekening) tidak pernah bisa `terverifikasi`/`disetujui` sehingga mengunci tutup buku — belum ada jalur penyelesaiannya (lihat A6 #13)
+- Transfer yang tidak valid (tidak ada di mutasi rekening) tidak pernah bisa `terverifikasi`/`disetujui` — diselesaikan dengan menolaknya (FR-8d); transaksi `ditolak` tidak mengunci tutup buku (FR-14b)
 - Ekstrakurikuler dengan lebih dari 1 pengajar (honor dibagi rata); khusus kegiatan berkelas-paralel, pembagian dihitung dari total gabungan seluruh kelas paralel lintas hari, bukan per kelas paralel sendiri-sendiri (lihat FR-16b)
 - `skema_honor` diubah di tengah tahun ajaran (tidak memengaruhi bulan yang sudah dihitung karena tersimpan sebagai snapshot)
 - Kegiatan spesifik libur/tidak berlangsung sebulan penuh sementara kegiatan lain tetap berjalan normal (lihat FR-23) — granularitas per kegiatan, bukan per kategori les/ekskul
@@ -897,7 +915,7 @@ TU mengubah status baris `pendaftaran` siswa dari `aktif` menjadi `berhenti` ata
 - Siswa terdaftar di kegiatan induk berkelas-paralel tapi belum di-assign TU ke kelas paralel manapun (status transisi sebelum FR-27 dijalankan) — perlu indikator jelas di UI TU supaya tidak terlewat
 - Satu guru menerima honor flat dari lebih dari satu jenis sekaligus dalam periode yang sama (mis. jadi pengajar Bina Karakter sekaligus Pembuat Soal Les) — rekap final (FR-19 layer 3) menjumlahkan seluruh jenis honor flat yang diterima orang tersebut, ditampilkan sebagai kolom terpisah per jenis sebelum dijumlah ke total akhir
 
-**Out of Scope versi ini:** payment gateway (lihat A6 #4), waiting list otomatis (lihat A6 #3)
+**Out of Scope versi ini:** waiting list otomatis — kuota penuh diatur TU secara manual (A6 #3). *(v1.11: payment gateway dihapus dari daftar ini karena sudah masuk lingkup sejak v1.10, lihat FR-29–FR-32.)*
 
 ---
 
@@ -916,7 +934,7 @@ TU mengubah status baris `pendaftaran` siswa dari `aktif` menjadi `berhenti` ata
 
 **Data yang Dimiliki:** `forum_pesan` (id, guru_id — pemilik thread, pengirim_id, isi, dibaca_at, created_at); digambar di Diagram 3 (A4)
 
-**Dependency:** butuh baca data jadwal dari Modul Jadwal Guru — format integrasi (query langsung/service) perlu disepakati dengan Pengembang 2
+**Dependency:** membaca jadwal pribadi guru langsung dari tabel `jadwal_mengajar` milik Modul Jadwal Guru (hari, slot waktu, kelas, jenis tugas — lihat B.3 "Aturan turunan"); sampai tabel itu diimplementasikan, memakai data seeder (A5)
 
 **Kasus Khusus:** belum ada detail lain dari wawancara — kemungkinan perlu digali lagi bila ada requirement tambahan
 
@@ -999,7 +1017,7 @@ jadwal_mengajar
 5. Jenis tugas dicari lewat `JenisTugas::byKode('utama' | 'damping' | 'piket')`, bukan id.
 6. Kolom salinan di `jadwal_mengajar` (`guru_id`, `jenis_tugas_id`, `kelas_id`) diisi otomatis lewat event `saving` di model — pola sama dengan `SiswaKelas` yang menyalin `tahun_ajaran_id` dari `kelas`. Karena itu baris jadwal dibuat lewat `JadwalMengajar::create(...)`, bukan `insert()` massal.
 
-*Catatan v1.9: `guru_damping_id` dan `keterangan` dihapus dari `kisi_kisi_tugas`; `waktu_pelajaran` mendapat dimensi jenjang; `hari` bertipe angka (sama dengan `dayOfWeekIso` di Carbon). Disarankan `jadwal_ekskul.hari` di Diagram 2 memakai format yang sama.*
+*Catatan v1.9: `guru_damping_id` dan `keterangan` dihapus dari `kisi_kisi_tugas`; `waktu_pelajaran` mendapat dimensi jenjang; `hari` bertipe angka (sama dengan `dayOfWeekIso` di Carbon). `jadwal_ekskul.hari` di Diagram 2 memakai format yang sama, dengan rentang 1–6 karena ada ekskul hari Sabtu (ditetapkan v1.11).*
 
 *ERD Modul Jadwal Guru: lihat Diagram 3 di A4.*
 
@@ -1010,11 +1028,10 @@ jadwal_mengajar
 - Hapus baris utama menghapus baris damping yang menempel (`parent_jadwal_id` cascade), meniru perilaku mockup Pembagian Jadwal.
 - Modul Jurnal Guru (B.2 FR-1) membaca jadwal pribadi guru langsung dari `jadwal_mengajar` (hari, slot waktu, kelas, jenis tugas).
 
-**Hal yang perlu dibahas dengan Pengembang 2:**
-1. Persetujuan menggabungkan `alokasi_piket` dan `alokasi_damping` ke `kisi_kisi_tugas` + `jadwal_mengajar` (menyimpang dari draf nama tabel di PRD v1.5).
-2. Data mockup tidak konsisten dengan aturan kuota: header kelas menulis 53 jam, sedangkan total Hasil Jadwal kelas 1A hanya 49 jam; halaman Waktu Pelajaran juga baru berisi 3 slot KBM. Mockup perlu diselaraskan dengan `waktu_pelajaran` sebagai satu-satunya sumber (lihat juga A6 #16).
-3. Waktu istirahat berbeda antar mockup (Waktu Pelajaran: 08:45–09:15 setelah jam 3; Hasil Jadwal: 08:10–08:40 setelah jam 2).
-4. Area piket: cukup teks `keterangan` atau perlu tabel master area piket (mockup memakai "Koridor Lt. 1", "Koridor Utama", dan satu kolom "Area Piket").
-5. Pasangan damping: di mockup masih hardcode per guru (`MASTER_PASANGAN`), sedangkan skema ini menyimpannya per baris kisi-kisi (`guru_damping_id`) — pilih salah satu.
-6. Aturan anti-bentrok `unique(guru_id, hari, waktu_pelajaran_id)` berlaku lintas jenis tugas (seorang guru tidak boleh mengajar, damping, dan piket di slot yang sama) — konfirmasi apakah memang demikian.
-7. Validasi damping: apakah damping hanya boleh ditempatkan jika slot tersebut sudah punya guru utama (sesuai FR-4), padahal mockup memperbolehkan menjatuhkan damping sendirian.
+**Hasil pembahasan dengan Pengembang 2** *(v1.11: seluruh poin diskusi v1.6–v1.8 sudah terjawab oleh skema final v1.9)*:
+1. `alokasi_piket` dan `alokasi_damping` digabung ke `kisi_kisi_tugas` + `jadwal_mengajar` (dibedakan lewat `jenis_tugas`).
+2. & 3. Kuota jam kelas dan waktu istirahat mengikuti `waktu_pelajaran` sebagai satu-satunya sumber, diisi dari `Jam_Belajar_SD_Plus.xlsx` (kelas 1–2 = 49 jam, kelas 3–6 = 53 jam; A6 #16). Mockup diselaraskan — lihat "Status Mockup UI" poin (d).
+4. Tidak ada area piket, baik teks maupun tabel master (FR-3; Status Mockup UI poin (c)).
+5. Pasangan damping tidak disimpan per guru maupun per baris kisi-kisi (`guru_damping_id` dihapus v1.9); pasangan terbentuk per slot lewat `jadwal_mengajar.parent_jadwal_id`, ditentukan bebas oleh Waka Kurikulum (FR-4).
+6. Anti-bentrok berlaku lintas jenis tugas: satu guru hanya satu tugas per slot (FR-6, `unique(guru_id, hari, waktu_pelajaran_id)`).
+7. Damping wajib menempel pada slot yang sudah terisi guru utama (FR-4, aturan kode #2; Status Mockup UI poin (e)).
