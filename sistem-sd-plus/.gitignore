@@ -42,6 +42,6 @@ yarn-error.log
 /boost.json
 /opencode.json
 /opencode.jsonc
-
+CLAUDE.local.md
 # Excel files (data siswa/nilai)
 *.xls*
