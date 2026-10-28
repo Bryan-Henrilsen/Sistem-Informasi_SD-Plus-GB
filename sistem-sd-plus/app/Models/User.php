@@ -2,13 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\Siswa;
+use App\Models\Guru;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
  * @property int $id
@@ -28,7 +34,9 @@ use Illuminate\Support\Carbon;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable, TwoFactorAuthenticatable;
+
+    protected $fillable = ['name', 'email', 'no_hp', 'password'];
 
     /**
      * Get the attributes that should be cast.
@@ -41,5 +49,16 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function guru(): HasOne
+    {
+        return $this->hasOne(Guru::class);
+    }
+
+    public function anak(): BelongsToMany
+    {
+        return $this->belongsToMany(Siswa::class, 'siswa_orang_tua')
+            ->withTimestamps();
     }
 }
