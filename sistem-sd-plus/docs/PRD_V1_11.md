@@ -15,6 +15,7 @@
 | 2 | `transaksi.diinput_oleh` nullable, dijaga CHECK: NULL hanya untuk `sumber_input` = `sistem` (transaksi online dari webhook) | A4 Diagram 2, FR-30 |
 | 3 | Penanda "dicatat terlambat" tidak disimpan sebagai kolom — dihitung dari `transaksi.tanggal` < tanggal laporan hariannya | A4 (Catatan v1.11), FR-8c |
 | 4 | Perapian teks usang: B.1 Out of Scope (payment gateway), Kasus Khusus transfer tidak valid, rujukan FR-14b, rujukan ke A6 yang sudah selesai, dependency B.2, daftar diskusi B.3, tipe `decimal` pada diagram Diagram 2, urutan A6 | A4, A5, A6, B.1, B.2, B.3 |
+| 5 | Folder kerja per modul dibuat (domain, route, halaman React, test); enum khusus modul disimpan di `app/Domains/<Modul>/Enums`, `app/Enums` hanya untuk data master | A5 (pola kerja #2, konvensi #3) |
 
 ---
 
@@ -729,7 +730,7 @@ erDiagram
 - **Deployment aplikasi:** direkomendasikan Laravel Cloud atau Render untuk pengalaman deploy pertama kali (minim konfigurasi server manual), tetap bisa terhubung ke database Supabase eksternal. Biaya hosting termasuk hal yang perlu didiskusikan dengan klien.
 - **Pola kerja dua pengembang (usulan v1.7, diperbarui v1.9):** satu repository — bukan dua aplikasi terpisah yang digabung di akhir, supaya migration, login, dan role tidak ditulis dua kali dengan bentuk berbeda. *Database development terpisah per pengembang* (project Supabase sendiri atau Postgres lokal), karena `migrate:fresh` oleh satu orang akan menghapus tabel dan data orang lain, dan migration dari branch yang berbeda akan mengacaukan tabel `migrations`. Project Supabase yang ada dapat dijadikan database bersama/staging. Data dev diseragamkan lewat seeder: `php artisan migrate:fresh --seed`.
   1. *Fondasi dulu* (perkiraan 1–2 hari, berdua atau satu orang): migration Diagram 1, seeder data contoh, login, dan role (`spatie/laravel-permission`); di-merge ke branch utama. *Status v1.9: migration, model, dan seeder Diagram 1 selesai dikerjakan Pengembang 1 — lihat "Status implementasi" di bawah.*
-  2. *Kerja paralel:* Pengembang 1 di `app/Domains/LesEkskul` dan `app/Domains/JurnalGuru`, Pengembang 2 di `app/Domains/JadwalGuru`; satu Git branch per orang, merge ke branch utama secara rutin (mis. tiap fitur selesai).
+  2. *Kerja paralel:* Pengembang 1 di `app/Domains/LesEkskul` dan `app/Domains/JurnalGuru`, Pengembang 2 di `app/Domains/JadwalGuru`; satu Git branch per orang, merge ke branch utama secara rutin (mis. tiap fitur selesai). *(v1.11: folder kerja sudah dibuat)* Setiap modul punya: `app/Domains/<Modul>/{Models, Services, Enums, Http/Controllers, Http/Requests}`, file route `routes/<modul>.php` (di-`require` dari `routes/web.php`, prefix URL & nama route `<modul>.`), halaman React `resources/js/pages/<modul>`, dan test `tests/Feature/<Modul>` — dengan `<Modul>` = `LesEkskul` / `JurnalGuru` / `JadwalGuru` dan `<modul>` = `les-ekskul` / `jurnal-guru` / `jadwal-guru`. Grup route Jadwal Guru dijaga `role:waka_kurikulum|kepala_sekolah`. File bersama (`routes/web.php`, `DatabaseSeeder.php`, `resources/js/layouts`, `resources/js/components/ui`) hanya boleh **ditambah** barisnya.
   3. *Tabel master* (Diagram 1) ditetapkan dan diubah oleh Pengembang 1 sebagai penanggung jawab skema; setiap perubahan diinformasikan ke Pengembang 2 sebelum di-merge.
   4. *Forum Jurnal Guru* (B.2 FR-2 s/d FR-4) tidak menunggu Modul Jadwal Guru; FR-1 (lihat jadwal sendiri) memakai data seeder sampai tabel `jadwal_mengajar` diimplementasikan Pengembang 2 (skemanya sudah final di B.3).
 
@@ -748,7 +749,7 @@ erDiagram
 - **Konvensi database (v1.8, wajib diikuti kedua pengembang):**
   1. *Nama tabel* bahasa Indonesia, snake_case, tunggal (mis. `guru`, `siswa`). Karena Eloquent menebak nama jamak bahasa Inggris, setiap model wajib menulis `protected $table`, dan setiap FK ditulis lengkap, mis. `constrained('guru')`.
   2. *Uang* disimpan sebagai bilangan bulat rupiah (`unsignedBigInteger`), tanpa desimal.
-  3. *Enum* (status, jenis, metode) disimpan sebagai string, dipetakan ke PHP Enum (`app/Enums`) lewat cast di model — bukan tipe enum Postgres, agar nilai baru tidak memerlukan migration.
+  3. *Enum* (status, jenis, metode) disimpan sebagai string, dipetakan ke PHP Enum lewat cast di model — bukan tipe enum Postgres, agar nilai baru tidak memerlukan migration. *(v1.11)* Enum data master di `app/Enums`; enum khusus modul di `app/Domains/<Modul>/Enums`, agar tiap pengembang hanya menambah file di foldernya sendiri.
   4. *Soft delete* untuk data master yang dirujuk data keuangan (`siswa`, `guru`, `kelas`); FK dari data keuangan memakai perilaku default (restrict), bukan cascade. Cascade hanya untuk tabel pivot murni.
   5. *Data acuan* dicari lewat kolom `kode` (mis. `jenis_tugas.kode = 'piket'`), bukan lewat id, karena id bisa berbeda antara database lokal dan produksi.
   6. *Hari* disimpan sebagai angka ISO (1 = Senin, sama dengan `dayOfWeekIso` Carbon): 1–5 untuk Modul Jadwal Guru (`waktu_pelajaran_hari`, `jadwal_mengajar`), 1–6 untuk `jadwal_ekskul` *(v1.11)*.

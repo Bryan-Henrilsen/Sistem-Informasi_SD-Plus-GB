@@ -9,3 +9,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+require __DIR__.'/les-ekskul.php';
+require __DIR__.'/jurnal-guru.php';
+require __DIR__.'/jadwal-guru.php';
