@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Domains\LesEkskul\Models\Pendaftaran;
+use App\Domains\LesEkskul\Models\Transaksi;
 use App\Enums\StatusSekolah;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -46,6 +47,11 @@ class Siswa extends Model
     public function riwayatKelas(): HasMany
     {
         return $this->hasMany(SiswaKelas::class);
+    }
+
+    public function transaksi(): HasMany
+    {
+        return $this->hasMany(Transaksi::class);
     }
 
     public function kelasTahunAktif(): HasOne

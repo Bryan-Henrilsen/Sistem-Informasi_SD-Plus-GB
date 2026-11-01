@@ -6,6 +6,7 @@ use App\Domains\LesEkskul\Enums\StatusLaporanHarian;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LaporanHarian extends Model
 {
@@ -55,6 +56,11 @@ class LaporanHarian extends Model
     public function ditolakOlehUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'ditolak_oleh');
+    }
+
+    public function transaksi(): HasMany
+    {
+        return $this->hasMany(Transaksi::class);
     }
 
     // Laporan yang sudah disetujui tidak dibuka kembali; transaksi baru masuk laporan hari pencatatan (FR-8c)

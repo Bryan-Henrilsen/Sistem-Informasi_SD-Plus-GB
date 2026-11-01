@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pendaftaran extends Model
 {
@@ -50,6 +51,17 @@ class Pendaftaran extends Model
     public function ekstrakurikuler(): BelongsTo
     {
         return $this->belongsTo(Ekstrakurikuler::class);
+    }
+
+    public function tagihan(): HasMany
+    {
+        return $this->hasMany(Tagihan::class);
+    }
+
+    // Riwayat penyesuaian dana per kegiatan (alih, kelebihan, refund)
+    public function penyesuaianDana(): HasMany
+    {
+        return $this->hasMany(PenyesuaianDana::class);
     }
 
     // Pendaftaran baru tujuan perpindahan (FR-11)
