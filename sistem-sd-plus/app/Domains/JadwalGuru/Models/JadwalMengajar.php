@@ -27,11 +27,7 @@ class JadwalMengajar extends Model
         'hari',
     ];
 
-    /**
-     * Event Lifecycle Laravel
-     * Sesuai PRD v1.9: Kolom salinan di jadwal_mengajar (guru_id, jenis_tugas_id, kelas_id) 
-     * diisi otomatis lewat event saving di model.
-     */
+
     protected static function booted(): void
     {
         static::saving(function (JadwalMengajar $jadwal) {

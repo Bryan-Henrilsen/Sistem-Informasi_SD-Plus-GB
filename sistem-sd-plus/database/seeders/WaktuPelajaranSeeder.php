@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use App\Domains\JadwalGuru\Models\WaktuPelajaran;
 use App\Domains\JadwalGuru\Models\WaktuPelajaranHari;
+use App\Models\TahunAjaran;
 
 class WaktuPelajaranSeeder extends Seeder
 {
@@ -14,9 +15,8 @@ class WaktuPelajaranSeeder extends Seeder
      */
     public function run(): void
     {
-        // Pastikan kita mengambil ID Tahun Ajaran yang aktif (Asumsi ID 1 adalah 2026/2027)
-        // Jika belum ada, seeder ini akan meminjam/membuat ID 1
-        $tahunAjaranId = 1; 
+        $tahunAjaran = TahunAjaran::aktif()->firstOrFail();
+        $tahunAjaranId = $tahunAjaran->id;
 
         // Aturan Hari: 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat
         $seninSampaiJumat = [1, 2, 3, 4, 5];

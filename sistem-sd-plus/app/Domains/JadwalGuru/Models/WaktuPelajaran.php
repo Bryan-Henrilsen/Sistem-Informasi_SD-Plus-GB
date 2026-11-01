@@ -13,7 +13,7 @@ class WaktuPelajaran extends Model
     use HasFactory;
 
     protected $table = 'waktu_pelajaran';
-    public $timestamps = false; // Sesuai migration yang tidak memiliki timestamps
+    public $timestamps = false; 
 
     protected $fillable = [
         'tahun_ajaran_id',

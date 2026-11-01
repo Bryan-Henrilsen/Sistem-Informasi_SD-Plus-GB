@@ -12,8 +12,7 @@ class WaktuPelajaranHari extends Model
 
     protected $table = 'waktu_pelajaran_hari';
     public $timestamps = false;
-    
-    // Karena kita memakai Composite Primary Key
+
     public $incrementing = false; 
 
     protected $fillable = [
