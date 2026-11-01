@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domains\LesEkskul\Models\Pendaftaran;
 use App\Enums\StatusSekolah;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -57,5 +58,10 @@ class Siswa extends Model
     public function berhakDiskonAnakGuru(): bool
     {
         return $this->anakGuru?->status_aktif === true;
+    }
+
+    public function pendaftaran(): HasMany
+    {
+        return $this->hasMany(Pendaftaran::class);
     }
 }
