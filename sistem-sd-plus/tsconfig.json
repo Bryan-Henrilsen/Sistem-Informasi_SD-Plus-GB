@@ -116,5 +116,5 @@
         "resources/js/**/*.ts",
         "resources/js/**/*.d.ts",
         "resources/js/**/*.tsx"
-    ]
+, "resources/js/pages/jadwal-guru/PembagianJadwal.jsx"    ]
 }

@@ -86,7 +86,7 @@ return new class extends Migration
         DB::statement('ALTER TABLE jadwal_mengajar ADD CONSTRAINT unique_guru_slot UNIQUE (guru_id, hari, waktu_pelajaran_id)');
         
         // Anti-bentrok: satu kelas hanya boleh punya 1 guru utama dan 1 guru damping per slot waktu & hari
-        DB::statement('ALTER TABLE jadwal_mengajar ADD CONSTRAINT unique_kelas_slot UNIQUE NULLS NOT DISTINCT (kelas_id, hari, waktu_pelajaran_id, jenis_tugas_id)');
+        DB::statement('ALTER TABLE jadwal_mengajar ADD CONSTRAINT unique_kelas_slot UNIQUE (kelas_id, hari, waktu_pelajaran_id, jenis_tugas_id)');
     }
 
     public function down(): void

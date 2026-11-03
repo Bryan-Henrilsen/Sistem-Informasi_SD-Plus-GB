@@ -9,6 +9,7 @@ use App\Domains\JadwalGuru\Models\JadwalMengajar;
 use App\Domains\JadwalGuru\Models\WaktuPelajaran;
 use App\Domains\JadwalGuru\Models\KisiKisiTugas;
 use App\Models\Kelas;
+use App\Models\TahunAjaran;
 use Inertia\Inertia;
 use Exception;
 
@@ -26,32 +27,73 @@ class PembagianJadwalController extends Controller
      */
     public function index()
     {
-        // 1. Ambil Waktu Pelajaran lengkap dengan relasi harinya
-        $waktuPelajaran = WaktuPelajaran::with('hari')->orderBy('urutan', 'asc')->get();
+        $tahunAjaran = TahunAjaran::aktif()->firstOrFail();
 
-        // 2. Ambil Daftar Kelas (Diurutkan berdasarkan jenjang lalu nama)
-        $daftarKelas = Kelas::orderBy('jenjang')->orderBy('nama_kelas')->get();
+        $tahunAjaranId = $tahunAjaran->id;
+        // 1. Waktu pelajaran
+        $waktuPelajaran = WaktuPelajaran::where(
+            'tahun_ajaran_id',
+            $tahunAjaran->id
+        )
+            ->with('hariBerlaku')
+            ->orderBy('urutan', 'asc')
+            ->get();
 
-        // 3. Ambil Kisi-Kisi Tugas yang sisa jamnya masih > 0
-        $kisiKisiTugas = KisiKisiTugas::with(['guru.user', 'kelas', 'mataPelajaran', 'jenisTugas'])
+        // 2. Daftar kelas
+        $daftarKelas = Kelas::where(
+            'tahun_ajaran_id',
+            $tahunAjaran->id
+        )
+            ->orderBy('jenjang')
+            ->orderBy('nama_kelas')
+            ->get();
+
+        // 3. Kisi-kisi tugas
+        $kisiKisiTugas = KisiKisiTugas::where(
+            'tahun_ajaran_id',
+            $tahunAjaran->id
+        )
+            ->with([
+                'guru.user',
+                'kelas',
+                'mataPelajaran',
+                'jenisTugas',
+                'jadwalMengajar',
+            ])
             ->get()
-            // Map digunakan agar property sisa_jam dari accessor masuk ke array JSON
             ->map(function ($kisi) {
-                $kisi->sisa_jam_tersedia = $kisi->sisa_jam; // Diselaraskan dengan nama variabel React
+                $kisi->sisa_jam_tersedia = max(
+                    0,
+                    $kisi->jumlah_jam - $kisi->jadwalMengajar->count()
+                );
+
                 return $kisi;
             })
-            ->filter(function ($kisi) {
-                return $kisi->sisa_jam_tersedia > 0;
-            })->values(); // Reset array index agar rapi di React
+            ->filter(fn ($kisi) => $kisi->sisa_jam_tersedia > 0)
+            ->values();
 
-        // 4. Ambil jadwal yang sudah terplot di kalender
-        $jadwalTerplot = JadwalMengajar::with(['guru.user', 'kisiKisiTugas.mataPelajaran', 'jenisTugas'])->get();
+        // 4. Jadwal aktual
+        $jadwalTerplot = JadwalMengajar::whereHas(
+            'kisiKisiTugas',
+            function ($query) use ($tahunAjaran) {
+                $query->where(
+                    'tahun_ajaran_id',
+                    $tahunAjaran->id
+                );
+            }
+        )
+            ->with([
+                'guru.user',
+                'kisiKisiTugas.mataPelajaran',
+                'jenisTugas',
+            ])
+            ->get();
 
         return Inertia::render('jadwal-guru/PembagianJadwal', [
             'waktuPelajaran' => $waktuPelajaran,
-            'daftarKelas'    => $daftarKelas,
-            'kisiKisiTugas'  => $kisiKisiTugas,
-            'jadwalTerplot'  => $jadwalTerplot // Variabel penting yang terlupakan!
+            'daftarKelas' => $daftarKelas,
+            'kisiKisiTugas' => $kisiKisiTugas,
+            'jadwalTerplot' => $jadwalTerplot,
         ]);
     }
 

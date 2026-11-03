@@ -3,71 +3,79 @@ import { Head, router, usePage } from '@inertiajs/react';
 
 // --- 1. DEFINISI STRUKTUR DATA (TYPESCRIPT INTERFACES) ---
 interface WaktuPelajaran {
-id: number;
-jam_ke: number | null;
-nama: string;
-jam_mulai: string;
-jam_selesai: string;
-jenis_kegiatan: 'kbm' | 'istirahat' | 'upacara' | string;
-jenjang_min: number;
-jenjang_max: number;
-hari?: { hari: number }[];
+    id: number;
+    jam_ke: number | null;
+    nama: string;
+    jam_mulai: string;
+    jam_selesai: string;
+    jenis_kegiatan: string;
+    jenjang_min: number;
+    jenjang_max: number;
+    hari_berlaku?: { hari: number }[];
 }
 
 interface Kelas {
-id: number;
-nama_kelas: string;
-jenjang: number;
+    id: number;
+    nama_kelas: string;
+    jenjang: number;
 }
 
 interface Guru {
-id: number;
-kode_guru: string;
-user?: { name: string };
-name?: string;
+    id: number;
+    kode_guru: string;
+    user?: { name: string };
+    name?: string;
 }
 
 interface JenisTugas {
-id: number;
-kode: 'utama' | 'damping' | 'piket' | string;
-nama: string;
+    id: number;
+    kode: 'utama' | 'damping' | 'piket' | string;
+    nama: string;
 }
 
 interface KisiKisiTugas {
-id: number;
-guru?: Guru;
-kelas?: Kelas;
-mata_pelajaran?: { nama: string };
-jenis_tugas: JenisTugas;
-sisa_jam_tersedia: number;
-keterangan?: string;
+    id: number;
+    guru?: Guru;
+    kelas?: Kelas;
+    mata_pelajaran?: { nama: string };
+    jenis_tugas: JenisTugas;
+    sisa_jam_tersedia: number;
+    keterangan?: string;
 }
 
 interface JadwalMengajar {
-id: number;
-hari: number;
-waktu_pelajaran_id: number;
-kelas_id: number | null;
-guru?: Guru;
-kisi_kisi_tugas?: KisiKisiTugas;
-jenis_tugas: JenisTugas;
+    id: number;
+    hari: number;
+    waktu_pelajaran_id: number;
+    kelas_id: number | null;
+    guru?: Guru;
+    kisi_kisi_tugas?: KisiKisiTugas;
+    jenis_tugas: JenisTugas;
 }
 
 interface PembagianJadwalProps {
-waktuPelajaran: WaktuPelajaran[];
-daftarKelas: Kelas[];
-kisiKisiTugas: KisiKisiTugas[];
-jadwalTerplot: JadwalMengajar[];
+    waktuPelajaran: WaktuPelajaran[];
+    daftarKelas: Kelas[];
+    kisiKisiTugas: KisiKisiTugas[];
+    jadwalTerplot: JadwalMengajar[];
 }
 
 interface CustomPageProps {
-flash?: { success?: string; error?: string };
-errors?: Record<string, string>;
-[key: string]: unknown;
+    flash?: { success?: string; error?: string };
+    errors?: Record<string, string>;
+    [key: string]: unknown;
 }
 
 export default function PembagianJadwal({ waktuPelajaran, daftarKelas, kisiKisiTugas, jadwalTerplot }: PembagianJadwalProps) {
-const { errors, flash } = usePage().props;
+const { props } = usePage();
+
+const flash = props.flash as
+    { success?: string; error?: string }
+    undefined;
+
+const errors = props.errors as
+    Record<string, string>
+    undefined;
 
 // --- STATES ---
 const [hariAktif, setHariAktif] = useState<number>(1);
@@ -85,6 +93,12 @@ const daftarHari = [
     { id: 4, name: 'Kamis' },
     { id: 5, name: 'Jumat' }
 ];
+
+const waktuHariIni = waktuPelajaran.filter(waktu =>
+    waktu.hari_berlaku?.some(
+        item => item.hari === hariAktif
+    )
+);
 
 useEffect(() => {
     if (flash?.success) {
@@ -259,7 +273,7 @@ return (
                             </tr>
                         </thead>
                         <tbody>
-                            {waktuPelajaran.map((waktu, index) => {
+                            {waktuHariIni.map((waktu, index) => {
                                 const isLastRow = index === waktuPelajaran.length - 1;
                                 return (
                                     <tr key={waktu.id} className="hover:bg-gray-50/50 transition-colors">

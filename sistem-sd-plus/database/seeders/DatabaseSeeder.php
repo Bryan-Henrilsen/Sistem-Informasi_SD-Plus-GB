@@ -20,7 +20,8 @@ class DatabaseSeeder extends Seeder
             JenisTugasSeeder::class,
             MataPelajaranSeeder::class,
             TahunAjaranSeeder::class,
-            KelasSeeder::class,
+            WaktuPelajaranSeeder::class,
+            KelasSeeder::class,            
             StafSeeder::class,
             GuruSeeder::class,
         ]);
