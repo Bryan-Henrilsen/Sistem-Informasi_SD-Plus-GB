@@ -18,9 +18,9 @@ class Ekstrakurikuler extends Model
     protected $fillable = [
         'tahun_ajaran_id',
         'parent_ekstrakurikuler_id',
-        'pendamping_user_id',
         'nama',
         'biaya',
+        'biaya_non_honor',
         'kuota',
         'kategori_pendamping',
         'wajib_otomatis',
@@ -58,9 +58,9 @@ class Ekstrakurikuler extends Model
         return $this->hasMany(Ekstrakurikuler::class, 'parent_ekstrakurikuler_id');
     }
 
-    public function pendamping(): BelongsTo
+    public function pendamping(): BelongsToMany
     {
-        return $this->belongsTo(User::class, 'pendamping_user_id');
+        return $this->belongsToMany(User::class, 'ekskul_pendamping')->withTimestamps();
     }
 
     public function jadwal(): HasMany
