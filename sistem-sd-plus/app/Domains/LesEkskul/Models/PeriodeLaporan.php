@@ -59,6 +59,17 @@ class PeriodeLaporan extends Model
         return $this->hasMany(LaporanHarian::class);
     }
 
+    public function honorKegiatan(): HasMany
+    {
+        return $this->hasMany(HonorKegiatan::class);
+    }
+
+    // Seluruh honor periode ini, persentase maupun flat; dasar rekap FR-19
+    public function honorDetail(): HasMany
+    {
+        return $this->hasMany(HonorDetail::class);
+    }
+
     // Periode yang memuat tanggal tertentu; periode tidak beririsan, jadi hasilnya paling banyak satu
     public function scopeMencakup(Builder $query, DateTimeInterface|string $tanggal): void
     {
