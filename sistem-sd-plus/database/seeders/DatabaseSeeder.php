@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             KelasSeeder::class,
             StafSeeder::class,
             GuruSeeder::class,
+            HonorFlatJenisSeeder::class,
         ]);
     }
 }
