@@ -2,6 +2,7 @@
 
 namespace App\Domains\LesEkskul\Models;
 
+use App\Domains\LesEkskul\Enums\StatusPembayaranOnline;
 use App\Domains\LesEkskul\Enums\StatusTagihan;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -66,9 +67,24 @@ class Tagihan extends Model
         return $this->harus_dibayar - $this->totalAlokasi();
     }
 
+    // Order online yang memuat tagihan ini (FR-29)
+    public function pembayaranOnline(): BelongsToMany
+    {
+        return $this->belongsToMany(PembayaranOnline::class, 'pembayaran_online_tagihan')
+            ->withPivot('nominal')
+            ->withTimestamps();
+    }
+
     public function scopeBelumLunas(Builder $query): void
     {
         $query->where('status', StatusTagihan::Belum);
+    }
+
+    // Tagihan yang boleh dipilih orang tua untuk dibayar online: belum lunas dan tidak sedang di order menunggu (FR-29)
+    public function scopeBisaDibayarOnline(Builder $query): void
+    {
+        $query->belumLunas()
+            ->whereDoesntHave('pembayaranOnline', fn (Builder $q) => $q->where('status', StatusPembayaranOnline::Menunggu));
     }
 
     // Tagihan bulan yang sudah lewat dan belum lunas

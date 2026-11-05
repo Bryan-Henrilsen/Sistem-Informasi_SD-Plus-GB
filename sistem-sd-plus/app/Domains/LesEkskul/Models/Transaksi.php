@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Transaksi extends Model
 {
@@ -92,6 +93,12 @@ class Transaksi extends Model
         return $this->belongsToMany(Tagihan::class, 'alokasi_transaksi')
             ->withPivot('nominal', 'diakui_periode_id')
             ->withTimestamps();
+    }
+
+    // Order online asal transaksi ini; null untuk cash dan transfer manual
+    public function pembayaranOnline(): HasOne
+    {
+        return $this->hasOne(PembayaranOnline::class);
     }
 
     // Dihitung, bukan kolom: uang masuk sebelum tanggal laporan tempatnya dicatat (FR-8c, Catatan v1.11)

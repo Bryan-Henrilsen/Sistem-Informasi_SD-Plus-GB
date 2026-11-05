@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domains\LesEkskul\Models\PembayaranOnline;
 use App\Domains\LesEkskul\Models\Pendaftaran;
 use App\Domains\LesEkskul\Models\Transaksi;
 use App\Enums\StatusSekolah;
@@ -69,5 +70,10 @@ class Siswa extends Model
     public function pendaftaran(): HasMany
     {
         return $this->hasMany(Pendaftaran::class);
+    }
+
+    public function pembayaranOnline(): HasMany
+    {
+        return $this->hasMany(PembayaranOnline::class);
     }
 }
