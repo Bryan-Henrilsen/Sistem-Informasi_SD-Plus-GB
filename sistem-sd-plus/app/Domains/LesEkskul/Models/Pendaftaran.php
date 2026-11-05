@@ -22,6 +22,7 @@ class Pendaftaran extends Model
         'tanggal_daftar',
         'status',
         'tanggal_efektif_berhenti',
+        'alasan_berhenti',
         'pindah_ke_id',
     ];
 
@@ -79,6 +80,11 @@ class Pendaftaran extends Model
     public function scopeAktif(Builder $query): void
     {
         $query->where('status', StatusPendaftaran::Aktif);
+    }
+
+    public function kegiatan(): LesTambahan|Ekstrakurikuler
+    {
+        return $this->adalahLesTambahan() ? $this->lesTambahan : $this->ekstrakurikuler;
     }
 
     public function adalahLesTambahan(): bool
