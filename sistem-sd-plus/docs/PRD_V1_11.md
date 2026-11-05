@@ -774,10 +774,11 @@ erDiagram
   3. *Tabel master* (Diagram 1) ditetapkan dan diubah oleh Pengembang 1 sebagai penanggung jawab skema; setiap perubahan diinformasikan ke Pengembang 2 sebelum di-merge.
   4. *Forum Jurnal Guru* (B.2 FR-2 s/d FR-4) tidak menunggu Modul Jadwal Guru; FR-1 (lihat jadwal sendiri) memakai data seeder sampai tabel `jadwal_mengajar` diimplementasikan Pengembang 2 (skemanya sudah final di B.3).
 
-- **Status implementasi (v1.9):**
+- **Status implementasi (v1.9, diperbarui v1.11):**
   - Migration Diagram 1 + tabel `spatie/laravel-permission` sudah berjalan di Supabase.
   - Model Diagram 1 di `app/Models`: `TahunAjaran` (scope `aktif()`), `Semester`, `Guru`, `MataPelajaran`, `Kelas` (accessor `nama_lengkap` → "1A Gregory"), `Siswa` (cast enum `StatusSekolah`, relasi `kelasTahunAktif`, method `berhakDiskonAnakGuru()`), `SiswaKelas` (event `saving` menyalin `tahun_ajaran_id` dari kelas — gunakan `SiswaKelas::create`, bukan `attach`/`insert`), `JenisTugas` (helper `byKode()`); `User` ditambah trait `HasRoles` dan relasi `guru()`, `anak()`.
   - Seeder: role (kepala_sekolah, tu, bendahara, waka_kurikulum, guru, orang_tua), `jenis_tugas`, 14 mata pelajaran, tahun ajaran 2026/2027 + 2 semester, 15 kelas, staf (kepala sekolah, 2 TU), dan 22 guru beserta mapel & wali kelas. Akun dev memakai domain `@sdplus.test` dengan password `password`. Data siswa belum di-seed — masuk lewat fitur impor (FR-28).
+  - *(v1.11)* Diagram 2 selesai di tingkat database dan di-merge ke `main` (5 November 2026): migration Tahap A–D (kegiatan & pendaftaran, keuangan, honor, pembayaran online), Model + Enum di `app/Domains/LesEkskul`, seeder `honor_flat_jenis`, dan test Pest di `tests/Feature/LesEkskul`. Service, Controller, dan halaman React modul Les & Ekskul belum dibuat.
 - **Payment gateway (v1.10):**
   - Kode pembayaran online di `app/Domains/LesEkskul/Pembayaran`, memakai antarmuka `PaymentGateway` (buat order, verifikasi webhook, cek status) dengan satu implementasi per penyedia — penyedia bisa diganti tanpa mengubah logika bisnis.
   - Route webhook dikecualikan dari CSRF (`bootstrap/app.php` → `validateCsrfTokens(except: [...])`), wajib memverifikasi tanda tangan/kunci dari gateway, dan idempoten.
