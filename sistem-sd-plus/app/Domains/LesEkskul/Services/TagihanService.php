@@ -84,7 +84,16 @@ class TagihanService
             && ! in_array($bulan->month, config('les_ekskul.bulan_tidak_ditagih'), true)
             && $bulan->between($tahunAjaran->tanggal_mulai->startOfMonth(), $tahunAjaran->tanggal_selesai)
             && $pendaftaran->tanggal_daftar->lte($bulan->copy()->endOfMonth()) // sudah terdaftar di bulan itu
-            && $this->masihIkut($pendaftaran, $bulan);
+            && $this->masihIkut($pendaftaran, $bulan)
+            && ! in_array($bulan->month, $this->bulanLiburJenjang($pendaftaran), true);
+    }
+
+    // Bulan tidak ditagih khusus jenjang siswa (config les_ekskul.bulan_tidak_ditagih_per_jenjang)
+    private function bulanLiburJenjang(Pendaftaran $pendaftaran): array
+    {
+        $jenjang = $pendaftaran->jenjang();
+
+        return $jenjang ? config('les_ekskul.bulan_tidak_ditagih_per_jenjang')[$jenjang] ?? [] : [];
     }
 
     private function masihIkut(Pendaftaran $pendaftaran, CarbonInterface $bulan): bool

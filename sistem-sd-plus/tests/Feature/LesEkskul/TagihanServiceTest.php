@@ -9,6 +9,7 @@ use App\Domains\LesEkskul\Services\TagihanService;
 use App\Models\Guru;
 use App\Models\Kelas;
 use App\Models\Siswa;
+use App\Models\SiswaKelas;
 use App\Models\TahunAjaran;
 use App\Models\User;
 
@@ -141,4 +142,22 @@ test('bayar di muka berhenti di akhir tahun ajaran', function () {
         '2026-08', '2026-09', '2026-10', '2026-11',
         '2027-01', '2027-02', '2027-03', '2027-04', '2027-05',
     ]);
+});
+
+test('kelas 6 semester genap hanya ditagih sampai april, les maupun ekskul', function () {
+    $kelas6 = Kelas::create(['tahun_ajaran_id' => $this->tahunAjaran->id, 'jenjang' => 6, 'nama_kelas' => '6A']);
+    SiswaKelas::create(['siswa_id' => $this->siswa->id, 'kelas_id' => $kelas6->id]);
+
+    $ekskul = daftarBasket();
+    $this->service->buatSampai($ekskul, '2027-06-01');
+
+    $les = LesTambahan::create(['kelas_id' => $kelas6->id, 'biaya' => 180000]);
+    $pendaftaranLes = daftarBasket(['ekstrakurikuler_id' => null, 'les_tambahan_id' => $les->id]);
+
+    expect(bulanTagihan($ekskul))->toBe([
+        '2026-08', '2026-09', '2026-10', '2026-11',
+        '2027-01', '2027-02', '2027-03', '2027-04',
+    ])
+        ->and($this->service->buatUntukBulan($pendaftaranLes, '2027-04-01'))->not->toBeNull()
+        ->and($this->service->buatUntukBulan($pendaftaranLes, '2027-05-01'))->toBeNull();
 });

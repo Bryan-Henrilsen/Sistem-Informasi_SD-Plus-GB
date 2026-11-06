@@ -14,6 +14,7 @@ class PenyesuaianDana extends Model
 
     protected $fillable = [
         'pendaftaran_id',
+        'transaksi_id',
         'jenis_penyesuaian',
         'periode_asal_id',
         'periode_tujuan_id',
@@ -39,6 +40,11 @@ class PenyesuaianDana extends Model
         return $this->belongsTo(Pendaftaran::class);
     }
 
+    public function transaksi(): BelongsTo
+    {
+        return $this->belongsTo(Transaksi::class);
+    }
+
     public function periodeAsal(): BelongsTo
     {
         return $this->belongsTo(PeriodeLaporan::class, 'periode_asal_id');
@@ -57,6 +63,6 @@ class PenyesuaianDana extends Model
 
     public function adalahRefund(): bool
     {
-        return $this->jenis_penyesuaian === JenisPenyesuaian::RefundBerhenti;
+        return in_array($this->jenis_penyesuaian, [JenisPenyesuaian::RefundBerhenti, JenisPenyesuaian::KelebihanTransfer], true);
     }
 }

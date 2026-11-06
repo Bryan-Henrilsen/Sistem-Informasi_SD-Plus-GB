@@ -87,6 +87,18 @@ class Pendaftaran extends Model
         return $this->adalahLesTambahan() ? $this->lesTambahan : $this->ekstrakurikuler;
     }
 
+    // Jenjang kelas siswa pada tahun ajaran kegiatan ini; null bila siswa belum punya kelas di tahun itu
+    public function jenjang(): ?int
+    {
+        if ($this->adalahLesTambahan()) {
+            return $this->lesTambahan->kelas->jenjang; // les tambahan selalu milik satu kelas
+        }
+
+        return $this->siswa->riwayatKelas()
+            ->where('tahun_ajaran_id', $this->ekstrakurikuler->tahun_ajaran_id)
+            ->first()?->kelas->jenjang;
+    }
+
     public function adalahLesTambahan(): bool
     {
         return $this->les_tambahan_id !== null;

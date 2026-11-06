@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Transaksi extends Model
@@ -99,6 +100,12 @@ class Transaksi extends Model
     public function pembayaranOnline(): HasOne
     {
         return $this->hasOne(PembayaranOnline::class);
+    }
+
+    // Refund kelebihan transfer yang berasal dari transaksi ini (FR-21, Ringkasan v1.11 #22)
+    public function penyesuaianDana(): HasMany
+    {
+        return $this->hasMany(PenyesuaianDana::class);
     }
 
     // Dihitung, bukan kolom: uang masuk sebelum tanggal laporan tempatnya dicatat (FR-8c, Catatan v1.11)
