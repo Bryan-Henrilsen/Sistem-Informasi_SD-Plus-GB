@@ -22,6 +22,7 @@ class Pendaftaran extends Model
         'tanggal_daftar',
         'status',
         'tanggal_efektif_berhenti',
+        'alasan_berhenti',
         'pindah_ke_id',
     ];
 
@@ -79,6 +80,23 @@ class Pendaftaran extends Model
     public function scopeAktif(Builder $query): void
     {
         $query->where('status', StatusPendaftaran::Aktif);
+    }
+
+    public function kegiatan(): LesTambahan|Ekstrakurikuler
+    {
+        return $this->adalahLesTambahan() ? $this->lesTambahan : $this->ekstrakurikuler;
+    }
+
+    // Jenjang kelas siswa pada tahun ajaran kegiatan ini; null bila siswa belum punya kelas di tahun itu
+    public function jenjang(): ?int
+    {
+        if ($this->adalahLesTambahan()) {
+            return $this->lesTambahan->kelas->jenjang; // les tambahan selalu milik satu kelas
+        }
+
+        return $this->siswa->riwayatKelas()
+            ->where('tahun_ajaran_id', $this->ekstrakurikuler->tahun_ajaran_id)
+            ->first()?->kelas->jenjang;
     }
 
     public function adalahLesTambahan(): bool

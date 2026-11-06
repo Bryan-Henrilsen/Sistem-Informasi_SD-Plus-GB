@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Pontianak', // WIB; tanggal laporan harian & webhook mengikuti jam sekolah
 
     /*
     |--------------------------------------------------------------------------
