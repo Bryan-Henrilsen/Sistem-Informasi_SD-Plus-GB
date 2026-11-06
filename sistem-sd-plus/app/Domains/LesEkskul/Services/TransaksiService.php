@@ -76,6 +76,93 @@ class TransaksiService
         });
     }
 
+    // FR-8: TU memverifikasi transfer pending setelah mengecek bukti yang dikirim orang tua di luar aplikasi
+    public function verifikasi(Transaksi $transaksi, User $oleh): Transaksi
+    {
+        return DB::transaction(function () use ($transaksi, $oleh) {
+            $transaksi = $this->kunci($transaksi);
+
+            if ($transaksi->metode !== MetodeTransaksi::Transfer || $transaksi->status !== StatusTransaksi::Pending) {
+                throw $this->gagal('transaksi', 'Hanya transfer yang berstatus pending yang bisa diverifikasi.');
+            }
+
+            $transaksi->update([
+                'status' => StatusTransaksi::Terverifikasi,
+                'diverifikasi_oleh' => $oleh->id,
+                'diverifikasi_at' => now(),
+            ]);
+
+            return $transaksi;
+        });
+    }
+
+    // FR-8b: Bendahara mencocokkan transfer yang sudah diverifikasi TU dengan mutasi rekening
+    public function setujui(Transaksi $transaksi, User $oleh): Transaksi
+    {
+        return DB::transaction(function () use ($transaksi, $oleh) {
+            $transaksi = $this->kunci($transaksi);
+
+            if ($transaksi->status !== StatusTransaksi::Terverifikasi || $transaksi->status_approval_bendahara !== StatusApprovalBendahara::BelumDicek) {
+                throw $this->gagal('transaksi', 'Hanya transfer yang sudah diverifikasi TU dan belum dicek yang bisa disetujui.');
+            }
+
+            $transaksi->update([
+                'status_approval_bendahara' => StatusApprovalBendahara::Disetujui,
+                'diapprove_oleh' => $oleh->id,
+                'tanggal_approval_bendahara' => now(),
+            ]);
+
+            return $transaksi;
+        });
+    }
+
+    // FR-8d: transfer tidak valid ditolak TU atau Bendahara. Transaksi tidak dihapus; alokasinya dilepas sehingga tagihan kembali 'belum', dan refund kelebihan yang belum dikirim ikut dihapus (Ringkasan v1.11 #25)
+    public function tolak(Transaksi $transaksi, User $oleh, string $alasan): Transaksi
+    {
+        $alasan = trim($alasan);
+
+        if ($alasan === '') {
+            throw $this->gagal('alasan', 'Alasan penolakan wajib diisi.');
+        }
+
+        return DB::transaction(function () use ($transaksi, $oleh, $alasan) {
+            $transaksi = $this->kunci($transaksi);
+
+            // Penolakan final; transfer yang sudah cocok dengan mutasi rekening tidak bisa ditolak
+            if ($transaksi->metode !== MetodeTransaksi::Transfer
+                || $transaksi->status === StatusTransaksi::Ditolak
+                || $transaksi->status_approval_bendahara === StatusApprovalBendahara::Disetujui) {
+                throw $this->gagal('transaksi', 'Hanya transfer yang belum disetujui Bendahara dan belum ditolak yang bisa ditolak');
+            }
+
+            if ($transaksi->penyesuaianDana()->where('status', StatusPenyesuaian::Berhasil)->exists()) {
+                throw $this->gagal('transaksi', 'Kelebihan transfer ini sudah dikembalikan ke orang tua. Selesaikan dulu langsung dengan orang tua.');
+            }
+
+            $tagihan = $transaksi->tagihan()->lockForUpdate()->get();
+            $transaksi->tagihan()->detach(); // lepas semua alokasi transaksi ini
+
+            $tagihan->each(fn (Tagihan $t) => $this->perbaruiStatus($t)); // lunas -> belum, kecuali dibayar transaksi lain
+
+            $transaksi->penyesuaianDana()->delete(); // refund 'proses': kelebihannya ternyata tidak pernah ada
+
+            $transaksi->update([
+                'status' => StatusTransaksi::Ditolak,
+                'alasan_ditolak' => $alasan,
+                'ditolak_oleh' => $oleh->id,
+                'ditolak_at' => now(),
+            ]);
+
+            return $transaksi;
+        });
+    }
+
+    // Ambil ulang baris transaksi sambil menguncinya, agar verifikasi/persetujuan/penolakan tidak bertabrakan
+    private function kunci(Transaksi $transaksi): Transaksi
+    {
+        return Transaksi::whereKey($transaksi->id)->lockForUpdate()->firstOrFail();
+    }
+
     private function periksaInput(MetodeTransaksi $metode, SumberInput $sumber, int $nominal, CarbonInterface $tanggal): void
     {
         if ($metode === MetodeTransaksi::Online || $sumber === SumberInput::Sistem) {

@@ -203,3 +203,81 @@ test('transfer yang ditambahkan Bendahara langsung terverifikasi dan disetujui',
         ->and($transaksi->laporanHarian->tanggal->toDateString())->toBe('2026-09-10')
         ->and($transaksi->dicatatTerlambat())->toBeTrue();
 });
+
+// ---- Bagian 2: verifikasi TU, persetujuan Bendahara, penolakan (FR-8, FR-8b, FR-8d)
+
+test('transfer diverifikasi TU lalu disetujui Bendahara', function () {
+    $bendahara = User::factory()->create();
+    $transaksi = catatTransaksi('transfer', 80000, [$this->sep]);
+
+    $transaksi = $this->service->verifikasi($transaksi, $this->tu);
+
+    expect($transaksi->status)->toBe(StatusTransaksi::Terverifikasi)
+        ->and($transaksi->diverifikasi_oleh)->toBe($this->tu->id)
+        ->and($transaksi->status_approval_bendahara)->toBe(StatusApprovalBendahara::BelumDicek);
+
+    $transaksi = $this->service->setujui($transaksi, $bendahara);
+
+    expect($transaksi->status_approval_bendahara)->toBe(StatusApprovalBendahara::Disetujui)
+        ->and($transaksi->diapprove_oleh)->toBe($bendahara->id)
+        ->and($transaksi->tanggal_approval_bendahara)->not->toBeNull();
+});
+
+test('verifikasi dan persetujuan hanya untuk transfer pada tahap yang tepat', function () {
+    $cash = catatTransaksi('cash', 80000, [$this->agu]);
+    $transfer = catatTransaksi('transfer', 80000, [$this->sep]);
+
+    expect(fn () => $this->service->verifikasi($cash, $this->tu))->toThrow(ValidationException::class)
+        ->and(fn () => $this->service->setujui($transfer, $this->tu))->toThrow(ValidationException::class); // belum diverifikasi
+
+    $this->service->verifikasi($transfer, $this->tu);
+
+    expect(fn () => $this->service->verifikasi($transfer, $this->tu))->toThrow(ValidationException::class); // sudah diverifikasi
+});
+
+test('transfer ditolak: transaksi tetap ada, alokasi dilepas, tagihan bisa dibayar lagi', function () {
+    catatTransaksi('cash', 40000, [$this->sep]);
+    $transfer = catatTransaksi('transfer', 40000, [$this->sep]);
+
+    expect($this->sep->fresh()->status)->toBe(StatusTagihan::Lunas);
+
+    $transfer = $this->service->tolak($transfer, $this->tu, '  Tidak ada di mutasi rekening  ');
+
+    expect($transfer->status)->toBe(StatusTransaksi::Ditolak)
+        ->and($transfer->alasan_ditolak)->toBe('Tidak ada di mutasi rekening')
+        ->and($transfer->ditolak_oleh)->toBe($this->tu->id)
+        ->and($transfer->tagihan()->count())->toBe(0)
+        ->and(Transaksi::count())->toBe(2) // tidak dihapus
+        ->and($this->sep->fresh()->status)->toBe(StatusTagihan::Belum)
+        ->and($this->sep->sisa())->toBe(40000); // bagian cash tetap tercatat
+
+    catatTransaksi('cash', 40000, [$this->sep]);
+
+    expect($this->sep->fresh()->status)->toBe(StatusTagihan::Lunas);
+});
+
+test('transfer ditolak menghapus refund kelebihan yang belum dikirim', function () {
+    $transfer = catatTransaksi('transfer', 200000, [$this->okt]); // Oktober, November, refund 40.000
+
+    $this->service->tolak($transfer, $this->tu, 'Bukti transfer palsu');
+
+    expect(PenyesuaianDana::count())->toBe(0)
+        ->and($this->okt->fresh()->status)->toBe(StatusTagihan::Belum)
+        ->and(Tagihan::where('bulan_tagihan', '2026-11-01')->first()->status)->toBe(StatusTagihan::Belum);
+});
+
+test('penolakan diblokir untuk transfer yang sudah disetujui, sudah ditolak, sudah direfund, atau tanpa alasan', function () {
+    $disetujui = catatTransaksi('transfer', 80000, [$this->agu]);
+    $this->service->setujui($this->service->verifikasi($disetujui, $this->tu), $this->tu);
+
+    $ditolak = catatTransaksi('transfer', 80000, [$this->sep]);
+    $this->service->tolak($ditolak, $this->tu, 'Tidak ada di mutasi');
+
+    $direfund = catatTransaksi('transfer', 200000, [$this->okt]);
+    $direfund->penyesuaianDana()->update(['status' => StatusPenyesuaian::Berhasil]);
+
+    expect(fn () => $this->service->tolak($disetujui, $this->tu, 'Salah'))->toThrow(ValidationException::class)
+        ->and(fn () => $this->service->tolak($ditolak, $this->tu, 'Lagi'))->toThrow(ValidationException::class)
+        ->and(fn () => $this->service->tolak($direfund, $this->tu, 'Salah'))->toThrow(ValidationException::class)
+        ->and(fn () => $this->service->tolak($direfund, $this->tu, '   '))->toThrow(ValidationException::class);
+});
