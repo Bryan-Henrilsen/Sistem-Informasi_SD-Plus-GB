@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Domains\LesEkskul\Models\PembayaranOnline;
+use App\Domains\LesEkskul\Models\Pendaftaran;
+use App\Domains\LesEkskul\Models\Transaksi;
 use App\Enums\StatusSekolah;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -47,6 +50,11 @@ class Siswa extends Model
         return $this->hasMany(SiswaKelas::class);
     }
 
+    public function transaksi(): HasMany
+    {
+        return $this->hasMany(Transaksi::class);
+    }
+
     public function kelasTahunAktif(): HasOne
     {
         return $this->hasOne(SiswaKelas::class)
@@ -57,5 +65,15 @@ class Siswa extends Model
     public function berhakDiskonAnakGuru(): bool
     {
         return $this->anakGuru?->status_aktif === true;
+    }
+
+    public function pendaftaran(): HasMany
+    {
+        return $this->hasMany(Pendaftaran::class);
+    }
+
+    public function pembayaranOnline(): HasMany
+    {
+        return $this->hasMany(PembayaranOnline::class);
     }
 }
