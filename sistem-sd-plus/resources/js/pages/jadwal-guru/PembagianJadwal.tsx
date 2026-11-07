@@ -17,7 +17,9 @@ interface WaktuPelajaran {
 interface Kelas {
     id: number;
     nama_kelas: string;
+    nama_lengkap?: string;
     jenjang: number;
+    kuota_jam: number;
 }
 
 interface Guru {
@@ -48,12 +50,14 @@ interface JadwalMengajar {
     hari: number;
     waktu_pelajaran_id: number;
     kelas_id: number | null;
+    parent_jadwal_id: number | null;
     guru?: Guru;
     kisi_kisi_tugas?: KisiKisiTugas;
     jenis_tugas: JenisTugas;
 }
 
 interface PembagianJadwalProps {
+    tahunAjaran?: { id: number; nama: string };
     waktuPelajaran: WaktuPelajaran[];
     daftarKelas: Kelas[];
     kisiKisiTugas: KisiKisiTugas[];
@@ -66,16 +70,11 @@ interface CustomPageProps {
     [key: string]: unknown;
 }
 
-export default function PembagianJadwal({ waktuPelajaran, daftarKelas, kisiKisiTugas, jadwalTerplot }: PembagianJadwalProps) {
-const { props } = usePage();
+export default function PembagianJadwal({ tahunAjaran, waktuPelajaran, daftarKelas, kisiKisiTugas, jadwalTerplot }: PembagianJadwalProps) {
+const { props } = usePage<CustomPageProps>();
 
-const flash = props.flash as
-    { success?: string; error?: string }
-    undefined;
-
-const errors = props.errors as
-    Record<string, string>
-    undefined;
+const flash = props.flash;
+const errors = props.errors;
 
 // --- STATES ---
 const [hariAktif, setHariAktif] = useState<number>(1);
@@ -129,57 +128,86 @@ const executeDelete = () => {
 
 const handleDragStart = (e: React.DragEvent<HTMLElement>, item: KisiKisiTugas) => {
     setDraggedItem(item);
-    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData('text/plain', String(item.id));
+
     const img = new Image();
     img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
     e.dataTransfer.setDragImage(img, 0, 0);
 };
 
 const handleDragOver = (e: React.DragEvent<HTMLElement>) => {
-    e.preventDefault(); 
-    e.dataTransfer.dropEffect = 'move';
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
 };
 
-const handleDrop = (e: React.DragEvent<HTMLElement>, waktuId: number, kelasId: number | null, expectedKodeTugas: string) => {
+const handleDrop = (
+    e: React.DragEvent<HTMLElement>,
+    waktuId: number,
+    expectedKodeTugas: string,
+    parentJadwalId: number | null = null
+) => {
     e.preventDefault();
-    
-    if (!draggedItem) return;
 
-    if (draggedItem.jenis_tugas.kode !== expectedKodeTugas) {
-        showToast(`Area ini untuk ${expectedKodeTugas}, tapi Anda menarik kartu ${draggedItem.jenis_tugas.kode}.`, 'error');
+    const draggedId = Number(e.dataTransfer.getData('text/plain'));
+    const item = draggedItem ?? kisiKisiTugas.find((kisi) => kisi.id === draggedId);
+    if (!item) return;
+
+    if (item.jenis_tugas.kode !== expectedKodeTugas) {
+        showToast(`Slot ini hanya menerima tugas ${expectedKodeTugas}.`, 'error');
+        setDraggedItem(null);
+        return;
+    }
+
+    if (expectedKodeTugas === 'damping' && parentJadwalId === null) {
+        showToast('Pilih slot yang sudah memiliki guru utama untuk menempatkan damping.', 'error');
         setDraggedItem(null);
         return;
     }
 
     router.post('/jadwal-guru/pembagian/assign', {
-        kisi_kisi_tugas_id: draggedItem.id,
+        kisi_kisi_tugas_id: item.id,
         waktu_pelajaran_id: waktuId,
-        hari: hariAktif
+        hari: hariAktif,
+        parent_jadwal_id: parentJadwalId,
     }, {
         preserveScroll: true,
         onSuccess: () => setDraggedItem(null),
+        onError: (validationErrors) => {
+            const message = Object.values(validationErrors)[0] ?? 'Jadwal gagal ditempatkan.';
+            showToast(String(message), 'error');
+            setDraggedItem(null);
+        },
     });
 };
 
-const filteredKisiKisi = kisiKisiTugas.filter(kisi => {
-    if (kisi.sisa_jam_tersedia <= 0) return false; 
-    
+const filteredKisiKisi = kisiKisiTugas.filter((kisi) => {
+    if (kisi.sisa_jam_tersedia <= 0) return false;
+
     const namaGuru = (kisi.guru?.user?.name || kisi.guru?.name || kisi.guru?.kode_guru || '').toLowerCase();
-    const mapel = (kisi.mata_pelajaran?.nama || kisi.keterangan || '').toLowerCase();
-    const keyword = searchTerm.toLowerCase();
-    
+    const mapel = (kisi.mata_pelajaran?.nama || kisi.keterangan || kisi.jenis_tugas.nama || '').toLowerCase();
+    const keyword = searchTerm.trim().toLowerCase();
     const matchSearch = namaGuru.includes(keyword) || mapel.includes(keyword);
-    const matchType = filterType[kisi.jenis_tugas.kode];
-    
+    const matchType = Boolean(filterType[kisi.jenis_tugas.kode]);
+
     return matchSearch && matchType;
 });
 
-const getJadwalDiSlot = (waktuId: number, kelasId: number | null, jenisTugasKode: string) => {
-    return jadwalTerplot.find(j => 
-        j.hari === hariAktif && 
-        j.waktu_pelajaran_id === waktuId && 
-        (j.kelas_id === kelasId || (j.kelas_id === null && kelasId === null)) &&
-        j.jenis_tugas.kode === jenisTugasKode
+const getJadwalDiSlot = (waktuId: number, kelasId: number, jenisTugasKode: string) => {
+    return jadwalTerplot.find((jadwal) =>
+        jadwal.hari === hariAktif &&
+        jadwal.waktu_pelajaran_id === waktuId &&
+        jadwal.kelas_id === kelasId &&
+        jadwal.jenis_tugas.kode === jenisTugasKode
+    );
+};
+
+const getPiketDiSlot = (waktuId: number) => {
+    return jadwalTerplot.filter((jadwal) =>
+        jadwal.hari === hariAktif &&
+        jadwal.waktu_pelajaran_id === waktuId &&
+        jadwal.kelas_id === null &&
+        jadwal.jenis_tugas.kode === 'piket'
     );
 };
 
@@ -205,7 +233,7 @@ return (
                         <span className="text-2xl">🗑️</span>
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-2">Tarik Kembali Jadwal?</h3>
-                    <p className="text-sm text-gray-500 mb-6">Jadwal ini akan dicabut dari kalender dan alokasi jamnya akan dikembalikan ke daftar penugasan guru.</p>
+                    <p className="text-sm text-gray-500 mb-6">Jadwal ini akan dicabut dari kalender dan alokasinya dikembalikan. Jika ini guru utama, jadwal damping yang menempel juga akan ikut terhapus.</p>
                     <div className="flex gap-3 justify-center">
                         <button onClick={() => setDeleteModal({ isOpen: false, jadwalId: null })} className="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">Batal</button>
                         <button onClick={executeDelete} className="px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">Ya, Tarik Jadwal</button>
@@ -221,9 +249,9 @@ return (
             </div>
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                 <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 mt-6">Modul Jadwal Guru</div>
-                <a href="#" className="flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md text-sm font-medium border-l-4 border-transparent transition-colors">Waktu Pelajaran</a>
-                <a href="#" className="flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md text-sm font-medium border-l-4 border-transparent transition-colors">Kisi-Kisi Tugas</a>
-                <a href="#" className="flex items-center px-3 py-2 bg-[#A9784F]/10 text-[#7A5738] rounded-md text-sm font-medium border-l-4 border-[#A9784F] transition-colors shadow-sm">Pembagian Jadwal</a>
+                <a href="/jadwal-guru/waktu-pelajaran" className="flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md text-sm font-medium border-l-4 border-transparent transition-colors">Waktu Pelajaran</a>
+                <a href="/jadwal-guru/kisi-kisi" className="flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md text-sm font-medium border-l-4 border-transparent transition-colors">Kisi-Kisi Tugas</a>
+                <a href="/jadwal-guru/pembagian" className="flex items-center px-3 py-2 bg-[#A9784F]/10 text-[#7A5738] rounded-md text-sm font-medium border-l-4 border-[#A9784F] transition-colors shadow-sm">Pembagian Jadwal</a>
             </nav>
         </aside>
 
@@ -232,7 +260,7 @@ return (
                 <div className="flex justify-between items-center w-full mb-4">
                     <div>
                         <h2 className="text-2xl font-bold text-[#7A5738]">Pembagian Jadwal Mengajar</h2>
-                        <p className="text-sm text-gray-500 mt-1">Seret kartu dari kanan ke sel yang tersedia di kalender.</p>
+                        <p className="text-sm text-gray-500 mt-1">Tahun Ajaran {tahunAjaran?.nama ?? ''} · Seret kartu dari kanan ke sel yang tersedia di kalender.</p>
                     </div>
                     <div className="flex gap-2 bg-gray-100 p-1 rounded-lg border border-gray-200 shadow-inner">
                         {daftarHari.map(hari => (
@@ -260,21 +288,18 @@ return (
                         <thead>
                             <tr>
                                 <th className="sticky top-0 left-0 z-30 bg-gray-100 border-b border-r border-gray-300 px-3 py-4 w-24 text-center font-bold text-gray-700 rounded-tl-xl bg-clip-padding">Waktu</th>
-                                {daftarKelas.map(kelas => (
-                                    <th key={kelas.id} className="sticky top-0 z-20 bg-white border-b border-r border-gray-200 px-4 py-3 font-bold text-[#3A322C] w-64 text-center bg-clip-padding">
+                                {daftarKelas.map((kelas, kelasIndex) => (
+                                    <th key={kelas.id} className={`sticky top-0 z-20 bg-white border-b border-r border-gray-200 px-4 py-3 font-bold text-[#3A322C] w-64 text-center bg-clip-padding ${kelasIndex === daftarKelas.length - 1 ? 'rounded-tr-xl' : ''}`}>
                                         <div className="text-base">Kelas {kelas.nama_kelas}</div>
                                         <div className="text-[10px] font-normal text-gray-400 mt-1 uppercase tracking-wider">Jenjang {kelas.jenjang}</div>
+                                        <div className="mt-1 text-xs font-bold text-[#A9784F]">{kelas.kuota_jam} Jam / Minggu</div>
                                     </th>
                                 ))}
-                                <th className="sticky top-0 z-20 bg-purple-50/80 backdrop-blur border-b border-purple-200 px-4 py-3 font-bold text-purple-800 w-64 text-center rounded-tr-xl bg-clip-padding">
-                                    <div className="text-base">Area Piket</div>
-                                    <div className="text-[10px] font-normal text-purple-500 mt-1 uppercase tracking-wider">Tidak Terikat Kelas</div>
-                                </th>
                             </tr>
                         </thead>
                         <tbody>
                             {waktuHariIni.map((waktu, index) => {
-                                const isLastRow = index === waktuPelajaran.length - 1;
+                                const isLastRow = index === waktuHariIni.length - 1;
                                 return (
                                     <tr key={waktu.id} className="hover:bg-gray-50/50 transition-colors">
                                         <td className={`sticky left-0 z-20 bg-white border-r border-b border-gray-200 px-2 py-3 text-center align-top bg-clip-padding ${isLastRow ? 'rounded-bl-xl' : ''}`}>
@@ -289,6 +314,24 @@ return (
                                                     <div className="text-[11px] font-medium text-orange-400 mt-1">{waktu.jam_mulai?.substring(0,5)}<br/>{waktu.jam_selesai?.substring(0,5)}</div>
                                                 </div>
                                             )}
+                                            {getPiketDiSlot(waktu.id).length > 0 && (
+                                                <div className="mt-2 space-y-1 text-left">
+                                                    {getPiketDiSlot(waktu.id).map((piket) => (
+                                                        <div key={piket.id} className="group relative rounded bg-purple-100 px-1.5 py-1 text-[10px] font-semibold text-purple-800">
+                                                            <span className="block truncate pr-4">{getGuruName(piket.guru)}</span>
+                                                            <button type="button" onClick={() => confirmDelete(piket.id)} title="Tarik jadwal piket" className="absolute right-1 top-1 text-purple-700 hover:text-red-600">×</button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            <div
+                                                onDragOver={handleDragOver}
+                                                onDrop={(event) => handleDrop(event, waktu.id, 'piket')}
+                                                className={`mt-2 rounded border border-dashed px-1 py-1 text-[10px] font-bold transition-colors ${draggedItem?.jenis_tugas.kode === 'piket' ? 'border-purple-400 bg-purple-50 text-purple-700' : 'border-transparent text-purple-300 hover:border-purple-200 hover:bg-purple-50'}`}
+                                                title="Tempatkan tugas piket pada slot waktu ini"
+                                            >
+                                                + Piket
+                                            </div>
                                         </td>
 
                                         {daftarKelas.map(kelas => {
@@ -311,7 +354,7 @@ return (
                                                                 ) : (
                                                                     <div 
                                                                         onDragOver={handleDragOver}
-                                                                        onDrop={(e) => handleDrop(e, waktu.id, kelas.id, 'utama')}
+                                                                        onDrop={(e) => handleDrop(e, waktu.id, 'utama')}
                                                                         className={`border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all min-h-[64px] ${draggedItem?.jenis_tugas?.kode === 'utama' ? 'border-blue-400 bg-blue-50/50 text-blue-500 scale-[1.02]' : 'border-gray-200 text-gray-400 hover:bg-gray-50 hover:border-blue-300'}`}
                                                                     >
                                                                         <span className="text-xs font-bold uppercase tracking-wider">+ Utama</span>
@@ -319,19 +362,19 @@ return (
                                                                 )}
 
                                                                 {/* Dropzone DAMPING (Aturan PRD: Hanya untuk Kelas 1 dan 2) */}
-                                                                {kelas.jenjang <= 2 && (
+                                                                {kelas.jenjang <= 2 && jadwalUtama && (
                                                                     jadwalDamping ? (
                                                                         <div className="w-full p-2 bg-orange-50 border border-orange-200 rounded-lg relative group shadow-sm hover:shadow-md transition-shadow">
-                                                                            <button onClick={() => confirmDelete(jadwalDamping.id)} className="absolute -top-2 -right-2 bg-red-100 text-red-600 border border-red-200 rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-600 hover:text-white pb-0.5">×</button>
+                                                                            <button type="button" onClick={() => confirmDelete(jadwalDamping.id)} className="absolute -top-2 -right-2 bg-red-100 text-red-600 border border-red-200 rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-600 hover:text-white pb-0.5">×</button>
                                                                             <div className="flex justify-between items-center">
                                                                                 <div className="font-bold text-orange-900 text-[13px]">{getGuruName(jadwalDamping.guru)}</div>
                                                                                 <div className="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">Damping</div>
                                                                             </div>
                                                                         </div>
                                                                     ) : (
-                                                                        <div 
+                                                                        <div
                                                                             onDragOver={handleDragOver}
-                                                                            onDrop={(e) => handleDrop(e, waktu.id, kelas.id, 'damping')}
+                                                                            onDrop={(event) => handleDrop(event, waktu.id, 'damping', jadwalUtama.id)}
                                                                             className={`border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-all min-h-[36px] ${draggedItem?.jenis_tugas?.kode === 'damping' ? 'border-orange-400 bg-orange-50/50 text-orange-500 scale-[1.02]' : 'border-gray-200/60 text-gray-300 hover:bg-gray-50 hover:border-orange-300 hover:text-orange-400'}`}
                                                                         >
                                                                             <span className="text-[10px] font-bold uppercase tracking-wider">+ Damping</span>
@@ -353,30 +396,6 @@ return (
                                             );
                                         })}
 
-                                        {/* Kolom Khusus Area Piket */}
-                                        <td className={`border-b border-gray-100 p-2 bg-purple-50/30 align-top ${isLastRow ? 'rounded-br-xl' : ''}`}>
-                                            {(() => {
-                                                const jadwalPiket = getJadwalDiSlot(waktu.id, null, 'piket');
-                                                if (waktu.jenis_kegiatan !== 'kbm') {
-                                                    return <div className="h-full min-h-[40px] flex items-center justify-center opacity-40"><span className="text-xs font-bold text-purple-300">-</span></div>;
-                                                }
-                                                return jadwalPiket ? (
-                                                    <div className="w-full h-full p-3 bg-purple-100 border border-purple-300 rounded-lg relative group shadow-sm hover:shadow-md transition-shadow">
-                                                        <button onClick={() => confirmDelete(jadwalPiket.id)} className="absolute -top-2 -right-2 bg-red-100 text-red-600 border border-red-200 rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-600 hover:text-white pb-0.5">×</button>
-                                                        <div className="font-bold text-purple-900 text-sm mb-1">{getGuruName(jadwalPiket.guru)}</div>
-                                                        <div className="text-xs text-purple-700 bg-purple-200/50 inline-block px-1.5 py-0.5 rounded">{jadwalPiket.kisi_kisi_tugas?.keterangan || 'Tugas Piket'}</div>
-                                                    </div>
-                                                ) : (
-                                                    <div 
-                                                        onDragOver={handleDragOver}
-                                                        onDrop={(e) => handleDrop(e, waktu.id, null, 'piket')}
-                                                        className={`h-full min-h-[108px] border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-all ${draggedItem?.jenis_tugas?.kode === 'piket' ? 'border-purple-400 bg-purple-100/50 text-purple-600 scale-[1.02]' : 'border-purple-200 text-purple-300 hover:bg-purple-50 hover:border-purple-400 hover:text-purple-500'}`}
-                                                    >
-                                                        <span className="text-xs font-bold uppercase tracking-wider">+ Piket</span>
-                                                    </div>
-                                                );
-                                            })()}
-                                        </td>
                                     </tr>
                                 );
                             })}
@@ -388,7 +407,7 @@ return (
                     <div className="p-5 border-b border-gray-200 bg-gray-50 flex flex-col gap-4">
                         <div>
                             <h3 className="font-bold text-[#3A322C] text-lg">Kartu Penugasan</h3>
-                            <p className="text-xs text-gray-500 font-medium mt-1"><span className="text-[#A9784F] font-bold">{filteredKisiKisi.length}</span> kartu tugas siap di-plot</p>
+                            <p className="text-xs text-gray-500 font-medium mt-1"><span className="text-[#A9784F] font-bold">{filteredKisiKisi.length}</span> alokasi dengan sisa jam</p>
                         </div>
                         
                         <div className="relative">
@@ -446,7 +465,7 @@ return (
                                         </span>
                                     </div>
                                     <div className="text-sm font-medium text-gray-700 mb-3 bg-gray-50 px-2 py-1.5 rounded-lg border border-gray-100">
-                                        {kisi.mata_pelajaran?.nama || kisi.keterangan || 'Tugas Spesifik'}
+                                        {kisi.mata_pelajaran?.nama || kisi.keterangan || kisi.jenis_tugas.nama}
                                     </div>
                                     <div className="flex justify-between items-center text-xs pt-2 border-t border-gray-100">
                                         <span className="text-gray-500 font-medium">Sisa Alokasi Slot:</span>

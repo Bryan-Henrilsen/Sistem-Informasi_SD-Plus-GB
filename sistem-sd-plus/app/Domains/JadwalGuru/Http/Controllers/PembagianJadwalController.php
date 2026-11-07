@@ -3,93 +3,99 @@
 namespace App\Domains\JadwalGuru\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Domains\JadwalGuru\Services\JadwalService;
 use App\Domains\JadwalGuru\Models\JadwalMengajar;
-use App\Domains\JadwalGuru\Models\WaktuPelajaran;
 use App\Domains\JadwalGuru\Models\KisiKisiTugas;
+use App\Domains\JadwalGuru\Models\WaktuPelajaran;
+use App\Domains\JadwalGuru\Services\JadwalService;
 use App\Models\Kelas;
 use App\Models\TahunAjaran;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Exception;
+use Inertia\Response;
+use Throwable;
 
 class PembagianJadwalController extends Controller
 {
-    protected $jadwalService;
-
-    public function __construct(JadwalService $jadwalService)
-    {
-        $this->jadwalService = $jadwalService;
+    public function __construct(
+        private readonly JadwalService $jadwalService
+    ) {
     }
 
-    /**
-     * Menampilkan halaman UI Pembagian Jadwal
-     */
-    public function index()
+    /** Menampilkan papan pembagian jadwal untuk tahun ajaran aktif. */
+    public function index(): Response
     {
         $tahunAjaran = TahunAjaran::aktif()->firstOrFail();
 
-        $tahunAjaranId = $tahunAjaran->id;
-        // 1. Waktu pelajaran
-        $waktuPelajaran = WaktuPelajaran::where(
-            'tahun_ajaran_id',
-            $tahunAjaran->id
-        )
-            ->with('hariBerlaku')
-            ->orderBy('urutan', 'asc')
+        $slotKbm = WaktuPelajaran::query()
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->where('jenis_kegiatan', 'kbm')
+            ->withCount('hariBerlaku')
             ->get();
 
-        // 2. Daftar kelas
-        $daftarKelas = Kelas::where(
-            'tahun_ajaran_id',
-            $tahunAjaran->id
-        )
+        $daftarKelas = Kelas::query()
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
             ->orderBy('jenjang')
             ->orderBy('nama_kelas')
+            ->get()
+            ->map(function (Kelas $kelas) use ($slotKbm): array {
+                $kuotaJam = (int) $slotKbm
+                    ->filter(fn (WaktuPelajaran $slot) =>
+                        $kelas->jenjang >= $slot->jenjang_min &&
+                        $kelas->jenjang <= $slot->jenjang_max
+                    )
+                    ->sum('hari_berlaku_count');
+
+                return [
+                    'id' => $kelas->id,
+                    'nama_kelas' => $kelas->nama_kelas,
+                    'nama_lengkap' => $kelas->nama_lengkap,
+                    'jenjang' => (int) $kelas->jenjang,
+                    'kuota_jam' => $kuotaJam,
+                ];
+            })
+            ->values();
+
+        $waktuPelajaran = WaktuPelajaran::query()
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->with('hariBerlaku')
+            ->orderBy('urutan')
             ->get();
 
-        // 3. Kisi-kisi tugas
-        $kisiKisiTugas = KisiKisiTugas::where(
-            'tahun_ajaran_id',
-            $tahunAjaran->id
-        )
-            ->with([
-                'guru.user',
-                'kelas',
-                'mataPelajaran',
-                'jenisTugas',
-                'jadwalMengajar',
-            ])
+        $kisiKisiTugas = KisiKisiTugas::query()
+            ->where('tahun_ajaran_id', $tahunAjaran->id)
+            ->with(['guru.user', 'kelas', 'mataPelajaran', 'jenisTugas'])
+            ->withCount('jadwalMengajar')
+            ->orderBy('guru_id')
+            ->orderBy('jenis_tugas_id')
             ->get()
-            ->map(function ($kisi) {
+            ->map(function (KisiKisiTugas $kisi): KisiKisiTugas {
                 $kisi->sisa_jam_tersedia = max(
                     0,
-                    $kisi->jumlah_jam - $kisi->jadwalMengajar->count()
+                    (int) $kisi->jumlah_jam - (int) $kisi->jadwal_mengajar_count
                 );
 
                 return $kisi;
             })
-            ->filter(fn ($kisi) => $kisi->sisa_jam_tersedia > 0)
+            ->filter(fn (KisiKisiTugas $kisi) => $kisi->sisa_jam_tersedia > 0)
             ->values();
 
-        // 4. Jadwal aktual
-        $jadwalTerplot = JadwalMengajar::whereHas(
-            'kisiKisiTugas',
-            function ($query) use ($tahunAjaran) {
-                $query->where(
-                    'tahun_ajaran_id',
-                    $tahunAjaran->id
-                );
-            }
-        )
+        $jadwalTerplot = JadwalMengajar::query()
+            ->whereHas('kisiKisiTugas', fn ($query) => $query->where('tahun_ajaran_id', $tahunAjaran->id))
             ->with([
                 'guru.user',
                 'kisiKisiTugas.mataPelajaran',
                 'jenisTugas',
             ])
+            ->orderBy('hari')
+            ->orderBy('waktu_pelajaran_id')
             ->get();
 
         return Inertia::render('jadwal-guru/PembagianJadwal', [
+            'tahunAjaran' => [
+                'id' => $tahunAjaran->id,
+                'nama' => $tahunAjaran->nama,
+            ],
             'waktuPelajaran' => $waktuPelajaran,
             'daftarKelas' => $daftarKelas,
             'kisiKisiTugas' => $kisiKisiTugas,
@@ -97,40 +103,43 @@ class PembagianJadwalController extends Controller
         ]);
     }
 
-    /**
-     * Menyimpan jadwal baru dari aksi Drag & Drop
-     */
-    public function store(Request $request)
+    /** Menyimpan satu penempatan dari aksi drag-and-drop. */
+    public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'kisi_kisi_tugas_id' => 'required|exists:kisi_kisi_tugas,id',
-            'waktu_pelajaran_id' => 'required|exists:waktu_pelajaran,id',
-            'hari'               => 'required|integer|between:1,5', // 1=Senin .. 5=Jumat
+        $validated = $request->validate([
+            'kisi_kisi_tugas_id' => ['required', 'integer', 'exists:kisi_kisi_tugas,id'],
+            'waktu_pelajaran_id' => ['required', 'integer', 'exists:waktu_pelajaran,id'],
+            'hari' => ['required', 'integer', 'between:1,5'],
+            'parent_jadwal_id' => ['nullable', 'integer', 'exists:jadwal_mengajar,id'],
         ]);
 
         try {
             $this->jadwalService->assignJadwal(
-                $request->kisi_kisi_tugas_id,
-                $request->waktu_pelajaran_id,
-                $request->hari
+                (int) $validated['kisi_kisi_tugas_id'],
+                (int) $validated['waktu_pelajaran_id'],
+                (int) $validated['hari'],
+                isset($validated['parent_jadwal_id']) ? (int) $validated['parent_jadwal_id'] : null
             );
-            
-            return redirect()->back()->with('success', 'Jadwal berhasil ditambahkan.');
-        } catch (Exception $e) {
-            return redirect()->back()->withErrors(['message' => $e->getMessage()]);
+
+            return redirect()->back()->with('success', 'Jadwal berhasil ditempatkan.');
+        } catch (Throwable $exception) {
+            return redirect()->back()->withErrors([
+                'message' => $exception->getMessage(),
+            ]);
         }
     }
 
-    /**
-     * Menghapus jadwal (Menarik kartu dari grid kembali ke sidebar)
-     */
-    public function destroy($id)
+    /** Menghapus jadwal dan mengembalikan alokasinya ke sidebar. */
+    public function destroy(int $id): RedirectResponse
     {
         try {
             $this->jadwalService->removeJadwal($id);
-            return redirect()->back()->with('success', 'Jadwal berhasil ditarik.');
-        } catch (Exception $e) {
-            return redirect()->back()->withErrors(['message' => 'Gagal menarik jadwal: ' . $e->getMessage()]);
+
+            return redirect()->back()->with('success', 'Jadwal berhasil ditarik kembali.');
+        } catch (Throwable $exception) {
+            return redirect()->back()->withErrors([
+                'message' => 'Gagal menarik jadwal: ' . $exception->getMessage(),
+            ]);
         }
     }
 }
