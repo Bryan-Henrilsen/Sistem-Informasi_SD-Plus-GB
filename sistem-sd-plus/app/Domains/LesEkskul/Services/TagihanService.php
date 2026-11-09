@@ -59,6 +59,27 @@ class TagihanService
         return $hasil;
     }
 
+    // (d) Bayar di muka dari halaman TU: satu tagihan untuk bulan ditagih berikutnya setelah tagihan terakhir;
+    // null bila tidak ada lagi bulan yang ditagih di tahun ajaran ini
+    public function buatBulanBerikutnya(Pendaftaran $pendaftaran): ?Tagihan
+    {
+        $terakhir = $pendaftaran->tagihan()->max('bulan_tagihan');
+        $bulan = $terakhir ? Carbon::parse($terakhir)->addMonth() : $pendaftaran->tanggal_daftar->startOfMonth();
+        $akhirTahunAjaran = $pendaftaran->kegiatan()->tahunAjaran->tanggal_selesai;
+
+        while ($bulan->lte($akhirTahunAjaran)) {
+            $tagihan = $this->buatUntukBulan($pendaftaran, $bulan);
+
+            if ($tagihan) {
+                return $tagihan;
+            }
+
+            $bulan = $bulan->addMonth();
+        }
+
+        return null;
+    }
+
     // Tagihan satu bulan; null bila bulan itu tidak ditagih. Aman dipanggil berulang (unique pendaftaran dan bulan)
     public function buatUntukBulan(Pendaftaran $pendaftaran, DateTimeInterface|string $bulan): ?Tagihan
     {
