@@ -520,7 +520,7 @@ export default function KisiKisiTugas({
 
             {isModalOpen && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-[2px]">
-                    <div className="my-8 w-full max-w-xl overflow-hidden rounded-xl bg-white shadow-2xl">
+                    <div className="my-8 w-full max-w-xl overflow-hidden rounded-xl bg-white text-gray-900 shadow-2xl">
                         <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
                             <div>
                                 <h3 className="font-bold text-[#3A322C]">{editingItem ? 'Ubah Alokasi Tugas' : 'Tambah Alokasi Tugas'}</h3>
@@ -536,7 +536,7 @@ export default function KisiKisiTugas({
                                     value={form.data.guru_id}
                                     onChange={(event: React.ChangeEvent<HTMLSelectElement>) => form.setData('guru_id', event.target.value)}
                                     disabled={Boolean(editingItem?.jadwal_terpasang)}
-                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#A9784F] disabled:bg-gray-100"
+                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[#A9784F] disabled:bg-gray-100"
                                 >
                                     <option value="">Pilih guru</option>
                                     {guruList.map((guru) => <option key={guru.id} value={guru.id}>{guru.nama} ({guru.kode_guru})</option>)}
@@ -555,7 +555,7 @@ export default function KisiKisiTugas({
                                         mapel_id: '',
                                     })}
                                     disabled={Boolean(editingItem?.jadwal_terpasang)}
-                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#A9784F] disabled:bg-gray-100"
+                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[#A9784F] disabled:bg-gray-100"
                                 >
                                     <option value="utama">Mengajar Utama</option>
                                     <option value="damping">Guru Damping</option>
@@ -572,7 +572,7 @@ export default function KisiKisiTugas({
                                             value={form.data.kelas_id}
                                             onChange={(event: React.ChangeEvent<HTMLSelectElement>) => form.setData('kelas_id', event.target.value)}
                                             disabled={Boolean(editingItem?.jadwal_terpasang)}
-                                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#A9784F] disabled:bg-gray-100"
+                                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[#A9784F] disabled:bg-gray-100"
                                         >
                                             <option value="">Pilih kelas</option>
                                             {kelasList.map((kelas) => (
@@ -589,7 +589,7 @@ export default function KisiKisiTugas({
                                             value={form.data.mapel_id}
                                             onChange={(event: React.ChangeEvent<HTMLSelectElement>) => form.setData('mapel_id', event.target.value)}
                                             disabled={Boolean(editingItem?.jadwal_terpasang)}
-                                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-[#A9784F] disabled:bg-gray-100"
+                                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[#A9784F] disabled:bg-gray-100"
                                         >
                                             <option value="">Pilih mata pelajaran</option>
                                             {mapelList.map((mapel) => <option key={mapel.id} value={mapel.id}>{mapel.nama} ({mapel.kode})</option>)}

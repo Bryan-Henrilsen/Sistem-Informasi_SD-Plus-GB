@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Domains\JadwalGuru\Http\Controllers\KisiKisiTugasController;
 use App\Domains\JadwalGuru\Http\Controllers\PembagianJadwalController;
 use App\Domains\JadwalGuru\Http\Controllers\WaktuPelajaranController;
+use App\Domains\JadwalGuru\Http\Controllers\HasilJadwalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,4 +30,7 @@ Route::prefix('jadwal-guru')->name('jadwal-guru.')->group(function () {
     Route::get('/pembagian', [PembagianJadwalController::class, 'index'])->name('pembagian.index');
     Route::post('/pembagian/assign', [PembagianJadwalController::class, 'store'])->name('pembagian.store');
     Route::delete('/pembagian/{id}', [PembagianJadwalController::class, 'destroy'])->name('pembagian.destroy');
+
+    // Hasil Jadwal
+    Route::get('/hasil', [HasilJadwalController::class, 'index'])->name('hasil.index');
 });

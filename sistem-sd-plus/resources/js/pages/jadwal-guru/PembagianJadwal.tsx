@@ -233,7 +233,7 @@ return (
                         <span className="text-2xl">🗑️</span>
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-2">Tarik Kembali Jadwal?</h3>
-                    <p className="text-sm text-gray-500 mb-6">Jadwal ini akan dicabut dari kalender dan alokasinya dikembalikan. Jika ini guru utama, jadwal damping yang menempel juga akan ikut terhapus.</p>
+                    <p className="text-sm text-gray-500 mb-6">Jadwal ini akan dicabut dari kalender dan alokasi jamnya akan dikembalikan ke daftar penugasan guru.</p>
                     <div className="flex gap-3 justify-center">
                         <button onClick={() => setDeleteModal({ isOpen: false, jadwalId: null })} className="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">Batal</button>
                         <button onClick={executeDelete} className="px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">Ya, Tarik Jadwal</button>
@@ -252,6 +252,7 @@ return (
                 <a href="/jadwal-guru/waktu-pelajaran" className="flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md text-sm font-medium border-l-4 border-transparent transition-colors">Waktu Pelajaran</a>
                 <a href="/jadwal-guru/kisi-kisi" className="flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md text-sm font-medium border-l-4 border-transparent transition-colors">Kisi-Kisi Tugas</a>
                 <a href="/jadwal-guru/pembagian" className="flex items-center px-3 py-2 bg-[#A9784F]/10 text-[#7A5738] rounded-md text-sm font-medium border-l-4 border-[#A9784F] transition-colors shadow-sm">Pembagian Jadwal</a>
+                <a href="/jadwal-guru/hasil" className="flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md text-sm font-medium border-l-4 border-transparent transition-colors">Hasil Jadwal</a>
             </nav>
         </aside>
 
@@ -260,7 +261,7 @@ return (
                 <div className="flex justify-between items-center w-full mb-4">
                     <div>
                         <h2 className="text-2xl font-bold text-[#7A5738]">Pembagian Jadwal Mengajar</h2>
-                        <p className="text-sm text-gray-500 mt-1">Tahun Ajaran {tahunAjaran?.nama ?? ''} · Seret kartu dari kanan ke sel yang tersedia di kalender.</p>
+                        <p className="text-sm text-gray-500 mt-1">Seret kartu dari kanan ke sel yang tersedia di kalender.</p>
                     </div>
                     <div className="flex gap-2 bg-gray-100 p-1 rounded-lg border border-gray-200 shadow-inner">
                         {daftarHari.map(hari => (
