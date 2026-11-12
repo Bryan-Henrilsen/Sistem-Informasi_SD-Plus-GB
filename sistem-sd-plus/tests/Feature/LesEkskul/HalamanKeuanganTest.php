@@ -22,6 +22,10 @@ beforeEach(function () {
     $this->bendahara = User::factory()->create()->assignRole('bendahara');
 
     $tahunAjaran = TahunAjaran::create(['nama' => '2026/2027', 'tanggal_mulai' => '2026-07-13', 'tanggal_selesai' => '2027-06-30', 'status_aktif' => true]);
+    $tahunAjaran->semester()->createMany([
+        ['urutan' => 1, 'nama' => 'Semester 1', 'tanggal_mulai' => '2026-07-13', 'tanggal_selesai' => '2026-12-31'],
+        ['urutan' => 2, 'nama' => 'Semester 2', 'tanggal_mulai' => '2027-01-01', 'tanggal_selesai' => '2027-06-30'],
+    ]);
     $basket = Ekstrakurikuler::create(['tahun_ajaran_id' => $tahunAjaran->id, 'nama' => 'Basket', 'biaya' => 80000]);
     $this->siswa = Siswa::create(['nama' => 'Budi Uji']);
     $this->pendaftaran = Pendaftaran::create(['siswa_id' => $this->siswa->id, 'ekstrakurikuler_id' => $basket->id, 'tanggal_daftar' => '2026-07-15']);
@@ -126,4 +130,27 @@ test('halaman catat pembayaran menampilkan tagihan terbuka siswa yang dipilih', 
 
     $this->actingAs($this->tu)->get('/les-ekskul/transaksi')
         ->assertInertia(fn (Assert $page) => $page->component('les-ekskul/transaksi/index'));
+});
+
+test('bayar di muka hanya sampai akhir semester yang sedang berjalan', function () {
+    $this->travelTo('2026-11-10 09:00'); // semester ganjil
+    $bayarDiMuka = fn () => $this->actingAs($this->tu)->post('/les-ekskul/tagihan/bayar-di-muka', ['pendaftaran_id' => $this->pendaftaran->id]);
+
+    foreach (range(1, 5) as $klik) {
+        $bayarDiMuka(); // klik ke-5 tidak membuat apa-apa: Desember libur, Januari sudah semester genap
+    }
+
+    expect(Tagihan::orderBy('bulan_tagihan')->get()->map(fn (Tagihan $t) => $t->bulan_tagihan->format('Y-m'))->all())
+        ->toBe(['2026-08', '2026-09', '2026-10', '2026-11']);
+
+    $this->actingAs($this->tu)->get("/les-ekskul/transaksi/catat?siswa={$this->siswa->id}")
+        ->assertInertia(fn (Assert $page) => $page->has('pendaftaran', 0)); // tombol bayar di muka tidak tampil
+
+    $this->travelTo('2027-01-05 09:00'); // semester genap sudah dimulai
+
+    $this->actingAs($this->tu)->get("/les-ekskul/transaksi/catat?siswa={$this->siswa->id}")
+        ->assertInertia(fn (Assert $page) => $page->where('pendaftaran.0.bulan', '2027-01'));
+
+    $bayarDiMuka();
+    expect(Tagihan::where('bulan_tagihan', '2027-01-01')->exists())->toBeTrue();
 });

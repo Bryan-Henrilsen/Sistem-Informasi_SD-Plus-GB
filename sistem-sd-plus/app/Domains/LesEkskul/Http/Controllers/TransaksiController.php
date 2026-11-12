@@ -10,6 +10,7 @@ use App\Domains\LesEkskul\Http\Requests\CatatTransaksiRequest;
 use App\Domains\LesEkskul\Models\Pendaftaran;
 use App\Domains\LesEkskul\Models\Tagihan;
 use App\Domains\LesEkskul\Models\Transaksi;
+use App\Domains\LesEkskul\Services\TagihanService;
 use App\Domains\LesEkskul\Services\TransaksiService;
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
@@ -74,7 +75,7 @@ class TransaksiController extends Controller
     }
 
     // Form Catat Pembayaran: cari siswa, lalu tampilkan tagihan yang masih bisa dibayar
-    public function create(Request $request): Response
+    public function create(Request $request, TagihanService $tagihanService): Response
     {
         $siswa = $request->integer('siswa') ? Siswa::with('kelasTahunAktif.kelas')->find($request->integer('siswa')) : null;
 
@@ -87,10 +88,16 @@ class TransaksiController extends Controller
                 : [],
             'siswa' => $siswa ? $this->ringkasSiswa($siswa) : null,
             'tagihan' => $siswa ? $this->tagihanTerbuka($siswa) : [],
+            // Tombol bayar di muka hanya untuk kegiatan yang masih punya bulan berikutnya di semester berjalan
             'pendaftaran' => $siswa
                 ? $siswa->pendaftaran()->aktif()->with('lesTambahan.kelas', 'ekstrakurikuler')->get()
-                    ->filter(fn (Pendaftaran $p) => $p->kegiatan()->biaya > 0)
-                    ->map(fn (Pendaftaran $p) => ['id' => $p->id, 'kegiatan' => $p->nama_kegiatan])->values()
+                    ->map(fn (Pendaftaran $p) => [
+                        'id' => $p->id,
+                        'kegiatan' => $p->nama_kegiatan,
+                        'bulan' => $tagihanService->bulanBayarDiMukaBerikutnya($p)?->format('Y-m'),
+                    ])
+                    ->filter(fn (array $p) => $p['bulan'] !== null)
+                    ->values()
                 : [],
             'hariIni' => today()->toDateString(),
         ]);
@@ -121,7 +128,7 @@ class TransaksiController extends Controller
         return to_route('les-ekskul.transaksi.index');
     }
 
-     public function verifikasi(Request $request, Transaksi $transaksi): RedirectResponse
+    public function verifikasi(Request $request, Transaksi $transaksi): RedirectResponse
     {
         $this->service->verifikasi($transaksi, $request->user());
 

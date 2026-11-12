@@ -28,7 +28,7 @@ type Props = {
     hasilCari: Siswa[];
     siswa: Siswa | null;
     tagihan: Tagihan[];
-    pendaftaran: { id: number; kegiatan: string }[];
+    pendaftaran: { id: number; kegiatan: string; bulan: string }[]; // bulan = bulan bayar di muka berikutnya
     hariIni: string;
 };
 
@@ -186,7 +186,7 @@ function FormPembayaran({ siswa, tagihan, pendaftaran, hariIni }: Omit<Props, 'c
                                     variant="outline"
                                     onClick={() => tambahBulanBerikutnya(p.id)}
                                 >
-                                    + bulan berikutnya {p.kegiatan}
+                                    + bulan berikutnya {p.kegiatan} {namaBulan(p.bulan)}
                                 </Button>
                             ))}
                         </div>
