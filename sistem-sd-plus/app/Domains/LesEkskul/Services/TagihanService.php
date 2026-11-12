@@ -7,9 +7,9 @@ use App\Domains\LesEkskul\Models\Pendaftaran;
 use App\Domains\LesEkskul\Models\PeriodeLaporan;
 use App\Domains\LesEkskul\Models\Tagihan;
 use Carbon\CarbonInterface;
-use Illuminate\Support\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -27,10 +27,10 @@ class TagihanService
             ->with(['siswa.anakGuru', 'lesTambahan.tahunAjaran', 'ekstrakurikuler.tahunAjaran'])
             ->get();
 
-            return DB::transaction(fn () => $kandidat
-                ->map(fn (Pendaftaran $p) => $this->buatUntukBulan($p, $bulan))
-                ->filter(fn (?Tagihan $t) => $t?->wasRecentlyCreated)
-                ->count());
+        return DB::transaction(fn () => $kandidat
+            ->map(fn (Pendaftaran $p) => $this->buatUntukBulan($p, $bulan))
+            ->filter(fn (?Tagihan $t) => $t?->wasRecentlyCreated)
+            ->count());
     }
 
     // (b) Pendaftaran baru: tagih dari bulan daftar sampai bulan periode terbaru yang sudah dibuka
@@ -38,7 +38,7 @@ class TagihanService
     {
         $periodeTerbaru = PeriodeLaporan::latest('bulan')->first();
 
-        return $periodeTerbaru ? $this->buatSampai($pendaftaran, $periodeTerbaru->bulan): collect();
+        return $periodeTerbaru ? $this->buatSampai($pendaftaran, $periodeTerbaru->bulan) : collect();
     }
 
     // (c) Bayar di muka: tagihan sampai bulan tertentu, mulai dari bulan daftar; yang sudah ada tidak dibuat ulang
@@ -57,6 +57,43 @@ class TagihanService
         }
 
         return $hasil;
+    }
+
+    // (d) Bayar di muka dari halaman TU: satu tagihan untuk bulan ditagih berikutnya setelah tagihan terakhir;
+    // null bila tidak ada lagi bulan yang ditagih di semester berjalan
+    public function buatBulanBerikutnya(Pendaftaran $pendaftaran): ?Tagihan
+    {
+        $bulan = $this->bulanBayarDiMukaBerikutnya($pendaftaran);
+
+        return $bulan ? $this->buatUntukBulan($pendaftaran, $bulan) : null;
+    }
+
+    // Bulan ditagih berikutnya setelah tagihan terakhir, dibatasi akhir semester yang sedang berjalan hari ini.
+    // Contoh: bulan November hanya bisa sampai November; tagihan Januari baru bisa dibuat setelah semester genap dimulai.
+    // null bila tidak ada lagi, atau hari ini di luar semester (libur kenaikan kelas, kegiatan tahun ajaran lain)
+    public function bulanBayarDiMukaBerikutnya(Pendaftaran $pendaftaran): ?CarbonInterface
+    {
+        $semester = $pendaftaran->kegiatan()->tahunAjaran->semester()
+            ->whereDate('tanggal_mulai', '<=', today())
+            ->whereDate('tanggal_selesai', '>=', today())
+            ->first();
+
+        if (! $semester) {
+            return null;
+        }
+
+        $terakhir = $pendaftaran->tagihan()->max('bulan_tagihan');
+        $bulan = $terakhir ? Carbon::parse($terakhir)->addMonth() : $pendaftaran->tanggal_daftar->startOfMonth();
+
+        while ($bulan->lte($semester->tanggal_selesai)) {
+            if ($this->perluDitagih($pendaftaran, $bulan)) {
+                return $bulan;
+            }
+
+            $bulan = $bulan->addMonth();
+        }
+
+        return null;
     }
 
     // Tagihan satu bulan; null bila bulan itu tidak ditagih. Aman dipanggil berulang (unique pendaftaran dan bulan)

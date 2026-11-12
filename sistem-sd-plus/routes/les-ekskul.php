@@ -1,5 +1,8 @@
 <?php
 
+use App\Domains\LesEkskul\Http\Controllers\PeriodeLaporanController;
+use App\Domains\LesEkskul\Http\Controllers\TagihanController;
+use App\Domains\LesEkskul\Http\Controllers\TransaksiController;
 use Illuminate\Support\Facades\Route;
 
 // Modul Les & Ekstrakurikuler (Pengembang 1) — PRD B.1.
@@ -8,5 +11,24 @@ Route::middleware(['auth'])
     ->prefix('les-ekskul')
     ->name('les-ekskul.')
     ->group(function () {
-        //
+        // Keuangan — Kepala Sekolah ikut melihat (A3)
+        Route::middleware('role:tu|bendahara|kepala_sekolah')->group(function () {
+            Route::get('periode', [PeriodeLaporanController::class, 'index'])->name('periode.index');
+            Route::get('tagihan', [TagihanController::class, 'index'])->name('tagihan.index');
+            Route::get('transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
+        });
+
+        // Mengubah data keuangan — TU dan Bendahara (Ringkasan v1.11 #22–#26)
+        Route::middleware('role:tu|bendahara')->group(function () {
+            Route::post('periode', [PeriodeLaporanController::class, 'store'])->name('periode.store');
+            Route::post('tagihan/bayar-di-muka', [TagihanController::class, 'bayarDiMuka'])->name('tagihan.bayar-di-muka');
+            Route::get('transaksi/catat', [TransaksiController::class, 'create'])->name('transaksi.create');
+            Route::post('transaksi', [TransaksiController::class, 'store'])->name('transaksi.store');
+            Route::post('transaksi/{transaksi}/tolak', [TransaksiController::class, 'tolak'])->name('transaksi.tolak');
+        });
+
+        Route::post('transaksi/{transaksi}/verifikasi', [TransaksiController::class, 'verifikasi'])
+            ->middleware('role:tu')->name('transaksi.verifikasi'); // FR-8
+        Route::post('transaksi/{transaksi}/setujui', [TransaksiController::class, 'setujui'])
+            ->middleware('role:bendahara')->name('transaksi.setujui'); // FR-8b
     });

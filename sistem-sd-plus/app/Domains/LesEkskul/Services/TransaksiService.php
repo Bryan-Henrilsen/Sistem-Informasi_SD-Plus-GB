@@ -39,7 +39,7 @@ class TransaksiService
         CarbonInterface|string|null $tanggal = null,
         ?string $catatanTransfer = null,
     ): Transaksi {
-        $tanggal = $tanggal ? Carbon::parse($tanggal)->toImmutable() : today();
+        $tanggal = $tanggal ? Carbon::parse($tanggal)->toImmutable()->startOfDay() : today(); // jamnya dibuang: yang dicatat hanya tanggal
         $this->periksaInput($metode, $sumber, $nominal, $tanggal);
 
         return DB::transaction(function () use ($siswa, $metode, $nominal, $tagihanIds, $oleh, $sumber, $tanggal, $catatanTransfer) {

@@ -1,5 +1,12 @@
-import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import {
+    BookOpen,
+    CalendarRange,
+    FolderGit2,
+    LayoutGrid,
+    ReceiptText,
+    Wallet,
+    } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -14,7 +21,10 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
+import periode from '@/routes/les-ekskul/periode';
+import tagihan from '@/routes/les-ekskul/tagihan';
+import transaksi from '@/routes/les-ekskul/transaksi';
+import type { Auth, NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
@@ -23,6 +33,14 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
 ];
+
+// Menu modul Les & Ekskul; hanya tampil untuk role keuangan (sama dengan middleware di routes/les-ekskul.php)
+const lesEkskulNavItems: NavItem[] = [
+    { title: 'Periode Laporan', href: periode.index(), icon: CalendarRange },
+    { title: 'Tagihan', href:tagihan.index(), icon: ReceiptText },
+    { title: 'Transaksi', href: transaksi.index(), icon: Wallet },
+];
+const roleKeuangan = ['tu', 'bendahara', 'kepala_sekolah'];
 
 const footerNavItems: NavItem[] = [
     {
@@ -38,6 +56,11 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage<{ auth: Auth }>().props;
+    const bisaLihatKeuangan = auth.roles.some((role) =>
+        roleKeuangan.includes(role),
+    );
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -54,6 +77,9 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                {bisaLihatKeuangan && (
+                    <NavMain items={lesEkskulNavItems} label="Les & Ekskul" />
+                )}
             </SidebarContent>
 
             <SidebarFooter>
