@@ -2,12 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Domains\JadwalGuru\Models\JadwalMengajar;
 use App\Domains\JadwalGuru\Models\WaktuPelajaran;
 use App\Models\TahunAjaran;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use RuntimeException;
 
 class WaktuPelajaranSeeder extends Seeder
 {
@@ -164,19 +162,9 @@ class WaktuPelajaranSeeder extends Seeder
         ];
 
         DB::transaction(function () use ($tahunAjaranId, $slots): void {
-            $existingIds = WaktuPelajaran::where('tahun_ajaran_id', $tahunAjaranId)
-                ->pluck('id');
-
-            if ($existingIds->isNotEmpty() && JadwalMengajar::whereIn('waktu_pelajaran_id', $existingIds)->exists()) {
-                throw new RuntimeException(
-                    'Seeder dibatalkan: sudah ada jadwal_mengajar yang memakai slot tahun ajaran aktif. '
-                    . 'Jangan hapus slot tersebut; lakukan penyesuaian melalui migration/data migration khusus.'
-                );
-            }
-
-            // Hapus slot draft untuk tahun ajaran aktif. Relasi hari ikut terhapus melalui ON DELETE CASCADE pada foreign key waktu_pelajaran_hari.
-            WaktuPelajaran::where('tahun_ajaran_id', $tahunAjaranId)->delete();
-
+        if (WaktuPelajaran::where('tahun_ajaran_id', $tahunAjaranId)->exists()) {
+            return;
+        }
             foreach ($slots as $slot) {
                 $waktuPelajaran = WaktuPelajaran::create([
                     'tahun_ajaran_id' => $tahunAjaranId,

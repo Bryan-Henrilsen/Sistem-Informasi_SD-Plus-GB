@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use RuntimeException;
 use Throwable;
 
 class PembagianJadwalController extends Controller
@@ -118,17 +119,26 @@ class PembagianJadwalController extends Controller
                 (int) $validated['kisi_kisi_tugas_id'],
                 (int) $validated['waktu_pelajaran_id'],
                 (int) $validated['hari'],
-                isset($validated['parent_jadwal_id']) ? (int) $validated['parent_jadwal_id'] : null
+                isset($validated['parent_jadwal_id'])
+                    ? (int) $validated['parent_jadwal_id']
+                    : null
             );
 
             return redirect()->back()->with('success', 'Jadwal berhasil ditempatkan.');
-        } catch (Throwable $exception) {
+
+        } catch (RuntimeException $exception) {
             return redirect()->back()->withErrors([
                 'message' => $exception->getMessage(),
             ]);
+
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect()->back()->withErrors([
+                'message' => 'Terjadi kesalahan saat menempatkan jadwal.',
+            ]);
         }
     }
-
     /** Menghapus jadwal dan mengembalikan alokasinya ke sidebar. */
     public function destroy(int $id): RedirectResponse
     {
@@ -136,9 +146,17 @@ class PembagianJadwalController extends Controller
             $this->jadwalService->removeJadwal($id);
 
             return redirect()->back()->with('success', 'Jadwal berhasil ditarik kembali.');
-        } catch (Throwable $exception) {
+
+        } catch (RuntimeException $exception) {
             return redirect()->back()->withErrors([
-                'message' => 'Gagal menarik jadwal: ' . $exception->getMessage(),
+                'message' => $exception->getMessage(),
+            ]);
+
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect()->back()->withErrors([
+                'message' => 'Terjadi kesalahan saat menarik jadwal.',
             ]);
         }
     }

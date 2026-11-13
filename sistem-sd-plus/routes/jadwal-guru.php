@@ -10,10 +10,11 @@ use App\Domains\JadwalGuru\Http\Controllers\HasilJadwalController;
 |--------------------------------------------------------------------------
 | Routes Modul Jadwal Guru
 |--------------------------------------------------------------------------
-| Middleware auth dan role mengikuti konfigurasi development project.
 */
-
-Route::prefix('jadwal-guru')->name('jadwal-guru.')->group(function () {
+  Route::middleware(['auth', 'role:waka_kurikulum|kepala_sekolah'])
+    ->prefix('jadwal-guru')
+    ->name('jadwal-guru.')
+    ->group(function () {
     // Waktu Pelajaran
     Route::get('/waktu-pelajaran', [WaktuPelajaranController::class, 'index'])->name('waktu-pelajaran.index');
     Route::post('/waktu-pelajaran', [WaktuPelajaranController::class, 'store'])->name('waktu-pelajaran.store');
