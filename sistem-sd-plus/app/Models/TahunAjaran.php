@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TahunAjaran extends Model
@@ -34,5 +35,16 @@ class TahunAjaran extends Model
     public function scopeAktif(Builder $query): void
     {
         $query->where('status_aktif', true);
+    }
+
+    // Semester yang mencakup tanggal tertentu (default hari ini); null di luar semester, mis. libur kenaikan kelas
+    public function semesterPada(?CarbonInterface $tanggal = null): ?Semester
+    {
+        $tanggal ??= today();
+
+        return $this->semester()
+            ->whereDate('tanggal_mulai', '<=', $tanggal)
+            ->whereDate('tanggal_selesai', '>=', $tanggal)
+            ->first();
     }
 }
