@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     BookOpen,
     CalendarRange,
+    ClipboardList,
     FolderGit2,
     LayoutGrid,
     ReceiptText,
@@ -21,6 +22,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import pendaftaran from '@/routes/les-ekskul/pendaftaran';
 import periode from '@/routes/les-ekskul/periode';
 import tagihan from '@/routes/les-ekskul/tagihan';
 import transaksi from '@/routes/les-ekskul/transaksi';
@@ -39,6 +41,7 @@ const lesEkskulNavItems: NavItem[] = [
     { title: 'Periode Laporan', href: periode.index(), icon: CalendarRange },
     { title: 'Tagihan', href:tagihan.index(), icon: ReceiptText },
     { title: 'Transaksi', href: transaksi.index(), icon: Wallet },
+    { title: 'Pendaftaran', href: pendaftaran.index(), icon: ClipboardList },
 ];
 const roleKeuangan = ['tu', 'bendahara', 'kepala_sekolah'];
 

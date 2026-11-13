@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\LesEkskul\Http\Controllers\PendaftaranController;
 use App\Domains\LesEkskul\Http\Controllers\PeriodeLaporanController;
 use App\Domains\LesEkskul\Http\Controllers\TagihanController;
 use App\Domains\LesEkskul\Http\Controllers\TransaksiController;
@@ -16,6 +17,14 @@ Route::middleware(['auth'])
             Route::get('periode', [PeriodeLaporanController::class, 'index'])->name('periode.index');
             Route::get('tagihan', [TagihanController::class, 'index'])->name('tagihan.index');
             Route::get('transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
+            Route::get('pendaftaran', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
+        });
+
+        // Input pendaftaran manual & assign kelas paralel — TU (FR-6, FR-27)
+        Route::middleware('role:tu')->group(function () {
+            Route::get('pendaftaran/tambah', [PendaftaranController::class, 'create'])->name('pendaftaran.create');
+            Route::post('pendaftaran', [PendaftaranController::class, 'store'])->name('pendaftaran.store');
+            Route::post('pendaftaran/{pendaftaran}/assign', [PendaftaranController::class, 'assign'])->name('pendaftaran.assign');
         });
 
         // Mengubah data keuangan — TU dan Bendahara (Ringkasan v1.11 #22–#26)

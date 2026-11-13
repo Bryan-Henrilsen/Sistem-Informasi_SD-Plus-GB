@@ -73,10 +73,7 @@ class TagihanService
     // null bila tidak ada lagi, atau hari ini di luar semester (libur kenaikan kelas, kegiatan tahun ajaran lain)
     public function bulanBayarDiMukaBerikutnya(Pendaftaran $pendaftaran): ?CarbonInterface
     {
-        $semester = $pendaftaran->kegiatan()->tahunAjaran->semester()
-            ->whereDate('tanggal_mulai', '<=', today())
-            ->whereDate('tanggal_selesai', '>=', today())
-            ->first();
+        $semester = $pendaftaran->kegiatan()->tahunAjaran->semesterPada();
 
         if (! $semester) {
             return null;

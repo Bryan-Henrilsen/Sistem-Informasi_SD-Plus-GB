@@ -1,9 +1,10 @@
-import { Form, Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import TagihanController from '@/actions/App/Domains/LesEkskul/Http/Controllers/TagihanController';
 import TransaksiController from '@/actions/App/Domains/LesEkskul/Http/Controllers/TransaksiController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
+import { CariSiswa } from '@/components/les-ekskul/cari-siswa';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,8 +12,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { namaBulan, rupiah } from '@/lib/format';
 import { create, index } from '@/routes/les-ekskul/transaksi';
+import type { SiswaRingkas } from '@/types/les-ekskul';
 
-type Siswa = { id: number; nama: string; kelas: string | null };
+type Siswa = SiswaRingkas;
 
 type Tagihan = {
     id: number;
@@ -52,47 +54,15 @@ export default function CatatPembayaran({ cari, hasilCari, siswa, tagihan, penda
                         hariIni={hariIni}
                     />
                 ) : (
-                    <CariSiswa cari={cari} hasilCari={hasilCari} />
+                    <CariSiswa
+                        cari={cari}
+                        hasilCari={hasilCari}
+                        form={TransaksiController.create.form()}
+                        tautanSiswa={(id) => create({ query: { siswa: id } })}
+                    />
                 )}
             </div>
         </>
-    );
-}
-
-// Langkah 1: cari siswa berdasarkan nama (GET ke halaman yang sama dengan ?cari=...)
-function CariSiswa({ cari, hasilCari }: { cari: string; hasilCari: Siswa[] }) {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Pilih siswa</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-                <Form {...TransaksiController.create.form()} className="flex gap-2">
-                    <Input name="cari" defaultValue={cari} placeholder="Ketik nama siswa" autoFocus />
-                    <Button type="submit" variant="secondary">
-                        Cari
-                    </Button>
-                </Form>
-
-                {cari && hasilCari.length === 0 && (
-                    <p className="text-sm text-muted-foreground">Siswa tidak ditemukan.</p>
-                )}
-
-                <ul className="divide-y rounded-md border empty:hidden">
-                    {hasilCari.map((s) => (
-                        <li key={s.id}>
-                            <Link
-                                href={create({ query: { siswa: s.id } })}
-                                className="flex justify-between p-3 hover:bg-muted/50"
-                            >
-                                <span className="font-medium">{s.nama}</span>
-                                <span className="text-sm text-muted-foreground">{s.kelas}</span>
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-            </CardContent>
-        </Card>
     );
 }
 
