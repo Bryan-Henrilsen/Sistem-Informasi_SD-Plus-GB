@@ -34,9 +34,13 @@ export type LaporanHarianBaris = {
 export function DaftarLaporanHarian({
     laporan,
     aksi,
+    aksiTransaksi,
+    terbuka = false,
 }: {
     laporan: LaporanHarianBaris[];
-    aksi?: (l: LaporanHarianBaris) => ReactNode;
+    aksi?: (l: LaporanHarianBaris) => ReactNode; // tombol per laporan (ajukan, setujui, ...)
+    aksiTransaksi?: (t: TransaksiLaporan) => ReactNode; // tombol per transfer (verifikasi, setujui, tolak)
+    terbuka?: boolean; // rincian langsung dibuka, mis. mode "perlu tindakan saya"
 }) {
     if (laporan.length === 0) {
         return (
@@ -49,7 +53,7 @@ export function DaftarLaporanHarian({
     return (
         <div className="flex flex-col gap-2">
             {laporan.map((l) => (
-                <details key={l.id} className="group rounded-xl border">
+                <details key={l.id} className="group rounded-xl border" open={terbuka || undefined}>
                     <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-4 gap-y-2 p-3 hover:bg-muted/50">
                         <span className="w-44 font-medium">
                             <span className="mr-1 inline-block text-muted-foreground transition-transform group-open:rotate-90">›</span>
@@ -86,6 +90,7 @@ export function DaftarLaporanHarian({
                                     <th className="p-2 text-right">Nominal</th>
                                     <th className="p-2">Status TU</th>
                                     <th className="p-2">Approval Bendahara</th>
+                                    {aksiTransaksi && <th className="p-2" />}
                                 </tr>
                             </thead>
                             <tbody>
@@ -120,6 +125,7 @@ export function DaftarLaporanHarian({
                                                 <span className="text-xs text-muted-foreground">–</span>
                                             )}
                                         </td>
+                                        {aksiTransaksi && <td className="p-2">{aksiTransaksi(t)}</td>}
                                     </tr>
                                 ))}
                             </tbody>

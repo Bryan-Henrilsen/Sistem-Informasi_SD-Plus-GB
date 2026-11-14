@@ -10,6 +10,7 @@ use App\Domains\LesEkskul\Http\Requests\CatatTransaksiRequest;
 use App\Domains\LesEkskul\Models\Pendaftaran;
 use App\Domains\LesEkskul\Models\Tagihan;
 use App\Domains\LesEkskul\Models\Transaksi;
+use App\Domains\LesEkskul\Services\RingkasanTugasService;
 use App\Domains\LesEkskul\Services\TagihanService;
 use App\Domains\LesEkskul\Services\TransaksiService;
 use App\Http\Controllers\Controller;
@@ -100,6 +101,8 @@ class TransaksiController extends Controller
                     ->values()
                 : [],
             'hariIni' => today()->toDateString(),
+            // Bendahara (tanpa role TU) hanya mencatat transfer dari mutasi rekening (FR-8c); cash hanya di loket TU
+            'hanyaTransfer' => ! $request->user()->hasRole('tu'),
         ]);
     }
 
@@ -128,18 +131,20 @@ class TransaksiController extends Controller
         return to_route('les-ekskul.transaksi.index');
     }
 
-    public function verifikasi(Request $request, Transaksi $transaksi): RedirectResponse
+    public function verifikasi(Request $request, Transaksi $transaksi, RingkasanTugasService $ringkasan): RedirectResponse
     {
         $this->service->verifikasi($transaksi, $request->user());
+        $sisa = $ringkasan->transferMenungguVerifikasi()->count();
 
-        return $this->kembali('Transfer diverifikasi.');
+        return $this->kembali('Transfer diverifikasi.'.($sisa > 0 ? " Sisa {$sisa} transfer menunggu verifikasi." : ''));
     }
 
-    public function setujui(Request $request, Transaksi $transaksi): RedirectResponse
+    public function setujui(Request $request, Transaksi $transaksi, RingkasanTugasService $ringkasan): RedirectResponse
     {
         $this->service->setujui($transaksi, $request->user());
+        $sisa = $ringkasan->transferMenungguBendahara()->count();
 
-        return $this->kembali('Transfer disetujui.');
+        return $this->kembali('Transfer disetujui.'.($sisa > 0 ? " Sisa {$sisa} transfer menunggu persetujuan." : ''));
     }
 
     public function tolak(Request $request, Transaksi $transaksi): RedirectResponse

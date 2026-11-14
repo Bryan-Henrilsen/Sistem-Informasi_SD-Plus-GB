@@ -3,6 +3,8 @@ import { useState } from 'react';
 import LaporanController from '@/actions/App/Domains/LesEkskul/Http/Controllers/LaporanController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
+import { AksiTransfer, DialogTolakTransfer } from '@/components/les-ekskul/aksi-transfer';
+import type { TransferRingkas } from '@/components/les-ekskul/aksi-transfer';
 import { DaftarLaporanHarian } from '@/components/les-ekskul/daftar-laporan-harian';
 import type { LaporanHarianBaris } from '@/components/les-ekskul/daftar-laporan-harian';
 import { LabelStatus } from '@/components/les-ekskul/label-status';
@@ -27,18 +29,25 @@ type Props = {
     daftarPeriode: { id: number; bulan: string; status: string }[];
     periode: Periode | null;
     laporan: LaporanHarianBaris[];
+    tindakan: boolean; // mode "perlu tindakan saya" (dibuka dari beranda/badge), lintas periode
     menunggu: number;
+    bisaAjukanSemua: number; // jumlah laporan draft/ditolak sampai kemarin (TU)
 };
 
 const kelasPilihan = 'h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs';
 
-export default function LaporanHarianIndex({ daftarPeriode, periode, laporan, menunggu }: Props) {
+export default function LaporanHarianIndex({ daftarPeriode, periode, laporan, tindakan, menunggu, bisaAjukanSemua }: Props) {
     const { auth, errors } = usePage<{ auth: Auth; errors: Record<string, string> }>().props;
     const tu = auth.roles.includes('tu');
     const bendahara = auth.roles.includes('bendahara');
     const [ditolak, setDitolak] = useState<LaporanHarianBaris | null>(null);
+    const [transferDitolak, setTransferDitolak] = useState<TransferRingkas | null>(null);
 
-    const kirim = (url: string) => router.post(url, {}, { preserveScroll: true });
+    const kirim = (url: string, pesan?: string) => {
+        if (!pesan || confirm(pesan)) {
+            router.post(url, {}, { preserveScroll: true });
+        }
+    };
 
     // Tombol sesuai status laporan dan role (FR-12, Ringkasan v1.11 #15); aturan yang sama dijaga LaporanService
     function aksi(l: LaporanHarianBaris) {
@@ -52,6 +61,21 @@ export default function LaporanHarianIndex({ daftarPeriode, periode, laporan, me
                 {tu && l.status === 'diajukan' && (
                     <Button size="sm" variant="outline" onClick={() => kirim(LaporanController.tarikHarian.url(l.id))}>
                         Tarik kembali
+                    </Button>
+                )}
+                {bendahara && siapDisetujui(l).length > 0 && (
+                    // Untuk hari ketika semua transfer sudah cocok dengan mutasi rekening (#32)
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                            kirim(
+                                LaporanController.setujuiTransferHarian.url(l.id),
+                                `Setujui ${siapDisetujui(l).length} transfer senilai ${rupiah(totalNominal(siapDisetujui(l)))} pada ${hariTanggal(l.tanggal)}? Pastikan semuanya sudah cocok dengan mutasi rekening.`,
+                            )
+                        }
+                    >
+                        Setujui {siapDisetujui(l).length} transfer
                     </Button>
                 )}
                 {bendahara && l.status === 'diajukan' && (
@@ -105,7 +129,35 @@ export default function LaporanHarianIndex({ daftarPeriode, periode, laporan, me
                     )}
                 </div>
 
-                <InputError message={errors.laporan} />
+                {tindakan && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-sky-300 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200">
+                        <span>
+                            Menampilkan {laporan.length} laporan yang perlu tindakan Anda dari semua periode yang belum ditutup
+                            {tu && ' (belum diajukan, atau ada transfer yang perlu diverifikasi)'}
+                            {bendahara && ' (menunggu persetujuan, atau ada transfer yang perlu disetujui)'}.
+                        </span>
+                        <Link href={index()} className="font-medium underline underline-offset-4">
+                            Tampilkan semua
+                        </Link>
+                    </div>
+                )}
+
+                {tu && bisaAjukanSemua > 0 && (
+                    <Button
+                        variant="outline"
+                        className="self-start"
+                        onClick={() =>
+                            kirim(
+                                LaporanController.ajukanSemuaHarian.url(),
+                                `Ajukan ${bisaAjukanSemua} laporan harian sampai kemarin ke Bendahara? Laporan hari ini tidak ikut.`,
+                            )
+                        }
+                    >
+                        Ajukan semua laporan sampai kemarin ({bisaAjukanSemua})
+                    </Button>
+                )}
+
+                <InputError message={errors.laporan ?? errors.transaksi} />
 
                 {tu && (
                     <p className="text-sm text-muted-foreground">
@@ -115,13 +167,24 @@ export default function LaporanHarianIndex({ daftarPeriode, periode, laporan, me
                     </p>
                 )}
 
-                <DaftarLaporanHarian laporan={laporan} aksi={tu || bendahara ? aksi : undefined} />
+                <DaftarLaporanHarian
+                    laporan={laporan}
+                    aksi={tu || bendahara ? aksi : undefined}
+                    aksiTransaksi={
+                        tu || bendahara
+                            ? (t) => <AksiTransfer t={t} roles={auth.roles} onTolak={setTransferDitolak} />
+                            : undefined
+                    }
+                    terbuka={tindakan}
+                />
 
                 <p className="text-sm text-muted-foreground">
                     Total periode: <strong>{rupiah(laporan.reduce((jumlah, l) => jumlah + l.total, 0))}</strong> dari{' '}
                     {laporan.reduce((jumlah, l) => jumlah + l.jumlah, 0)} transaksi.
                 </p>
             </div>
+
+            <DialogTolakTransfer transaksi={transferDitolak} onClose={() => setTransferDitolak(null)} />
 
             <Dialog open={ditolak !== null} onOpenChange={(buka) => !buka && setDitolak(null)}>
                 <DialogContent>
@@ -159,6 +222,15 @@ export default function LaporanHarianIndex({ daftarPeriode, periode, laporan, me
             </Dialog>
         </>
     );
+}
+
+// Transfer yang sudah diverifikasi TU dan menunggu Bendahara
+function siapDisetujui(l: LaporanHarianBaris) {
+    return l.transaksi.filter((t) => t.metode === 'transfer' && t.status === 'terverifikasi' && t.status_approval_bendahara === 'belum_dicek');
+}
+
+function totalNominal(daftar: { nominal: number }[]) {
+    return daftar.reduce((jumlah, t) => jumlah + t.nominal, 0);
 }
 
 LaporanHarianIndex.layout = {

@@ -21,7 +21,43 @@ use Illuminate\Validation\ValidationException;
 // Alur bulanan: terbuka -> diajukan (TU) -> ditutup (Bendahara), atau dikembalikan ke TU (kembali terbuka).
 class LaporanService
 {
+    public function __construct(private TransaksiService $transaksi) {}
+
     // ---------- Laporan harian ----------
+
+    // TU lupa mengajukan beberapa hari: ajukan semua laporan draft/ditolak sampai kemarin sekaligus (#32).
+    // Laporan hari ini tidak ikut karena mungkin masih ada transaksi
+    public function ajukanSemuaSampaiKemarin(User $oleh): int
+    {
+        return DB::transaction(function () use ($oleh) {
+            $laporan = LaporanHarian::whereIn('status', [StatusLaporanHarian::Draft, StatusLaporanHarian::Ditolak])
+                ->where('tanggal', '<', today()->toDateString())
+                ->whereHas('periodeLaporan', fn (Builder $q) => $q->where('status', '!=', StatusPeriodeLaporan::Ditutup))
+                ->orderBy('tanggal')
+                ->get();
+
+            $laporan->each(fn (LaporanHarian $l) => $this->ajukanHarian($l, $oleh));
+
+            return $laporan->count();
+        });
+    }
+
+    // Bendahara menyetujui sekaligus semua transfer di laporan ini yang sudah diverifikasi TU (FR-8b, #32).
+    // Transfer yang masih pending tidak ikut: harus diverifikasi TU dulu
+    public function setujuiSemuaTransfer(LaporanHarian $laporan, User $oleh): int
+    {
+        return DB::transaction(function () use ($laporan, $oleh) {
+            $transfer = $laporan->transaksi()
+                ->where('metode', MetodeTransaksi::Transfer)
+                ->where('status', StatusTransaksi::Terverifikasi)
+                ->where('status_approval_bendahara', StatusApprovalBendahara::BelumDicek)
+                ->get();
+
+            $transfer->each(fn (Transaksi $t) => $this->transaksi->setujui($t, $oleh));
+
+            return $transfer->count();
+        });
+    }
 
     public function ajukanHarian(LaporanHarian $laporan, User $oleh): void
     {

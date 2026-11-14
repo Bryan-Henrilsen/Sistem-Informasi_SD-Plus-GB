@@ -34,7 +34,7 @@ import type { Auth, NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: 'Beranda',
         href: dashboard(),
         icon: LayoutGrid,
     },
@@ -64,11 +64,21 @@ const footerNavItems: NavItem[] = [
     },
 ];
 
+type Badge = { transaksi: number; laporan_harian: number; refund: number } | null;
+
 export function AppSidebar() {
-    const { auth } = usePage<{ auth: Auth }>().props;
+    const { auth, badge } = usePage<{ auth: Auth; badge: Badge }>().props;
     const bisaLihatKeuangan = auth.roles.some((role) =>
         roleKeuangan.includes(role),
     );
+
+    // Angka yang menunggu tindakan role pengguna (HandleInertiaRequests -> RingkasanTugasService::badge)
+    const jumlah: Record<string, number | undefined> = {
+        Transaksi: badge?.transaksi,
+        'Laporan Harian': badge?.laporan_harian,
+        Refund: badge?.refund,
+    };
+    const menuLesEkskul = lesEkskulNavItems.map((item) => ({ ...item, badge: jumlah[item.title] }));
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -87,7 +97,7 @@ export function AppSidebar() {
             <SidebarContent>
                 <NavMain items={mainNavItems} />
                 {bisaLihatKeuangan && (
-                    <NavMain items={lesEkskulNavItems} label="Les & Ekskul" />
+                    <NavMain items={menuLesEkskul} label="Les & Ekskul" />
                 )}
             </SidebarContent>
 
