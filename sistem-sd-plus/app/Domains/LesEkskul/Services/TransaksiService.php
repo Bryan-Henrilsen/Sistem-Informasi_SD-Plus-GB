@@ -10,6 +10,7 @@ use App\Domains\LesEkskul\Enums\StatusTagihan;
 use App\Domains\LesEkskul\Enums\StatusTransaksi;
 use App\Domains\LesEkskul\Enums\SumberInput;
 use App\Domains\LesEkskul\Models\LaporanHarian;
+use App\Domains\LesEkskul\Models\Pendaftaran;
 use App\Domains\LesEkskul\Models\PenyesuaianDana;
 use App\Domains\LesEkskul\Models\PeriodeLaporan;
 use App\Domains\LesEkskul\Models\Tagihan;
@@ -305,6 +306,29 @@ class TransaksiService
         }
 
         return $uang;
+    }
+
+    // Pindah kegiatan (FR-11, Ringkasan v1.11 #29): uang dari alokasi kegiatan lama yang dilepas dipakai membayar tagihan
+    // kegiatan baru mulai bulan tertentu, urut bulan, hanya di semester yang sama (seperti kelebihan transfer).
+    // $uangPerTransaksi = [transaksi_id => nominal]. Hasilnya sisa uang yang tidak punya bulan tujuan (dicatat refund oleh pemanggil)
+    public function alihkanKeKegiatanBaru(array $uangPerTransaksi, Pendaftaran $tujuan, CarbonInterface $mulai): int
+    {
+        $sisa = 0;
+
+        foreach (Transaksi::whereKey(array_keys($uangPerTransaksi))->orderBy('id')->get() as $transaksi) {
+            $uang = $uangPerTransaksi[$transaksi->id];
+            $bulan = $mulai->toImmutable()->startOfMonth();
+
+            while ($uang > 0 && ($baru = $this->tagihanService->buatUntukBulan($tujuan, $bulan))) {
+                $tagihan = Tagihan::whereKey($baru->id)->belumLunas()->lockForUpdate()->get(); // kosong bila sudah lunas
+                $uang = $this->alokasikan($transaksi, $tagihan, $uang);
+                $bulan = $bulan->addMonth();
+            }
+
+            $sisa += $uang;
+        }
+
+        return $sisa;
     }
 
     // Sisa yang tidak punya bulan tujuan di semester ini dikembalikan kepada orang tua;

@@ -6,6 +6,7 @@ import {
     FolderGit2,
     LayoutGrid,
     ReceiptText,
+    Undo2,
     Wallet,
     } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -24,6 +25,7 @@ import {
 import { dashboard } from '@/routes';
 import pendaftaran from '@/routes/les-ekskul/pendaftaran';
 import periode from '@/routes/les-ekskul/periode';
+import refund from '@/routes/les-ekskul/refund';
 import tagihan from '@/routes/les-ekskul/tagihan';
 import transaksi from '@/routes/les-ekskul/transaksi';
 import type { Auth, NavItem } from '@/types';
@@ -42,6 +44,7 @@ const lesEkskulNavItems: NavItem[] = [
     { title: 'Tagihan', href:tagihan.index(), icon: ReceiptText },
     { title: 'Transaksi', href: transaksi.index(), icon: Wallet },
     { title: 'Pendaftaran', href: pendaftaran.index(), icon: ClipboardList },
+    { title: 'Refund', href: refund.index(), icon: Undo2 },
 ];
 const roleKeuangan = ['tu', 'bendahara', 'kepala_sekolah'];
 

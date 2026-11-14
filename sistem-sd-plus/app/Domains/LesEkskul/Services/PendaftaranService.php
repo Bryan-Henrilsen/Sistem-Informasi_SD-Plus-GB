@@ -140,7 +140,8 @@ class PendaftaranService
                 $punyaEkskul = $aktif->contains(fn (Pendaftaran $p) => $p->ekstrakurikuler
                     && $p->ekstrakurikuler->tahun_ajaran_id == $tahunAjaran->id
                     && ! $p->ekstrakurikuler->wajib_otomatis);
-                $bebasEkskul = $semesterGenap && $sk->kelas->jenjang == 6; // kelas 6 semester genap tidak wajib (#23)
+                // Kelas 6 semester genap tidak wajib (#23); siswa berkondisi khusus dibebaskan TU per tahun ajaran (#30)
+                $bebasEkskul = ($semesterGenap && $sk->kelas->jenjang == 6) || filled($sk->alasan_bebas_ekskul);
 
                 if ($wajibEkskul && ! $punyaEkskul && ! $bebasEkskul) {
                     $kurang[] = 'ekstrakurikuler';
@@ -150,7 +151,7 @@ class PendaftaranService
                     $kurang[] = 'les tambahan';
                 }
 
-                return ['siswa' => $sk->siswa, 'kelas' => $sk->kelas, 'kurang' => $kurang];
+                return ['siswa_kelas' => $sk, 'siswa' => $sk->siswa, 'kelas' => $sk->kelas, 'kurang' => $kurang];
             })
             ->filter(fn (array $baris) => $baris['kurang'] !== [])
             ->sortBy(fn (array $baris) => sprintf('%d%s %s', $baris['kelas']->jenjang, $baris['kelas']->nama_kelas, $baris['siswa']->nama))

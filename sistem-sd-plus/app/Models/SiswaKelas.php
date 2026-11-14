@@ -9,7 +9,7 @@ class SiswaKelas extends Model
 {
     protected $table = 'siswa_kelas';
 
-    protected $fillable = ['siswa_id', 'kelas_id'];
+    protected $fillable = ['siswa_id', 'kelas_id', 'alasan_bebas_ekskul'];
 
     protected static function booted(): void
     {
