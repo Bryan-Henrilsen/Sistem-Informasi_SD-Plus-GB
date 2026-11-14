@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Domains\LesEkskul\Services\RingkasanTugasService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -43,6 +44,10 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $request->user()?->getRoleNames() ?? [], // untuk menampilkan menu & tombol sesuai role
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            // Angka badge menu Les & Ekskul (yang menunggu tindakan role pengguna); null untuk role non-keuangan
+            'badge' => fn () => $request->user()?->hasAnyRole(RingkasanTugasService::ROLE_KEUANGAN)
+                ? app(RingkasanTugasService::class)->badge($request->user())
+                : null,
         ];
     }
 }

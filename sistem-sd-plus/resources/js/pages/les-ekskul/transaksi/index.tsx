@@ -1,19 +1,13 @@
-import { Form, Head, Link, router, usePage } from '@inertiajs/react';
+import { Form, Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import TransaksiController from '@/actions/App/Domains/LesEkskul/Http/Controllers/TransaksiController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
+import { AksiTransfer, DialogTolakTransfer } from '@/components/les-ekskul/aksi-transfer';
+import type { TransferRingkas } from '@/components/les-ekskul/aksi-transfer';
 import { LabelStatus } from '@/components/les-ekskul/label-status';
 import { Paginasi } from '@/components/les-ekskul/paginasi';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { namaBulan, rupiah, tanggal } from '@/lib/format';
 import { create, index } from '@/routes/les-ekskul/transaksi';
@@ -47,7 +41,7 @@ const kelasPilihan = 'h-9 rounded-md border border-input bg-transparent px-3 tex
 export default function TransaksiIndex({ transaksi, filter, jumlah }: Props) {
     const { auth, errors } = usePage<{ auth: Auth; errors: Record<string, string> }>().props;
     const punya = (role: string) => auth.roles.includes(role);
-    const [ditolak, setDitolak] = useState<Transaksi | null>(null); // transaksi yang sedang dibuka di dialog tolak
+    const [ditolak, setDitolak] = useState<TransferRingkas | null>(null); // transaksi yang sedang dibuka di dialog tolak
 
     return (
         <>
@@ -140,7 +134,7 @@ export default function TransaksiIndex({ transaksi, filter, jumlah }: Props) {
                                         </div>
                                     </td>
                                     <td className="p-3">
-                                        <Aksi t={t} punya={punya} onTolak={() => setDitolak(t)} />
+                                        <AksiTransfer t={t} roles={auth.roles} onTolak={setDitolak} />
                                     </td>
                                 </tr>
                             ))}
@@ -158,77 +152,8 @@ export default function TransaksiIndex({ transaksi, filter, jumlah }: Props) {
                 <Paginasi data={transaksi} />
             </div>
 
-            <DialogTolak transaksi={ditolak} onClose={() => setDitolak(null)} />
+            <DialogTolakTransfer transaksi={ditolak} onClose={() => setDitolak(null)} />
         </>
-    );
-}
-
-// Tombol per baris sesuai tahap transfer dan role (FR-8, FR-8b, FR-8d); aturan yang sama dijaga lagi di TransaksiService
-function Aksi({ t, punya, onTolak }: { t: Transaksi; punya: (role: string) => boolean; onTolak: () => void }) {
-    if (t.metode !== 'transfer' || t.status === 'ditolak' || t.status_approval_bendahara === 'disetujui') {
-        return null;
-    }
-
-    const kirim = (url: string) => router.post(url, {}, { preserveScroll: true });
-
-    return (
-        <div className="flex flex-col gap-1">
-            {t.status === 'pending' && punya('tu') && (
-                <Button size="sm" onClick={() => kirim(TransaksiController.verifikasi.url(t.id))}>
-                    Verifikasi
-                </Button>
-            )}
-            {t.status === 'terverifikasi' && punya('bendahara') && (
-                <Button size="sm" onClick={() => kirim(TransaksiController.setujui.url(t.id))}>
-                    Setujui
-                </Button>
-            )}
-            {(punya('tu') || punya('bendahara')) && (
-                <Button size="sm" variant="outline" onClick={onTolak}>
-                    Tolak
-                </Button>
-            )}
-        </div>
-    );
-}
-
-// Dialog alasan penolakan (alasan wajib, FR-8d)
-function DialogTolak({ transaksi, onClose }: { transaksi: Transaksi | null; onClose: () => void }) {
-    return (
-        <Dialog open={transaksi !== null} onOpenChange={(buka) => !buka && onClose()}>
-            <DialogContent>
-                {transaksi && (
-                    <Form
-                        {...TransaksiController.tolak.form(transaksi.id)}
-                        options={{ preserveScroll: true }}
-                        onSuccess={onClose}
-                        className="flex flex-col gap-4"
-                    >
-                        {({ processing, errors }) => (
-                            <>
-                                <DialogHeader>
-                                    <DialogTitle>Tolak transfer {rupiah(transaksi.nominal)}</DialogTitle>
-                                    <DialogDescription>
-                                        {transaksi.siswa}. Transaksi tetap tersimpan sebagai ditolak, tagihannya kembali
-                                        belum lunas. Penolakan tidak bisa dibatalkan.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <Input name="alasan" placeholder="Alasan, mis. tidak ada di mutasi rekening" autoFocus />
-                                <InputError message={errors.alasan ?? errors.transaksi} />
-                                <DialogFooter>
-                                    <Button type="button" variant="ghost" onClick={onClose}>
-                                        Batal
-                                    </Button>
-                                    <Button type="submit" variant="destructive" disabled={processing}>
-                                        Tolak transfer
-                                    </Button>
-                                </DialogFooter>
-                            </>
-                        )}
-                    </Form>
-                )}
-            </DialogContent>
-        </Dialog>
     );
 }
 

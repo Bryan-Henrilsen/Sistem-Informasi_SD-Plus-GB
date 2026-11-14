@@ -11,4 +11,5 @@ export type NavItem = {
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    badge?: number | null; // jumlah yang menunggu tindakan pengguna, tampil di samping menu
 };

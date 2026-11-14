@@ -50,14 +50,15 @@ type Props = {
     belumMemenuhi: { siswa_kelas_id: number; siswa: { id: number; nama: string }; kelas: string; kurang: string[] }[];
     dibebaskan: { siswa_kelas_id: number; siswa: { id: number; nama: string }; kelas: string; alasan: string }[];
     saranTanggal: SaranTanggal;
+    tabAwal: 'semua' | 'belum';
 };
 
 const kelasPilihan = 'h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs';
 
-export default function PendaftaranIndex({ pendaftaran, filter, kegiatan, kelasParalel, belumMemenuhi, dibebaskan, saranTanggal }: Props) {
+export default function PendaftaranIndex({ pendaftaran, filter, kegiatan, kelasParalel, belumMemenuhi, dibebaskan, saranTanggal, tabAwal }: Props) {
     const { auth } = usePage<{ auth: Auth }>().props;
     const bisaMengubah = auth.roles.includes('tu');
-    const [tab, setTab] = useState<'semua' | 'belum'>('semua');
+    const [tab, setTab] = useState<'semua' | 'belum'>(tabAwal);
     const [diassign, setDiassign] = useState<Baris | null>(null); // pendaftaran yang sedang dibuka di dialog assign
     const [dihentikan, setDihentikan] = useState<Baris | null>(null); // ... di dialog berhenti
     const [dipindah, setDipindah] = useState<Baris | null>(null); // ... di dialog pindah

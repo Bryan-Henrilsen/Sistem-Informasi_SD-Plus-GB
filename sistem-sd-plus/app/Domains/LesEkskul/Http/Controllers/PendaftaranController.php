@@ -95,6 +95,8 @@ class PendaftaranController extends Controller
                     'alasan' => $sk->alasan_bebas_ekskul,
                 ]),
             'saranTanggal' => $this->perubahan->saranTanggal($tahunAjaran->load('semester')),
+            'tabAwal' => $request->string('tab')->toString() === 'belum' ? 'belum' : 'semua', // dari kartu beranda
+
         ]);
     }
 

@@ -32,17 +32,24 @@ type Props = {
     tagihan: Tagihan[];
     pendaftaran: { id: number; kegiatan: string; bulan: string }[]; // bulan = bulan bayar di muka berikutnya
     hariIni: string;
+    hanyaTransfer: boolean; // Bendahara: hanya transfer dari mutasi rekening (FR-8c); cash hanya di loket TU
 };
 
-export default function CatatPembayaran({ cari, hasilCari, siswa, tagihan, pendaftaran, hariIni }: Props) {
+export default function CatatPembayaran({ cari, hasilCari, siswa, tagihan, pendaftaran, hariIni, hanyaTransfer }: Props) {
+    const judul = hanyaTransfer ? 'Catat Transfer dari Mutasi Rekening' : 'Catat Pembayaran';
+
     return (
         <>
-            <Head title="Catat Pembayaran" />
+            <Head title={judul} />
 
             <div className="flex max-w-3xl flex-col gap-6 p-4">
                 <Heading
-                    title="Catat Pembayaran"
-                    description="Cari siswa, centang tagihan yang dibayar, lalu isi nominal uang yang diterima."
+                    title={judul}
+                    description={
+                        hanyaTransfer
+                            ? 'Untuk transfer yang ada di mutasi rekening tetapi buktinya tidak dikirim ke TU. Transaksi otomatis terverifikasi dan disetujui.'
+                            : 'Cari siswa, centang tagihan yang dibayar, lalu isi nominal uang yang diterima.'
+                    }
                 />
 
                 {siswa ? (
@@ -52,6 +59,7 @@ export default function CatatPembayaran({ cari, hasilCari, siswa, tagihan, penda
                         tagihan={tagihan}
                         pendaftaran={pendaftaran}
                         hariIni={hariIni}
+                        hanyaTransfer={hanyaTransfer}
                     />
                 ) : (
                     <CariSiswa
@@ -67,10 +75,10 @@ export default function CatatPembayaran({ cari, hasilCari, siswa, tagihan, penda
 }
 
 // Langkah 2: centang tagihan + isi data pembayaran, lalu kirim ke TransaksiService::catat()
-function FormPembayaran({ siswa, tagihan, pendaftaran, hariIni }: Omit<Props, 'cari' | 'hasilCari' | 'siswa'> & { siswa: Siswa }) {
+function FormPembayaran({ siswa, tagihan, pendaftaran, hariIni, hanyaTransfer }: Omit<Props, 'cari' | 'hasilCari' | 'siswa'> & { siswa: Siswa }) {
     const form = useForm({
         siswa_id: siswa.id,
-        metode: 'cash',
+        metode: hanyaTransfer ? 'transfer' : 'cash',
         tanggal: hariIni,
         nominal: 0,
         tagihan_ids: [] as number[],
@@ -168,15 +176,21 @@ function FormPembayaran({ siswa, tagihan, pendaftaran, hariIni }: Omit<Props, 'c
                 <CardContent className="grid gap-4 sm:grid-cols-2">
                     <div className="grid gap-2">
                         <Label htmlFor="metode">Metode</Label>
-                        <select
-                            id="metode"
-                            value={form.data.metode}
-                            onChange={(e) => form.setData('metode', e.target.value)}
-                            className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                        >
-                            <option value="cash">Cash (di loket TU)</option>
-                            <option value="transfer">Transfer manual</option>
-                        </select>
+                        {hanyaTransfer ? (
+                            <p id="metode" className="flex h-9 items-center text-sm">
+                                Transfer (dari mutasi rekening)
+                            </p>
+                        ) : (
+                            <select
+                                id="metode"
+                                value={form.data.metode}
+                                onChange={(e) => form.setData('metode', e.target.value)}
+                                className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                            >
+                                <option value="cash">Cash (di loket TU)</option>
+                                <option value="transfer">Transfer manual</option>
+                            </select>
+                        )}
                         <InputError message={errors.metode} />
                     </div>
 

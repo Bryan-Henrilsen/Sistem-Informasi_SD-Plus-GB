@@ -10,7 +10,10 @@ use App\Domains\LesEkskul\Models\LaporanHarian;
 use App\Domains\LesEkskul\Models\PeriodeLaporan;
 use App\Domains\LesEkskul\Models\Transaksi;
 use App\Domains\LesEkskul\Services\LaporanService;
+use App\Domains\LesEkskul\Services\RingkasanTugasService;
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -21,7 +24,7 @@ use Inertia\Response;
 // Laporan harian (FR-12) dan laporan bulanan / tutup buku per periode (FR-13, FR-14, FR-14b)
 class LaporanController extends Controller
 {
-    public function __construct(private LaporanService $service) {}
+    public function __construct(private LaporanService $service, private RingkasanTugasService $ringkasan) {}
 
     public function harian(Request $request): Response
     {
@@ -29,13 +32,67 @@ class LaporanController extends Controller
         $dipilih = $daftarPeriode->firstWhere('id', $request->integer('periode'))
             ?? PeriodeLaporan::mencakup(today())->first()
             ?? $daftarPeriode->first();
+        $tindakan = $request->boolean('tindakan');
 
         return Inertia::render('les-ekskul/laporan-harian/index', [
             'daftarPeriode' => $daftarPeriode->map(fn (PeriodeLaporan $p) => ['id' => $p->id, 'bulan' => $p->bulan->toDateString(), 'status' => $p->status]),
             'periode' => $dipilih ? $this->ringkasPeriode($dipilih) : null,
-            'laporan' => $dipilih ? $this->laporanHarian($dipilih, 'desc') : [],
+            'laporan' => match (true) {
+                $tindakan => $this->muat($this->perluTindakan($request->user()), 'asc'),
+                $dipilih !== null => $this->laporanHarian($dipilih, 'desc'),
+                default => [],
+            },
+            'tindakan' => $tindakan,
             'menunggu' => LaporanHarian::where('status', StatusLaporanHarian::Diajukan)->count(),
+            'bisaAjukanSemua' => $request->user()->hasRole('tu') ? $this->ringkasan->laporanBelumDiajukan()->count() : 0,
         ]);
+    }
+
+    // TU: ajukan semua laporan draft/ditolak sampai kemarin (#32)
+    public function ajukanSemuaHarian(Request $request): RedirectResponse
+    {
+        $jumlah = $this->service->ajukanSemuaSampaiKemarin($request->user());
+
+        return $this->kembali("{$jumlah} laporan harian diajukan ke Bendahara.");
+    }
+
+    // Bendahara: setujui sekaligus transfer yang sudah diverifikasi TU di laporan ini (#32)
+    public function setujuiTransferHarian(Request $request, LaporanHarian $laporanHarian): RedirectResponse
+    {
+        $jumlah = $this->service->setujuiSemuaTransfer($laporanHarian, $request->user());
+
+        return $this->kembali("{$jumlah} transfer {$this->tanggal($laporanHarian)} disetujui."
+            .$this->sisa($this->ringkasan->transferMenungguBendahara()->count(), 'transfer menunggu persetujuan'));
+    }
+
+    // Mode "perlu tindakan saya" (dibuka dari beranda/badge), lintas periode yang belum ditutup:
+    // TU = laporan draft/ditolak atau berisi transfer yang perlu diverifikasi;
+    // Bendahara = laporan yang diajukan atau berisi transfer yang perlu disetujui
+    private function perluTindakan(User $user): Builder
+    {
+        $tu = $user->hasRole('tu');
+        $bendahara = $user->hasRole('bendahara');
+
+        return LaporanHarian::query()
+            ->whereHas('periodeLaporan', fn (Builder $q) => $q->where('status', '!=', StatusPeriodeLaporan::Ditutup))
+            ->where(function (Builder $q) use ($tu, $bendahara) {
+                $q->whereRaw('1 = 0'); // tanpa role TU/Bendahara: tidak ada yang perlu ditindak
+
+                if ($tu) {
+                    $q->orWhereIn('status', [StatusLaporanHarian::Draft, StatusLaporanHarian::Ditolak])
+                        ->orWhereHas('transaksi', fn (Builder $t) => $t->whereIn('id', $this->ringkasan->transferMenungguVerifikasi()->select('id')));
+                }
+
+                if ($bendahara) {
+                    $q->orWhere('status', StatusLaporanHarian::Diajukan)
+                        ->orWhereHas('transaksi', fn (Builder $t) => $t->whereIn('id', $this->ringkasan->transferMenungguBendahara()->select('id')));
+                }
+            });
+    }
+
+    private function sisa(int $jumlah, string $apa): string
+    {
+        return $jumlah > 0 ? " Sisa {$jumlah} {$apa}." : ' Tidak ada lagi yang menunggu.';
     }
 
     // Laporan bulanan: rekap per hari yang bisa dibuka per transaksi; total dihitung, tidak bisa diedit (FR-13)
@@ -86,7 +143,8 @@ class LaporanController extends Controller
     {
         $this->service->setujuiHarian($laporanHarian, $request->user());
 
-        return $this->kembali('Laporan harian '.$this->tanggal($laporanHarian).' disetujui.');
+        return $this->kembali('Laporan harian '.$this->tanggal($laporanHarian).' disetujui.'
+            .$this->sisa($this->ringkasan->laporanMenungguBendahara()->count(), 'laporan harian menunggu persetujuan'));
     }
 
     public function tolakHarian(Request $request, LaporanHarian $laporanHarian): RedirectResponse
@@ -139,7 +197,12 @@ class LaporanController extends Controller
 
     private function laporanHarian(PeriodeLaporan $periode, string $urutan): Collection
     {
-        return $periode->laporanHarian()
+        return $this->muat($periode->laporanHarian()->getQuery(), $urutan);
+    }
+
+    private function muat(Builder $query, string $urutan): Collection
+    {
+        return $query
             ->with(['transaksi' => fn ($q) => $q->with('siswa')->orderBy('id'), 'diajukanOlehUser', 'disetujuiOlehUser', 'ditolakOlehUser'])
             ->orderBy('tanggal', $urutan)
             ->get()

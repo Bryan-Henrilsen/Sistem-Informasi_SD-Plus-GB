@@ -27,6 +27,7 @@ Route::middleware(['auth'])
 
         // Laporan harian & bulanan: TU mengajukan / menarik kembali (FR-12, FR-14; #15, #31)
         Route::middleware('role:tu')->group(function () {
+            Route::post('laporan-harian/ajukan-semua', [LaporanController::class, 'ajukanSemuaHarian'])->name('laporan-harian.ajukan-semua');
             Route::post('laporan-harian/{laporanHarian}/ajukan', [LaporanController::class, 'ajukanHarian'])->name('laporan-harian.ajukan');
             Route::post('laporan-harian/{laporanHarian}/tarik', [LaporanController::class, 'tarikHarian'])->name('laporan-harian.tarik');
             Route::post('periode/{periode}/ajukan', [LaporanController::class, 'ajukanBulanan'])->name('periode.ajukan');
@@ -37,6 +38,7 @@ Route::middleware(['auth'])
         Route::middleware('role:bendahara')->group(function () {
             Route::post('laporan-harian/{laporanHarian}/setujui', [LaporanController::class, 'setujuiHarian'])->name('laporan-harian.setujui');
             Route::post('laporan-harian/{laporanHarian}/tolak', [LaporanController::class, 'tolakHarian'])->name('laporan-harian.tolak');
+            Route::post('laporan-harian/{laporanHarian}/setujui-transfer', [LaporanController::class, 'setujuiTransferHarian'])->name('laporan-harian.setujui-transfer');
             Route::post('periode/{periode}/kembalikan', [LaporanController::class, 'kembalikanBulanan'])->name('periode.kembalikan');
             Route::post('periode/{periode}/tutup-buku', [LaporanController::class, 'tutupBuku'])->name('periode.tutup-buku');
         });
