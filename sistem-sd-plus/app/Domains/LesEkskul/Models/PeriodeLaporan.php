@@ -20,6 +20,11 @@ class PeriodeLaporan extends Model
         'tanggal_mulai',
         'tanggal_selesai',
         'status',
+        'diajukan_oleh',
+        'diajukan_at',
+        'alasan_dikembalikan',
+        'dikembalikan_oleh',
+        'dikembalikan_at',
         'ditutup_oleh',
         'ditutup_at',
         'honor_diketahui_oleh',
@@ -37,9 +42,23 @@ class PeriodeLaporan extends Model
             'tanggal_mulai' => 'date',
             'tanggal_selesai' => 'date',
             'status' => StatusPeriodeLaporan::class,
+            'diajukan_at' => 'datetime',
+            'dikembalikan_at' => 'datetime',
             'ditutup_at' => 'datetime',
             'honor_diketahui_at' => 'datetime',
         ];
+    }
+
+    // TU yang mengajukan laporan bulanan (FR-14)
+    public function diajukanOlehUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'diajukan_oleh');
+    }
+
+    // Bendahara yang mengembalikan laporan bulanan ke TU (#31)
+    public function dikembalikanOlehUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'dikembalikan_oleh');
     }
 
     // Bendahara yang menutup buku (FR-14)

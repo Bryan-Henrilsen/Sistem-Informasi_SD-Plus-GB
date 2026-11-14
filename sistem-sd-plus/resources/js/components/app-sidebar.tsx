@@ -3,6 +3,7 @@ import {
     BookOpen,
     CalendarRange,
     ClipboardList,
+    FileCheck2,
     FolderGit2,
     LayoutGrid,
     ReceiptText,
@@ -23,6 +24,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import laporanHarian from '@/routes/les-ekskul/laporan-harian';
 import pendaftaran from '@/routes/les-ekskul/pendaftaran';
 import periode from '@/routes/les-ekskul/periode';
 import refund from '@/routes/les-ekskul/refund';
@@ -43,6 +45,7 @@ const lesEkskulNavItems: NavItem[] = [
     { title: 'Periode Laporan', href: periode.index(), icon: CalendarRange },
     { title: 'Tagihan', href:tagihan.index(), icon: ReceiptText },
     { title: 'Transaksi', href: transaksi.index(), icon: Wallet },
+    { title: 'Laporan Harian', href: laporanHarian.index(), icon: FileCheck2 },
     { title: 'Pendaftaran', href: pendaftaran.index(), icon: ClipboardList },
     { title: 'Refund', href: refund.index(), icon: Undo2 },
 ];

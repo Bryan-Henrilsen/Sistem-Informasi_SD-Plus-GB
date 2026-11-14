@@ -1,4 +1,4 @@
-import { Form, Head, usePage } from "@inertiajs/react";
+import { Form, Head, Link, usePage } from "@inertiajs/react";
 import PeriodeLaporanController from '@/actions/App/Domains/LesEkskul/Http/Controllers/PeriodeLaporanController';
 import Heading from "@/components/heading";
 import InputError from "@/components/input-error";
@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { namaBulan, rupiah, tanggal } from "@/lib/format";
-import { index } from '@/routes/les-ekskul/periode';
+import { index, show } from '@/routes/les-ekskul/periode';
 import type { Auth } from "@/types";
 
 type Periode = {
@@ -113,7 +113,10 @@ export default function PeriodeIndex({ periode, usulan }: Props) {
                         {periode.map((p) => (
                             <tr key={p.id} className="border-t">
                                 <td className="p-3 font-medium">
-                                    {namaBulan(p.bulan)}
+                                    <Link href={show(p.id)} className="underline-offset-4 hover:underline">
+                                        {namaBulan(p.bulan)}
+                                    </Link>
+                                    <div className="text-xs font-normal text-muted-foreground">Lihat laporan bulanan</div>
                                 </td>
                                 <td className="p-3">
                                     {tanggal(p.tanggal_mulai)} -{' '}

@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\LesEkskul\Http\Controllers\LaporanController;
 use App\Domains\LesEkskul\Http\Controllers\PendaftaranController;
 use App\Domains\LesEkskul\Http\Controllers\PeriodeLaporanController;
 use App\Domains\LesEkskul\Http\Controllers\RefundController;
@@ -20,6 +21,24 @@ Route::middleware(['auth'])
             Route::get('transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
             Route::get('pendaftaran', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
             Route::get('refund', [RefundController::class, 'index'])->name('refund.index');
+            Route::get('laporan-harian', [LaporanController::class, 'harian'])->name('laporan-harian.index');
+            Route::get('periode/{periode}', [LaporanController::class, 'bulanan'])->name('periode.show');
+        });
+
+        // Laporan harian & bulanan: TU mengajukan / menarik kembali (FR-12, FR-14; #15, #31)
+        Route::middleware('role:tu')->group(function () {
+            Route::post('laporan-harian/{laporanHarian}/ajukan', [LaporanController::class, 'ajukanHarian'])->name('laporan-harian.ajukan');
+            Route::post('laporan-harian/{laporanHarian}/tarik', [LaporanController::class, 'tarikHarian'])->name('laporan-harian.tarik');
+            Route::post('periode/{periode}/ajukan', [LaporanController::class, 'ajukanBulanan'])->name('periode.ajukan');
+            Route::post('periode/{periode}/tarik', [LaporanController::class, 'tarikBulanan'])->name('periode.tarik');
+        });
+
+        // Bendahara menyetujui / menolak laporan harian, mengembalikan laporan bulanan, dan menutup buku (FR-12, FR-14, FR-14b)
+        Route::middleware('role:bendahara')->group(function () {
+            Route::post('laporan-harian/{laporanHarian}/setujui', [LaporanController::class, 'setujuiHarian'])->name('laporan-harian.setujui');
+            Route::post('laporan-harian/{laporanHarian}/tolak', [LaporanController::class, 'tolakHarian'])->name('laporan-harian.tolak');
+            Route::post('periode/{periode}/kembalikan', [LaporanController::class, 'kembalikanBulanan'])->name('periode.kembalikan');
+            Route::post('periode/{periode}/tutup-buku', [LaporanController::class, 'tutupBuku'])->name('periode.tutup-buku');
         });
 
         // Pendaftaran, berhenti/pindah, pembebasan wajib ekskul, dan refund — TU (FR-6, FR-10, FR-11, FR-22, FR-27; #29–#30)

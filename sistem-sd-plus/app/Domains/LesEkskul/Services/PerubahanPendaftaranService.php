@@ -184,6 +184,11 @@ class PerubahanPendaftaranService
                 throw $this->gagal('tanggal', "Tagihan {$bulan} sedang dalam pembayaran online yang belum selesai. Tunggu sampai lunas atau kedaluwarsa.");
             }
 
+            // Alokasi yang sudah diakui saat tutup buku sudah masuk honor; tidak boleh dilepas lagi (#31)
+            if ($t->transaksi->contains(fn ($tr) => $tr->pivot->diakui_periode_id !== null)) {
+                throw $this->gagal('tanggal', "Tagihan {$bulan} sudah masuk tutup buku. Pilih tanggal efektif setelah periode yang sudah ditutup.");
+            }
+
             // Uang transfer yang belum diverifikasi belum pasti ada; jangan dialihkan atau direfund
             if ($t->transaksi->contains(fn ($tr) => $tr->status === StatusTransaksi::Pending)) {
                 throw $this->gagal('tanggal', "Tagihan {$bulan} dibayar dengan transfer yang belum diverifikasi TU. Verifikasi atau tolak transfer itu dulu.");
