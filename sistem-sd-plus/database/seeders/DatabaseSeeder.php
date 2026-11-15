@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             StafSeeder::class,
             GuruSeeder::class,
             HonorFlatJenisSeeder::class,
+            SkemaHonorSeeder::class,
         ]);
     }
 }

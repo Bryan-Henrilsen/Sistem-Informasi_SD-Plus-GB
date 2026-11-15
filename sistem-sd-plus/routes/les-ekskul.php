@@ -2,8 +2,10 @@
 
 use App\Domains\LesEkskul\Http\Controllers\LaporanController;
 use App\Domains\LesEkskul\Http\Controllers\PendaftaranController;
+use App\Domains\LesEkskul\Http\Controllers\PengajarEkskulController;
 use App\Domains\LesEkskul\Http\Controllers\PeriodeLaporanController;
 use App\Domains\LesEkskul\Http\Controllers\RefundController;
+use App\Domains\LesEkskul\Http\Controllers\SkemaHonorController;
 use App\Domains\LesEkskul\Http\Controllers\TagihanController;
 use App\Domains\LesEkskul\Http\Controllers\TransaksiController;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +25,26 @@ Route::middleware(['auth'])
             Route::get('refund', [RefundController::class, 'index'])->name('refund.index');
             Route::get('laporan-harian', [LaporanController::class, 'harian'])->name('laporan-harian.index');
             Route::get('periode/{periode}', [LaporanController::class, 'bulanan'])->name('periode.show');
+            Route::get('honor/pengajar', [PengajarEkskulController::class, 'index'])->name('honor.pengajar');
+            Route::get('honor/skema', [SkemaHonorController::class, 'index'])->name('honor.skema');
+        });
+
+        // Pengaturan honor oleh TU & Kepala Sekolah: data pengajar, penugasan, cara hitung, penerima tanpa akun (#33)
+        Route::middleware('role:tu|kepala_sekolah')->group(function () {
+            Route::post('honor/pengajar', [PengajarEkskulController::class, 'store'])->name('honor.pengajar.store');
+            Route::put('honor/pengajar/{pengajarEkskul}', [PengajarEkskulController::class, 'update'])->name('honor.pengajar.update');
+            Route::post('honor/kegiatan/{ekstrakurikuler}/mode', [PengajarEkskulController::class, 'aturMode'])->name('honor.kegiatan.mode');
+            Route::post('honor/kegiatan/{ekstrakurikuler}/pengajar', [PengajarEkskulController::class, 'aturPengajar'])->name('honor.kegiatan.pengajar');
+            Route::post('honor/penerima-tanpa-akun', [SkemaHonorController::class, 'tambahTanpaAkun'])->name('honor.tanpa-akun');
+        });
+
+        // Pengaturan honor khusus Kepala Sekolah: pendamping & kategori (FR-18), skema persen (FR-17), penerima peran, honor flat (FR-25b)
+        Route::middleware('role:kepala_sekolah')->group(function () {
+            Route::post('honor/kegiatan/{ekstrakurikuler}/kategori', [PengajarEkskulController::class, 'aturKategori'])->name('honor.kegiatan.kategori');
+            Route::post('honor/kegiatan/{ekstrakurikuler}/pendamping', [PengajarEkskulController::class, 'aturPendamping'])->name('honor.kegiatan.pendamping');
+            Route::post('honor/skema', [SkemaHonorController::class, 'simpanSkema'])->name('honor.skema.simpan');
+            Route::post('honor/peran', [SkemaHonorController::class, 'simpanPeran'])->name('honor.peran.simpan');
+            Route::post('honor/flat/{honorFlatJenis}', [SkemaHonorController::class, 'simpanHonorFlat'])->name('honor.flat.simpan');
         });
 
         // Laporan harian & bulanan: TU mengajukan / menarik kembali (FR-12, FR-14; #15, #31)

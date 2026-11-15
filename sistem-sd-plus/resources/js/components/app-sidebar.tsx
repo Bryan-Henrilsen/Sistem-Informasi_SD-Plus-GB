@@ -1,4 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
+import PengajarEkskulController from '@/actions/App/Domains/LesEkskul/Http/Controllers/PengajarEkskulController';
+import SkemaHonorController from '@/actions/App/Domains/LesEkskul/Http/Controllers/SkemaHonorController';
 import {
     BookOpen,
     CalendarRange,
@@ -6,8 +8,10 @@ import {
     FileCheck2,
     FolderGit2,
     LayoutGrid,
+    Percent,
     ReceiptText,
     Undo2,
+    Users,
     Wallet,
     } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -48,6 +52,12 @@ const lesEkskulNavItems: NavItem[] = [
     { title: 'Laporan Harian', href: laporanHarian.index(), icon: FileCheck2 },
     { title: 'Pendaftaran', href: pendaftaran.index(), icon: ClipboardList },
     { title: 'Refund', href: refund.index(), icon: Undo2 },
+];
+
+// Menu pengaturan dan rekap honor (FR-16–FR-20); role sama dengan menu keuangan
+const honorNavItems: NavItem[] = [
+    { title: 'Pengajar Ekskul', href: PengajarEkskulController.index(), icon: Users },
+    { title: 'Skema Honor', href: SkemaHonorController.index(), icon: Percent },
 ];
 const roleKeuangan = ['tu', 'bendahara', 'kepala_sekolah'];
 
@@ -99,6 +109,7 @@ export function AppSidebar() {
                 {bisaLihatKeuangan && (
                     <NavMain items={menuLesEkskul} label="Les & Ekskul" />
                 )}
+                {bisaLihatKeuangan && <NavMain items={honorNavItems} label="Honor" />}
             </SidebarContent>
 
             <SidebarFooter>

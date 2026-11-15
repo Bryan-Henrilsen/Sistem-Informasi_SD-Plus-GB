@@ -27,11 +27,13 @@ class Ekstrakurikuler extends Model
         'jenjang_min',
         'jenjang_max',
         'honor_flat',
+        'honor_per_kelas_paralel',
     ];
 
     protected $attributes = [
         'wajib_otomatis' => false,
         'honor_flat' => false,
+        'honor_per_kelas_paralel' => false,
     ];
 
     protected function casts(): array
@@ -40,6 +42,7 @@ class Ekstrakurikuler extends Model
             'kategori_pendamping' => KategoriPendamping::class,
             'wajib_otomatis' => 'boolean',
             'honor_flat' => 'boolean',
+            'honor_per_kelas_paralel' => 'boolean',
         ];
     }
 
