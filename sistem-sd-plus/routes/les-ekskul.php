@@ -134,5 +134,6 @@ Route::middleware(['auth', 'role:orang_tua'])
         Route::delete('anak/{siswa}', [OrangTuaController::class, 'lepas'])->name('anak.lepas');
         Route::get('anak/{siswa}/kegiatan', [KegiatanAnakController::class, 'show'])->name('anak.kegiatan');
         Route::post('anak/{siswa}/kegiatan', [KegiatanAnakController::class, 'daftar'])->name('anak.daftar');
+        Route::get('tagihan', [OrangTuaController::class, 'tagihan'])->name('tagihan');
         Route::get('akun', [OrangTuaController::class, 'akun'])->name('akun');
     });

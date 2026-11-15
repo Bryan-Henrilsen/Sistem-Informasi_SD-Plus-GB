@@ -2,11 +2,19 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { CalendarClock, ChevronRight, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { tanggal } from '@/lib/format';
+import { rupiah, tanggal } from '@/lib/format';
 import ortu from '@/routes/ortu';
 import type { Auth } from '@/types';
 
-export type AnakRingkas = { id: number; nama: string; kelas: string | null; kegiatan: string[] };
+export type AnakRingkas = {
+    id: number;
+    nama: string;
+    kelas: string | null;
+    kegiatan: string[];
+    tunggakan?: number; // beranda saja (#38)
+    bulan_ini?: number;
+    menunggu_verifikasi?: number;
+};
 
 type Periode = { tanggal_mulai: string; tanggal_selesai: string };
 
@@ -79,6 +87,11 @@ export function KartuAnak({ anak, aksi }: { anak: AnakRingkas; aksi?: React.Reac
                     </div>
                 ) : (
                     <p className="text-xs text-muted-foreground">Belum mengikuti les atau ekstrakurikuler.</p>
+                )}
+                {(anak.tunggakan ?? 0) > 0 && <p className="text-sm font-medium text-red-600 dark:text-red-400">Tunggakan {rupiah(anak.tunggakan ?? 0)}</p>}
+                {(anak.bulan_ini ?? 0) > 0 && <p className="text-sm text-muted-foreground">Belum dibayar bulan ini {rupiah(anak.bulan_ini ?? 0)}</p>}
+                {(anak.menunggu_verifikasi ?? 0) > 0 && (
+                    <p className="text-xs text-sky-700 dark:text-sky-400">{anak.menunggu_verifikasi} pembayaran menunggu verifikasi TU</p>
                 )}
             </CardContent>
         </Card>
