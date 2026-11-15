@@ -21,6 +21,28 @@ trait ProfileValidationRules
         ];
     }
 
+    // Akun orang tua: no HP wajib (bentuk baku 08…, sudah dinormalkan NomorHp), email opsional untuk lupa password (#36)
+    protected function orangTuaRules(?int $userId = null): array
+    {
+        $unik = fn (string $kolom) => $userId === null ? Rule::unique(User::class, $kolom) : Rule::unique(User::class, $kolom)->ignore($userId);
+
+        return [
+            'name' => $this->nameRules(),
+            'no_hp' => ['required', 'string', 'regex:/^08\d{8,12}$/', $unik('no_hp')],
+            'email' => ['nullable', 'string', 'email', 'max:255', $unik('email')],
+        ];
+    }
+
+    protected function orangTuaMessages(): array
+    {
+        return [
+            'no_hp.required' => 'Nomor HP wajib diisi.',
+            'no_hp.regex' => 'Nomor HP tidak valid. Contoh: 0812 3456 7890.',
+            'no_hp.unique' => 'Nomor HP ini sudah terdaftar. Silakan login, atau hubungi TU bila lupa password.',
+            'email.unique' => 'Email ini sudah dipakai akun lain.',
+        ];
+    }
+
     /**
      * Get the validation rules used to validate user names.
      *

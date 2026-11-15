@@ -1,7 +1,9 @@
 <?php
 
+use App\Domains\LesEkskul\Http\Controllers\AkunOrangTuaController;
 use App\Domains\LesEkskul\Http\Controllers\LaporanController;
 use App\Domains\LesEkskul\Http\Controllers\LaporanKasController;
+use App\Domains\LesEkskul\Http\Controllers\OrangTuaController;
 use App\Domains\LesEkskul\Http\Controllers\PendaftaranController;
 use App\Domains\LesEkskul\Http\Controllers\PengajarEkskulController;
 use App\Domains\LesEkskul\Http\Controllers\PeriodeLaporanController;
@@ -106,4 +108,24 @@ Route::middleware(['auth'])
             ->middleware('role:tu')->name('transaksi.verifikasi'); // FR-8
         Route::post('transaksi/{transaksi}/setujui', [TransaksiController::class, 'setujui'])
             ->middleware('role:bendahara')->name('transaksi.setujui'); // FR-8b
+
+        // Akun orang tua oleh TU: hapus klaim salah, reset password, tambah siswa yang belum ada (FR-1b, #36)
+        Route::middleware('role:tu')->group(function () {
+            Route::get('akun-orang-tua', [AkunOrangTuaController::class, 'index'])->name('akun-orang-tua.index');
+            Route::delete('akun-orang-tua/{user}/anak/{siswa}', [AkunOrangTuaController::class, 'hapusKlaim'])->name('akun-orang-tua.hapus-klaim');
+            Route::post('akun-orang-tua/{user}/reset-password', [AkunOrangTuaController::class, 'resetPassword'])->name('akun-orang-tua.reset-password');
+            Route::post('siswa', [AkunOrangTuaController::class, 'tambahSiswa'])->name('siswa.store');
+        });
+    });
+
+// Halaman orang tua (layout khusus HP): beranda, anak saya & klaim, akun (FR-1, FR-1b; Ringkasan v1.11 #36)
+Route::middleware(['auth', 'role:orang_tua'])
+    ->prefix('ortu')
+    ->name('ortu.')
+    ->group(function () {
+        Route::get('/', [OrangTuaController::class, 'beranda'])->name('beranda');
+        Route::get('anak', [OrangTuaController::class, 'anakSaya'])->name('anak');
+        Route::post('anak', [OrangTuaController::class, 'klaim'])->name('anak.klaim');
+        Route::delete('anak/{siswa}', [OrangTuaController::class, 'lepas'])->name('anak.lepas');
+        Route::get('akun', [OrangTuaController::class, 'akun'])->name('akun');
     });

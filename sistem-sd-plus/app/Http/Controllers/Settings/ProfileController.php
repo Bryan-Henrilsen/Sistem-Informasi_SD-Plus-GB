@@ -40,7 +40,8 @@ class ProfileController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
 
-        return to_route('profile.edit');
+        // Orang tua mengubah profil dari halaman Akun miliknya sendiri (#36)
+        return $request->user()->hasRole('orang_tua') ? back() : to_route('profile.edit');
     }
 
     /**

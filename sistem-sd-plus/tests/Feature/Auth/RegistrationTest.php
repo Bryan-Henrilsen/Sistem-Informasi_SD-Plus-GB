@@ -1,9 +1,11 @@
 <?php
 
+use Database\Seeders\RoleSeeder;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
     $this->skipUnlessFortifyHas(Features::registration());
+    $this->seed(RoleSeeder::class);
 });
 
 test('registration screen can be rendered', function () {
@@ -15,7 +17,7 @@ test('registration screen can be rendered', function () {
 test('new users can register', function () {
     $response = $this->post(route('register.store'), [
         'name' => 'Test User',
-        'email' => 'test@example.com',
+        'no_hp' => '0812 3456 7890',
         'password' => 'password',
         'password_confirmation' => 'password',
     ]);

@@ -4,8 +4,11 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\User;
+use App\Support\NomorHp;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -41,6 +44,16 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+
+        // Login dengan email (staf) atau no HP dalam bentuk apa pun (orang tua); no HP dinormalkan dulu (#36)
+        Fortify::authenticateUsing(function (Request $request): ?User {
+            $isian = trim((string) $request->input('login'));
+            $user = NomorHp::bukanEmail($isian)
+                ? User::where('no_hp', NomorHp::normal($isian) ?? $isian)->first()
+                : User::where('email', $isian)->first();
+
+            return $user && Hash::check((string) $request->input('password'), $user->password) ? $user : null;
+        });
     }
 
     /**

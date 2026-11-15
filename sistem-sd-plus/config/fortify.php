@@ -45,7 +45,8 @@ return [
     |
     */
 
-    'username' => 'email',
+    // Satu kolom login "Email atau No HP": staf memakai email, orang tua memakai no HP (Ringkasan v1.11 #36)
+    'username' => 'login',
 
     'email' => 'email',
 
