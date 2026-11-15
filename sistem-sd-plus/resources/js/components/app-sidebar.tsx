@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import AkunOrangTuaController from '@/actions/App/Domains/LesEkskul/Http/Controllers/AkunOrangTuaController';
 import PengajarEkskulController from '@/actions/App/Domains/LesEkskul/Http/Controllers/PengajarEkskulController';
 import RekapHonorController from '@/actions/App/Domains/LesEkskul/Http/Controllers/RekapHonorController';
 import SkemaHonorController from '@/actions/App/Domains/LesEkskul/Http/Controllers/SkemaHonorController';
@@ -7,6 +8,7 @@ import {
     CalendarRange,
     ClipboardList,
     Coins,
+    Contact,
     FileCheck2,
     FolderGit2,
     Landmark,
@@ -33,6 +35,7 @@ import {
 import { dashboard } from '@/routes';
 import laporanHarian from '@/routes/les-ekskul/laporan-harian';
 import laporanKas from '@/routes/les-ekskul/laporan-kas';
+import ortu from '@/routes/ortu';
 import pendaftaran from '@/routes/les-ekskul/pendaftaran';
 import periode from '@/routes/les-ekskul/periode';
 import refund from '@/routes/les-ekskul/refund';
@@ -95,6 +98,12 @@ export function AppSidebar() {
         Refund: badge?.refund,
     };
     const menuLesEkskul = lesEkskulNavItems.map((item) => ({ ...item, badge: jumlah[item.title] }));
+    // Akun Orang Tua hanya untuk TU (#36)
+    if (auth.roles.includes('tu')) {
+        menuLesEkskul.push({ title: 'Akun Orang Tua', href: AkunOrangTuaController.index(), icon: Contact, badge: undefined });
+    }
+    // Guru/staf yang juga orang tua membuka halaman orang tua dari sini (#36)
+    const menuOrangTua: NavItem[] = auth.roles.includes('orang_tua') ? [{ title: 'Anak Saya', href: ortu.beranda(), icon: Users }] : [];
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -116,6 +125,7 @@ export function AppSidebar() {
                     <NavMain items={menuLesEkskul} label="Les & Ekskul" />
                 )}
                 {bisaLihatKeuangan && <NavMain items={honorNavItems} label="Honor" />}
+                {menuOrangTua.length > 0 && <NavMain items={menuOrangTua} label="Orang Tua" />}
             </SidebarContent>
 
             <SidebarFooter>
