@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Domains\LesEkskul\Models\HonorFlatJenis;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class HonorFlatJenisSeeder extends Seeder
@@ -18,6 +17,7 @@ class HonorFlatJenisSeeder extends Seeder
             'bina_karakter' => 'Bina Karakter',
             'pramuka' => 'Pramuka',
             'pembuat_soal_les' => 'Pembuat Soal Les',
+            'petugas_kebersihan' => 'Petugas Kebersihan', // Ringkasan v1.11 #33
         ];
 
         foreach ($daftar as $kode => $nama) {
