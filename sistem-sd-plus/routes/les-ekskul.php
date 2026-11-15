@@ -5,6 +5,7 @@ use App\Domains\LesEkskul\Http\Controllers\PendaftaranController;
 use App\Domains\LesEkskul\Http\Controllers\PengajarEkskulController;
 use App\Domains\LesEkskul\Http\Controllers\PeriodeLaporanController;
 use App\Domains\LesEkskul\Http\Controllers\RefundController;
+use App\Domains\LesEkskul\Http\Controllers\RekapHonorController;
 use App\Domains\LesEkskul\Http\Controllers\SkemaHonorController;
 use App\Domains\LesEkskul\Http\Controllers\TagihanController;
 use App\Domains\LesEkskul\Http\Controllers\TransaksiController;
@@ -27,6 +28,7 @@ Route::middleware(['auth'])
             Route::get('periode/{periode}', [LaporanController::class, 'bulanan'])->name('periode.show');
             Route::get('honor/pengajar', [PengajarEkskulController::class, 'index'])->name('honor.pengajar');
             Route::get('honor/skema', [SkemaHonorController::class, 'index'])->name('honor.skema');
+            Route::get('honor/rekap', [RekapHonorController::class, 'index'])->name('honor.rekap');
         });
 
         // Pengaturan honor oleh TU & Kepala Sekolah: data pengajar, penugasan, cara hitung, penerima tanpa akun (#33)
@@ -46,6 +48,12 @@ Route::middleware(['auth'])
             Route::post('honor/peran', [SkemaHonorController::class, 'simpanPeran'])->name('honor.peran.simpan');
             Route::post('honor/flat/{honorFlatJenis}', [SkemaHonorController::class, 'simpanHonorFlat'])->name('honor.flat.simpan');
         });
+
+        // Hitung / hitung ulang honor oleh Bendahara & Kepala Sekolah; "Sudah Diketahui" hanya Kepala Sekolah (FR-20, #34)
+        Route::post('honor/rekap/{periode}/hitung', [RekapHonorController::class, 'hitung'])
+            ->middleware('role:bendahara|kepala_sekolah')->name('honor.rekap.hitung');
+        Route::post('honor/rekap/{periode}/diketahui', [RekapHonorController::class, 'tandaiDiketahui'])
+            ->middleware('role:kepala_sekolah')->name('honor.rekap.diketahui');
 
         // Laporan harian & bulanan: TU mengajukan / menarik kembali (FR-12, FR-14; #15, #31)
         Route::middleware('role:tu')->group(function () {

@@ -25,7 +25,7 @@ class RingkasanTugasService
 {
     public const ROLE_KEUANGAN = ['tu', 'bendahara', 'kepala_sekolah'];
 
-    public function __construct(private LaporanService $laporan, private PendaftaranService $pendaftaran) {}
+    public function __construct(private LaporanService $laporan, private PendaftaranService $pendaftaran, private HonorService $honor) {}
 
     // Angka di samping menu sidebar: yang menunggu tindakan role pengguna
     public function badge(User $user): array
@@ -84,6 +84,24 @@ class RingkasanTugasService
             }
         }
 
+        // Honor (#34): tertahan karena data belum lengkap saat tutup buku, lalu menunggu "Sudah Diketahui" Kepala Sekolah
+        if ($user->hasAnyRole(['bendahara', 'kepala_sekolah'])) {
+            $tertahan = $this->honorBelumDihitung()->orderBy('bulan')->get()->filter(fn (PeriodeLaporan $p) => $this->honor->adaYangDihitung($p))->values();
+            $kartu[] = $this->kartu('Honor belum dihitung', $tertahan->count(),
+                'Buku sudah ditutup, tetapi data honor belum lengkap. Lengkapi lalu hitung di Rekap Honor.',
+                route('les-ekskul.honor.rekap', $tertahan->isNotEmpty() ? ['periode' => $tertahan->first()->id] : [], false));
+        }
+
+        if ($user->hasRole('kepala_sekolah')) {
+            // Termasuk periode tanpa honor sama sekali (mis. Juni) supaya tetap bisa ditandai
+            $menunggu = $this->honorMenungguDiketahui()->orderBy('bulan')->get()
+                ->concat($this->honorBelumDihitung()->get()->reject(fn (PeriodeLaporan $p) => $this->honor->adaYangDihitung($p)))
+                ->sortBy('bulan')->values();
+            $kartu[] = $this->kartu('Honor menunggu Diketahui', $menunggu->count(),
+                'Periksa rekap honor, lalu tandai Sudah Diketahui.',
+                route('les-ekskul.honor.rekap', $menunggu->isNotEmpty() ? ['periode' => $menunggu->first()->id] : [], false));
+        }
+
         return $kartu;
     }
 
@@ -132,6 +150,21 @@ class RingkasanTugasService
     public function laporanMenungguBendahara(): Builder
     {
         return LaporanHarian::where('status', StatusLaporanHarian::Diajukan);
+    }
+
+    // Periode yang bukunya sudah ditutup tetapi honornya belum ada (tertahan data belum lengkap, #33)
+    public function honorBelumDihitung(): Builder
+    {
+        return PeriodeLaporan::where('status', StatusPeriodeLaporan::Ditutup)
+            ->whereNull('honor_diketahui_at')
+            ->whereDoesntHave('honorDetail');
+    }
+
+    public function honorMenungguDiketahui(): Builder
+    {
+        return PeriodeLaporan::where('status', StatusPeriodeLaporan::Ditutup)
+            ->whereNull('honor_diketahui_at')
+            ->whereHas('honorDetail');
     }
 
     public function refundBelumDikembalikan(): Builder
