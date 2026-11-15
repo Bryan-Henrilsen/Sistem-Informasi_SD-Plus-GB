@@ -141,3 +141,16 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Cetak (mis. Rekap Honor): hanya isi halaman, tanpa sidebar dan header aplikasi */
+@media print {
+    [data-slot='sidebar'],
+    [data-slot='sidebar-inset'] > header {
+        display: none !important;
+    }
+
+    [data-slot='sidebar-inset'] {
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
+}

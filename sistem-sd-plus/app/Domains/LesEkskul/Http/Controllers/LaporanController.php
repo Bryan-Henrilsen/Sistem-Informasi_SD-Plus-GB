@@ -181,7 +181,11 @@ class LaporanController extends Controller
     {
         $diakui = $this->service->tutupBuku($periode, $request->user());
 
-        return $this->kembali('Buku periode '.$this->bulan($periode)." ditutup. {$diakui} alokasi pembayaran diakui untuk honor periode ini.");
+        $honor = $periode->honorDetail()->exists()
+            ? 'Honor sudah dihitung otomatis.'
+            : 'Honor belum dihitung karena data belum lengkap; lengkapi lalu hitung di halaman Rekap Honor.';
+
+        return $this->kembali('Buku periode '.$this->bulan($periode)." ditutup. {$diakui} alokasi pembayaran diakui untuk honor periode ini. {$honor}");
     }
 
     private function ringkasPeriode(PeriodeLaporan $periode): array

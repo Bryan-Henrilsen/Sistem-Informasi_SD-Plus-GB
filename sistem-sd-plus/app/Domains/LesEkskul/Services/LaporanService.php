@@ -21,7 +21,7 @@ use Illuminate\Validation\ValidationException;
 // Alur bulanan: terbuka -> diajukan (TU) -> ditutup (Bendahara), atau dikembalikan ke TU (kembali terbuka).
 class LaporanService
 {
-    public function __construct(private TransaksiService $transaksi) {}
+    public function __construct(private TransaksiService $transaksi, private HonorService $honor) {}
 
     // ---------- Laporan harian ----------
 
@@ -218,8 +218,12 @@ class LaporanService
             $this->tolakBilaAdaHambatan($this->hambatanTutupBuku($periode));
 
             $periode->update(['status' => StatusPeriodeLaporan::Ditutup, 'ditutup_oleh' => $oleh->id, 'ditutup_at' => now()]);
+            $diakui = $this->akuiAlokasi($periode);
 
-            return $this->akuiAlokasi($periode);
+            // Honor langsung dihitung bila datanya lengkap; bila belum, tutup buku tetap jalan dan honor dihitung manual nanti (#33)
+            $this->honor->hitungBilaLengkap($periode);
+
+            return $diakui;
         });
     }
 

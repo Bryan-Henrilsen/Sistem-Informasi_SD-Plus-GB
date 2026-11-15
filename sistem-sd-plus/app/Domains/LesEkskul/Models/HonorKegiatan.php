@@ -40,7 +40,7 @@ class HonorKegiatan extends Model
         return $this->belongsTo(LesTambahan::class);
     }
 
-    // Selalu kegiatan induk; kelas paralel sudah digabung (FR-16b)
+    // Kegiatan induk bila kelas paralel digabung (FR-16b); kelas paralelnya bila honor dihitung per kelas (#33)
     public function ekstrakurikuler(): BelongsTo
     {
         return $this->belongsTo(Ekstrakurikuler::class);

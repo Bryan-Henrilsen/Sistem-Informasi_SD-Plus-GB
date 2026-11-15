@@ -1,10 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
 import PengajarEkskulController from '@/actions/App/Domains/LesEkskul/Http/Controllers/PengajarEkskulController';
+import RekapHonorController from '@/actions/App/Domains/LesEkskul/Http/Controllers/RekapHonorController';
 import SkemaHonorController from '@/actions/App/Domains/LesEkskul/Http/Controllers/SkemaHonorController';
 import {
     BookOpen,
     CalendarRange,
     ClipboardList,
+    Coins,
     FileCheck2,
     FolderGit2,
     LayoutGrid,
@@ -58,6 +60,7 @@ const lesEkskulNavItems: NavItem[] = [
 const honorNavItems: NavItem[] = [
     { title: 'Pengajar Ekskul', href: PengajarEkskulController.index(), icon: Users },
     { title: 'Skema Honor', href: SkemaHonorController.index(), icon: Percent },
+    { title: 'Rekap Honor', href: RekapHonorController.index(), icon: Coins },
 ];
 const roleKeuangan = ['tu', 'bendahara', 'kepala_sekolah'];
 
