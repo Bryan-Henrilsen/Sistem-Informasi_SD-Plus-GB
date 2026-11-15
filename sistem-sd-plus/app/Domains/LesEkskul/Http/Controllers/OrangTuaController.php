@@ -6,6 +6,7 @@ use App\Domains\LesEkskul\Enums\StatusPendaftaran;
 use App\Domains\LesEkskul\Models\Pendaftaran;
 use App\Domains\LesEkskul\Services\AkunOrangTuaService;
 use App\Domains\LesEkskul\Services\PendaftaranService;
+use App\Domains\LesEkskul\Services\TagihanOrangTuaService;
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\Siswa;
@@ -22,12 +23,16 @@ class OrangTuaController extends Controller
 {
     public function __construct(private AkunOrangTuaService $service) {}
 
-    public function beranda(Request $request, PendaftaranService $pendaftaran): Response
+    public function beranda(Request $request, PendaftaranService $pendaftaran, TagihanOrangTuaService $tagihan): Response
     {
         $buka = $pendaftaran->periodeBuka();
 
         return Inertia::render('les-ekskul/orang-tua/beranda', [
-            'anak' => $this->anak($request->user()),
+            // Tiap anak dilengkapi tunggakan & sisa bulan ini (#38)
+            'anak' => array_map(
+                fn (array $a) => $a + $tagihan->ringkasan($tagihan->tagihan(Siswa::findOrFail($a['id']))),
+                $this->anak($request->user()),
+            ),
             // Pemberitahuan periode pendaftaran yang sedang dibuka (#37)
             'periodeBuka' => $buka ? ['tanggal_mulai' => $buka->tanggal_mulai->toDateString(), 'tanggal_selesai' => $buka->tanggal_selesai->toDateString()] : null,
         ]);
@@ -64,6 +69,29 @@ class OrangTuaController extends Controller
         $this->service->lepas($request->user(), $siswa);
 
         return $this->kembali("{$siswa->nama} dihapus dari daftar anak Anda.");
+    }
+
+    // Tagihan & status pembayaran semua anak, dengan info rekening transfer manual (FR-15, FR-32; #38)
+    public function tagihan(Request $request, TagihanOrangTuaService $tagihan): Response
+    {
+        return Inertia::render('les-ekskul/orang-tua/tagihan', [
+            'anak' => $request->user()->anak()->with('kelasTahunAktif.kelas')->orderBy('nama')->get()
+                ->map(function (Siswa $s) use ($tagihan) {
+                    $daftar = $tagihan->tagihan($s);
+
+                    return [
+                        'id' => $s->id,
+                        'nama' => $s->nama,
+                        'kelas' => $s->kelasTahunAktif?->kelas?->nama_lengkap,
+                        'ringkasan' => $tagihan->ringkasan($daftar),
+                        'tagihan' => $daftar->values(),
+                        'ditolak' => $tagihan->transferDitolak($s)->values(),
+                    ];
+                })
+                ->values(),
+            'rekening' => $tagihan->rekening(),
+            'waTu' => config('les_ekskul.wa_tu'),
+        ]);
     }
 
     public function akun(Request $request): Response

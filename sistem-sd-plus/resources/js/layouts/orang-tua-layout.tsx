@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { House, UserRound, Users } from 'lucide-react';
+import { House, ReceiptText, UserRound, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { cn } from '@/lib/utils';
@@ -8,10 +8,11 @@ import type { Auth } from '@/types';
 
 type Menu = { judul: string; href: string; ikon: LucideIcon; aktif: (url: string) => boolean };
 
-// Menu bawah orang tua; Tagihan & Daftar Kegiatan menyusul di Tahap B–C (Ringkasan v1.11 #36)
+// Menu bawah orang tua (Ringkasan v1.11 #36–#38); daftar kegiatan dibuka dari kartu anak
 const MENU: Menu[] = [
     { judul: 'Beranda', href: ortu.beranda.url(), ikon: House, aktif: (url) => url === '/ortu' || url.startsWith('/ortu?') },
     { judul: 'Anak', href: ortu.anak.url(), ikon: Users, aktif: (url) => url.startsWith('/ortu/anak') },
+    { judul: 'Tagihan', href: ortu.tagihan.url(), ikon: ReceiptText, aktif: (url) => url.startsWith('/ortu/tagihan') },
     { judul: 'Akun', href: ortu.akun.url(), ikon: UserRound, aktif: (url) => url.startsWith('/ortu/akun') },
 ];
 
@@ -36,7 +37,7 @@ export default function OrangTuaLayout({ children }: { children: React.ReactNode
             <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-4 pb-24">{children}</main>
 
             <nav className="fixed inset-x-0 bottom-0 z-10 border-t bg-background pb-[env(safe-area-inset-bottom)]">
-                <div className="mx-auto grid max-w-2xl grid-cols-3">
+                <div className="mx-auto grid max-w-2xl grid-cols-4">
                     {MENU.map((m) => {
                         const aktif = m.aktif(path);
 
