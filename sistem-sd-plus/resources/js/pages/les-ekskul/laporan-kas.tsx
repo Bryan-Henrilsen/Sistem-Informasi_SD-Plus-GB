@@ -7,6 +7,14 @@ import InputError from '@/components/input-error';
 import { LabelStatus } from '@/components/les-ekskul/label-status';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { namaBulan, rupiah, tanggal } from '@/lib/format';
@@ -44,6 +52,7 @@ const kelasPilihan = 'h-9 rounded-md border border-input bg-transparent px-3 tex
 
 export default function LaporanKas({ daftarPeriode, periode, laporan, kategori, bisaCatat }: Props) {
     const bisaUbah = bisaCatat && laporan !== null && !laporan.terkunci;
+    const [setor, setSetor] = useState(false);
 
     function hapus(id: number) {
         router.delete(LaporanKasController.destroy(id).url, { preserveScroll: true });
@@ -108,7 +117,21 @@ export default function LaporanKas({ daftarPeriode, periode, laporan, kategori, 
                         </div>
 
                         <TabelKas judul="Kas Sekolah" labelLalu="Saldo kas sekolah periode lalu" bagian={laporan.sekolah} bisaUbah={bisaUbah} onHapus={hapus} />
-                        <TabelKas judul="Kas Yayasan" labelLalu="Saldo kas yayasan periode lalu" bagian={laporan.yayasan} bisaUbah={bisaUbah} onHapus={hapus} />
+                        <TabelKas
+                            judul="Kas Yayasan"
+                            labelLalu="Saldo kas yayasan periode lalu"
+                            bagian={laporan.yayasan}
+                            bisaUbah={bisaUbah}
+                            onHapus={hapus}
+                            aksi={
+                                bisaUbah &&
+                                laporan.yayasan.saldo > 0 && (
+                                    <Button size="sm" variant="outline" onClick={() => setSetor(true)}>
+                                        Tandai sudah disetor
+                                    </Button>
+                                )
+                            }
+                        />
 
                         <Card className="gap-2 py-4 print:border-0 print:shadow-none">
                             <CardHeader className="px-4">
@@ -145,6 +168,7 @@ export default function LaporanKas({ daftarPeriode, periode, laporan, kategori, 
                         </div>
 
                         {bisaUbah && <FormCatat periode={periode} kategori={kategori} />}
+                        <DialogSetorYayasan buka={setor} periode={periode} saldo={laporan.yayasan.saldo} onClose={() => setSetor(false)} />
                     </>
                 )}
             </div>
@@ -158,19 +182,22 @@ function TabelKas({
     bagian,
     bisaUbah,
     onHapus,
+    aksi,
 }: {
     judul: string;
     labelLalu: string;
     bagian: Bagian;
     bisaUbah: boolean;
     onHapus: (id: number) => void;
+    aksi?: React.ReactNode;
 }) {
     const angka = (n: number) => (n === 0 ? '' : rupiah(n));
 
     return (
         <Card className="gap-2 py-4 print:border-0 print:shadow-none">
-            <CardHeader className="px-4">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 px-4">
                 <CardTitle className="text-base">{judul}</CardTitle>
+                {aksi && <div className="print:hidden">{aksi}</div>}
             </CardHeader>
             <CardContent className="overflow-x-auto px-4">
                 <table className="w-full text-sm">
@@ -297,6 +324,64 @@ function FormCatat({ periode, kategori }: { periode: Periode; kategori: Kategori
                 </Form>
             </CardContent>
         </Card>
+    );
+}
+
+// Pintasan mencatat setoran ke yayasan: nominal terisi saldo kas yayasan, boleh dikurangi bila disetor sebagian (#35)
+function DialogSetorYayasan({ buka, periode, saldo, onClose }: { buka: boolean; periode: Periode; saldo: number; onClose: () => void }) {
+    const hariIni = new Date().toLocaleDateString('sv-SE');
+
+    return (
+        <Dialog open={buka} onOpenChange={(b) => !b && onClose()}>
+            <DialogContent>
+                {buka && (
+                    <Form
+                        {...LaporanKasController.store.form(periode.id)}
+                        options={{ preserveScroll: true }}
+                        onSuccess={onClose}
+                        className="flex flex-col gap-4"
+                    >
+                        {({ processing, errors }) => (
+                            <>
+                                <DialogHeader>
+                                    <DialogTitle>Tandai kas yayasan sudah disetor</DialogTitle>
+                                    <DialogDescription>
+                                        Dicatat sebagai pengeluaran "Setor ke yayasan" di Kas Yayasan periode {namaBulan(periode.bulan)}. Saldo kas yayasan saat ini{' '}
+                                        {rupiah(saldo)}; kurangi nominal bila hanya sebagian yang disetor.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <input type="hidden" name="kategori" value="setor_yayasan" />
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="grid gap-1 text-sm">
+                                        <Label htmlFor="setor-nominal">Nominal (Rp)</Label>
+                                        <Input id="setor-nominal" name="nominal" type="number" min={1} max={saldo} defaultValue={saldo} inputMode="numeric" />
+                                        <InputError message={errors.nominal} />
+                                    </div>
+                                    <div className="grid gap-1 text-sm">
+                                        <Label htmlFor="setor-tanggal">Tanggal setor</Label>
+                                        <Input id="setor-tanggal" name="tanggal" type="date" defaultValue={hariIni} />
+                                        <InputError message={errors.tanggal} />
+                                    </div>
+                                </div>
+                                <div className="grid gap-1 text-sm">
+                                    <Label htmlFor="setor-uraian">Uraian (opsional)</Label>
+                                    <Input id="setor-uraian" name="uraian" placeholder="mis. diserahkan ke bendahara yayasan" />
+                                    <InputError message={errors.uraian ?? errors.periode} />
+                                </div>
+                                <DialogFooter>
+                                    <Button type="button" variant="ghost" onClick={onClose}>
+                                        Batal
+                                    </Button>
+                                    <Button type="submit" disabled={processing}>
+                                        Tandai disetor
+                                    </Button>
+                                </DialogFooter>
+                            </>
+                        )}
+                    </Form>
+                )}
+            </DialogContent>
+        </Dialog>
     );
 }
 
