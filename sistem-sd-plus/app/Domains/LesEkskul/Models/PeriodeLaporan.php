@@ -89,6 +89,12 @@ class PeriodeLaporan extends Model
         return $this->hasMany(HonorDetail::class);
     }
 
+    // Catatan kas manual periode ini untuk Laporan Keuangan Kas (#35)
+    public function kasManual(): HasMany
+    {
+        return $this->hasMany(KasManual::class);
+    }
+
     // Periode yang memuat tanggal tertentu; periode tidak beririsan, jadi hasilnya paling banyak satu
     public function scopeMencakup(Builder $query, DateTimeInterface|string $tanggal): void
     {

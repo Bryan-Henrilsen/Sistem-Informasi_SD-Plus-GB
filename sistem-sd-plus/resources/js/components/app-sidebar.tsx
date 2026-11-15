@@ -9,6 +9,7 @@ import {
     Coins,
     FileCheck2,
     FolderGit2,
+    Landmark,
     LayoutGrid,
     Percent,
     ReceiptText,
@@ -31,6 +32,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import laporanHarian from '@/routes/les-ekskul/laporan-harian';
+import laporanKas from '@/routes/les-ekskul/laporan-kas';
 import pendaftaran from '@/routes/les-ekskul/pendaftaran';
 import periode from '@/routes/les-ekskul/periode';
 import refund from '@/routes/les-ekskul/refund';
@@ -54,6 +56,7 @@ const lesEkskulNavItems: NavItem[] = [
     { title: 'Laporan Harian', href: laporanHarian.index(), icon: FileCheck2 },
     { title: 'Pendaftaran', href: pendaftaran.index(), icon: ClipboardList },
     { title: 'Refund', href: refund.index(), icon: Undo2 },
+    { title: 'Laporan Kas', href: laporanKas.index(), icon: Landmark },
 ];
 
 // Menu pengaturan dan rekap honor (FR-16–FR-20); role sama dengan menu keuangan
