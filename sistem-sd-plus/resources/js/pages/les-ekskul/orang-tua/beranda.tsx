@@ -1,14 +1,17 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ChevronRight, UserPlus } from 'lucide-react';
+import { CalendarClock, ChevronRight, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { tanggal } from '@/lib/format';
 import ortu from '@/routes/ortu';
 import type { Auth } from '@/types';
 
 export type AnakRingkas = { id: number; nama: string; kelas: string | null; kegiatan: string[] };
 
-// Beranda orang tua: sapaan dan ringkasan setiap anak (Ringkasan v1.11 #36)
-export default function BerandaOrangTua({ anak }: { anak: AnakRingkas[] }) {
+type Periode = { tanggal_mulai: string; tanggal_selesai: string };
+
+// Beranda orang tua: sapaan, pemberitahuan periode pendaftaran, dan ringkasan setiap anak (Ringkasan v1.11 #36–#37)
+export default function BerandaOrangTua({ anak, periodeBuka }: { anak: AnakRingkas[]; periodeBuka: Periode | null }) {
     const { auth } = usePage<{ auth: Auth }>().props;
 
     return (
@@ -20,6 +23,13 @@ export default function BerandaOrangTua({ anak }: { anak: AnakRingkas[] }) {
                     <h1 className="text-lg font-semibold">Halo, {auth.user?.name}</h1>
                     <p className="text-sm text-muted-foreground">Pantau les dan ekstrakurikuler anak Anda di sini.</p>
                 </div>
+
+                {periodeBuka && (
+                    <div className="flex gap-2 rounded-md border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+                        <CalendarClock className="mt-0.5 size-4 shrink-0" />
+                        <span>Pendaftaran les & ekstrakurikuler dibuka sampai {tanggal(periodeBuka.tanggal_selesai)}. Pilih anak untuk mendaftarkannya.</span>
+                    </div>
+                )}
 
                 {anak.length === 0 ? (
                     <Card className="py-5">
@@ -37,7 +47,11 @@ export default function BerandaOrangTua({ anak }: { anak: AnakRingkas[] }) {
                         </CardContent>
                     </Card>
                 ) : (
-                    anak.map((a) => <KartuAnak key={a.id} anak={a} />)
+                    anak.map((a) => (
+                        <Link key={a.id} href={ortu.anak.kegiatan(a.id)} className="block rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+                            <KartuAnak anak={a} />
+                        </Link>
+                    ))
                 )}
             </div>
         </>

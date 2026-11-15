@@ -7,10 +7,12 @@ use App\Domains\LesEkskul\Models\Ekstrakurikuler;
 use App\Domains\LesEkskul\Models\JadwalEkskul;
 use App\Domains\LesEkskul\Models\LesTambahan;
 use App\Domains\LesEkskul\Models\Pendaftaran;
+use App\Domains\LesEkskul\Models\PeriodePendaftaran;
 use App\Enums\StatusSekolah;
 use App\Models\Siswa;
 use App\Models\SiswaKelas;
 use App\Models\TahunAjaran;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -82,6 +84,87 @@ class PendaftaranService
 
             return $pendaftaran;
         });
+    }
+
+    // Pendaftaran oleh orang tua (FR-2–FR-5; Ringkasan v1.11 #37): aturan sama dengan TU, ditambah
+    // hanya anak yang diklaim, hanya selama periode pendaftaran dibuka, dan kuota penuh ditolak (FR-4) — bukan peringatan
+    public function daftarOlehOrangTua(User $orangTua, Siswa $siswa, LesTambahan|Ekstrakurikuler $kegiatan): Pendaftaran
+    {
+        if (! $orangTua->anak()->whereKey($siswa->id)->exists()) {
+            throw ValidationException::withMessages(['kegiatan' => 'Anak ini tidak ada di daftar anak Anda.']);
+        }
+
+        if (! $this->periodeBuka()) {
+            throw ValidationException::withMessages(['kegiatan' => 'Pendaftaran sedang ditutup. Hubungi TU untuk pendaftaran di luar periode.']);
+        }
+
+        try {
+            return $this->daftar($siswa, $kegiatan, today()->toDateString());
+        } catch (ValidationException $e) {
+            // Peringatan kuota untuk TU ("centang konfirmasi") menjadi penolakan untuk orang tua
+            if (isset($e->errors()['kuota'])) {
+                throw ValidationException::withMessages(['kegiatan' => "Kuota {$kegiatan->nama} sudah penuh. Hubungi TU bila tetap ingin ikut."]);
+            }
+
+            throw $e;
+        }
+    }
+
+    // Periode pendaftaran tahun ajaran aktif yang sedang dibuka hari ini (orang tua; TU tidak dibatasi, FR-6)
+    public function periodeBuka(): ?PeriodePendaftaran
+    {
+        return $this->periodeTahunAktif()->first(fn (PeriodePendaftaran $p) => $p->sedangBuka());
+    }
+
+    // Periode berikutnya yang belum dibuka, untuk informasi di halaman orang tua
+    public function periodeBerikutnya(): ?PeriodePendaftaran
+    {
+        return $this->periodeTahunAktif()->first(fn (PeriodePendaftaran $p) => $p->tanggal_mulai->isAfter(today()));
+    }
+
+    public function periodeTahunAktif(): Collection
+    {
+        return PeriodePendaftaran::where('tahun_ajaran_id', TahunAjaran::aktif()->value('id'))->orderBy('tanggal_mulai')->get();
+    }
+
+    // TU membuka jendela pendaftaran orang tua; harus di dalam tahun ajaran aktif dan tidak beririsan dengan periode lain
+    public function simpanPeriode(string $mulai, string $selesai): PeriodePendaftaran
+    {
+        $tahunAjaran = TahunAjaran::aktif()->firstOrFail();
+        $mulai = Carbon::parse($mulai)->startOfDay();
+        $selesai = Carbon::parse($selesai)->startOfDay();
+
+        $masalah = match (true) {
+            $selesai->lt($mulai) => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
+            ! $mulai->between($tahunAjaran->tanggal_mulai, $tahunAjaran->tanggal_selesai)
+                || ! $selesai->between($tahunAjaran->tanggal_mulai, $tahunAjaran->tanggal_selesai) => "Periode harus di dalam tahun ajaran {$tahunAjaran->nama}.",
+            PeriodePendaftaran::where('tahun_ajaran_id', $tahunAjaran->id)
+                ->where('tanggal_mulai', '<=', $selesai->toDateString())
+                ->where('tanggal_selesai', '>=', $mulai->toDateString())
+                ->exists() => 'Periode ini beririsan dengan periode pendaftaran lain.',
+            default => null,
+        };
+
+        if ($masalah) {
+            throw ValidationException::withMessages(['tanggal_mulai' => $masalah]);
+        }
+
+        return PeriodePendaftaran::create([
+            'tahun_ajaran_id' => $tahunAjaran->id,
+            'tanggal_mulai' => $mulai->toDateString(),
+            'tanggal_selesai' => $selesai->toDateString(),
+        ]);
+    }
+
+    // Kegiatan wajib otomatis sesuai jenjang anak (Bina Karakter/Pramuka), hanya informasi untuk orang tua (FR-24)
+    public function kegiatanWajib(Siswa $siswa): Collection
+    {
+        $kelas = $siswa->kelasTahunAktif?->kelas;
+
+        return $kelas
+            ? Ekstrakurikuler::where('tahun_ajaran_id', $kelas->tahun_ajaran_id)->where('wajib_otomatis', true)
+                ->untukJenjang($kelas->jenjang)->with('jadwal')->orderBy('nama')->get()
+            : collect();
     }
 
     // FR-27: pindahkan pendaftaran dari kegiatan induk ke salah satu kelas paralelnya (atau antar kelas paralel).

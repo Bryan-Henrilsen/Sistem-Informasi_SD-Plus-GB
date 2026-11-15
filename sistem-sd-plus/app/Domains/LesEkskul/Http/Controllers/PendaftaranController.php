@@ -7,6 +7,7 @@ use App\Domains\LesEkskul\Http\Requests\DaftarkanSiswaRequest;
 use App\Domains\LesEkskul\Models\Ekstrakurikuler;
 use App\Domains\LesEkskul\Models\LesTambahan;
 use App\Domains\LesEkskul\Models\Pendaftaran;
+use App\Domains\LesEkskul\Models\PeriodePendaftaran;
 use App\Domains\LesEkskul\Services\PendaftaranService;
 use App\Domains\LesEkskul\Services\PerubahanPendaftaranService;
 use App\Http\Controllers\Controller;
@@ -96,8 +97,36 @@ class PendaftaranController extends Controller
                 ]),
             'saranTanggal' => $this->perubahan->saranTanggal($tahunAjaran->load('semester')),
             'tabAwal' => $request->string('tab')->toString() === 'belum' ? 'belum' : 'semua', // dari kartu beranda
-
+            // Jendela pendaftaran oleh orang tua tahun ajaran aktif (#37)
+            'periodePendaftaran' => $this->service->periodeTahunAktif()->map(fn (PeriodePendaftaran $p) => [
+                'id' => $p->id,
+                'tanggal_mulai' => $p->tanggal_mulai->toDateString(),
+                'tanggal_selesai' => $p->tanggal_selesai->toDateString(),
+                'status' => $p->sedangBuka() ? 'buka' : ($p->tanggal_selesai->isBefore(today()) ? 'selesai' : 'akan_datang'),
+            ])->values(),
         ]);
+    }
+
+    // TU membuka jendela pendaftaran orang tua (FR-2; #37)
+    public function simpanPeriode(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'tanggal_mulai' => ['required', 'date'],
+            'tanggal_selesai' => ['required', 'date'],
+        ], ['tanggal_mulai.required' => 'Tanggal mulai wajib diisi.', 'tanggal_selesai.required' => 'Tanggal selesai wajib diisi.']);
+
+        $this->service->simpanPeriode($data['tanggal_mulai'], $data['tanggal_selesai']);
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Periode pendaftaran orang tua disimpan.']);
+
+        return back();
+    }
+
+    public function hapusPeriode(PeriodePendaftaran $periodePendaftaran): RedirectResponse
+    {
+        $periodePendaftaran->delete();
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Periode pendaftaran dihapus.']);
+
+        return back();
     }
 
     // Tambah Pendaftaran (FR-6): cari siswa, lalu pilih kegiatan yang boleh diikutinya

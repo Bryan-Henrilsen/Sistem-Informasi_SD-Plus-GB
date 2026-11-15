@@ -37,12 +37,11 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
+        // Production: minimal 8 karakter berisi huruf dan angka — cukup aman tanpa memberatkan orang tua (Ringkasan v1.11 #37)
         Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
+            ? Password::min(8)
                 ->letters()
                 ->numbers()
-                ->symbols()
                 ->uncompromised()
             : null,
         );
