@@ -1,8 +1,8 @@
 // Format tampilan berbahasa Indonesia untuk uang dan tanggal
 
-// 150000 -> "Rp150.000"
+// 150000 -> "Rp150.000"; -1000 -> "-Rp1.000"
 export function rupiah(nilai: number): string {
-    return 'Rp' + nilai.toLocaleString('id-ID');
+    return (nilai < 0 ? '-Rp' : 'Rp') + Math.abs(nilai).toLocaleString('id-ID');
 }
 
 // "2026-11-05" -> "5 Nov 2026"

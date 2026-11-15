@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\LesEkskul\Http\Controllers\LaporanController;
+use App\Domains\LesEkskul\Http\Controllers\LaporanKasController;
 use App\Domains\LesEkskul\Http\Controllers\PendaftaranController;
 use App\Domains\LesEkskul\Http\Controllers\PengajarEkskulController;
 use App\Domains\LesEkskul\Http\Controllers\PeriodeLaporanController;
@@ -29,6 +30,7 @@ Route::middleware(['auth'])
             Route::get('honor/pengajar', [PengajarEkskulController::class, 'index'])->name('honor.pengajar');
             Route::get('honor/skema', [SkemaHonorController::class, 'index'])->name('honor.skema');
             Route::get('honor/rekap', [RekapHonorController::class, 'index'])->name('honor.rekap');
+            Route::get('laporan-kas', [LaporanKasController::class, 'index'])->name('laporan-kas.index');
         });
 
         // Pengaturan honor oleh TU & Kepala Sekolah: data pengajar, penugasan, cara hitung, penerima tanpa akun (#33)
@@ -54,6 +56,12 @@ Route::middleware(['auth'])
             ->middleware('role:bendahara|kepala_sekolah')->name('honor.rekap.hitung');
         Route::post('honor/rekap/{periode}/diketahui', [RekapHonorController::class, 'tandaiDiketahui'])
             ->middleware('role:kepala_sekolah')->name('honor.rekap.diketahui');
+
+        // Catatan kas manual (saldo awal, kolam, ATK, admin bank, setor yayasan, lainnya) oleh Bendahara & Kepala Sekolah (#35)
+        Route::middleware('role:bendahara|kepala_sekolah')->group(function () {
+            Route::post('laporan-kas/{periode}', [LaporanKasController::class, 'store'])->name('laporan-kas.store');
+            Route::delete('kas-manual/{kasManual}', [LaporanKasController::class, 'destroy'])->name('laporan-kas.destroy');
+        });
 
         // Laporan harian & bulanan: TU mengajukan / menarik kembali (FR-12, FR-14; #15, #31)
         Route::middleware('role:tu')->group(function () {
