@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\LesEkskul\Http\Controllers\AkunOrangTuaController;
+use App\Domains\LesEkskul\Http\Controllers\KegiatanAnakController;
 use App\Domains\LesEkskul\Http\Controllers\LaporanController;
 use App\Domains\LesEkskul\Http\Controllers\LaporanKasController;
 use App\Domains\LesEkskul\Http\Controllers\OrangTuaController;
@@ -115,6 +116,10 @@ Route::middleware(['auth'])
             Route::delete('akun-orang-tua/{user}/anak/{siswa}', [AkunOrangTuaController::class, 'hapusKlaim'])->name('akun-orang-tua.hapus-klaim');
             Route::post('akun-orang-tua/{user}/reset-password', [AkunOrangTuaController::class, 'resetPassword'])->name('akun-orang-tua.reset-password');
             Route::post('siswa', [AkunOrangTuaController::class, 'tambahSiswa'])->name('siswa.store');
+
+            // Jendela pendaftaran oleh orang tua (FR-2, #37)
+            Route::post('periode-pendaftaran', [PendaftaranController::class, 'simpanPeriode'])->name('periode-pendaftaran.store');
+            Route::delete('periode-pendaftaran/{periodePendaftaran}', [PendaftaranController::class, 'hapusPeriode'])->name('periode-pendaftaran.destroy');
         });
     });
 
@@ -127,5 +132,7 @@ Route::middleware(['auth', 'role:orang_tua'])
         Route::get('anak', [OrangTuaController::class, 'anakSaya'])->name('anak');
         Route::post('anak', [OrangTuaController::class, 'klaim'])->name('anak.klaim');
         Route::delete('anak/{siswa}', [OrangTuaController::class, 'lepas'])->name('anak.lepas');
+        Route::get('anak/{siswa}/kegiatan', [KegiatanAnakController::class, 'show'])->name('anak.kegiatan');
+        Route::post('anak/{siswa}/kegiatan', [KegiatanAnakController::class, 'daftar'])->name('anak.daftar');
         Route::get('akun', [OrangTuaController::class, 'akun'])->name('akun');
     });

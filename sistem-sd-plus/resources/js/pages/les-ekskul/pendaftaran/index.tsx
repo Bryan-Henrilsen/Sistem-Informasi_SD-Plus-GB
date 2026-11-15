@@ -7,6 +7,8 @@ import { DialogBerhenti, DialogPindah } from '@/components/les-ekskul/dialog-per
 import type { EkskulTujuan, SaranTanggal } from '@/components/les-ekskul/dialog-perubahan-pendaftaran';
 import { LabelStatus } from '@/components/les-ekskul/label-status';
 import { Paginasi } from '@/components/les-ekskul/paginasi';
+import { PanelPeriodePendaftaran } from '@/components/les-ekskul/periode-pendaftaran';
+import type { PeriodePendaftaran } from '@/components/les-ekskul/periode-pendaftaran';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -51,11 +53,12 @@ type Props = {
     dibebaskan: { siswa_kelas_id: number; siswa: { id: number; nama: string }; kelas: string; alasan: string }[];
     saranTanggal: SaranTanggal;
     tabAwal: 'semua' | 'belum';
+    periodePendaftaran: PeriodePendaftaran[];
 };
 
 const kelasPilihan = 'h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs';
 
-export default function PendaftaranIndex({ pendaftaran, filter, kegiatan, kelasParalel, belumMemenuhi, dibebaskan, saranTanggal, tabAwal }: Props) {
+export default function PendaftaranIndex({ pendaftaran, filter, kegiatan, kelasParalel, belumMemenuhi, dibebaskan, saranTanggal, tabAwal, periodePendaftaran }: Props) {
     const { auth } = usePage<{ auth: Auth }>().props;
     const bisaMengubah = auth.roles.includes('tu');
     const [tab, setTab] = useState<'semua' | 'belum'>(tabAwal);
@@ -79,6 +82,8 @@ export default function PendaftaranIndex({ pendaftaran, filter, kegiatan, kelasP
                         </Button>
                     )}
                 </div>
+
+                <PanelPeriodePendaftaran periode={periodePendaftaran} bisaUbah={bisaMengubah} />
 
                 <div className="flex gap-1 border-b">
                     <TombolTab aktif={tab === 'semua'} onClick={() => setTab('semua')}>

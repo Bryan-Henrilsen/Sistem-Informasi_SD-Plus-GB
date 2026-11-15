@@ -5,6 +5,7 @@ namespace App\Domains\LesEkskul\Http\Controllers;
 use App\Domains\LesEkskul\Enums\StatusPendaftaran;
 use App\Domains\LesEkskul\Models\Pendaftaran;
 use App\Domains\LesEkskul\Services\AkunOrangTuaService;
+use App\Domains\LesEkskul\Services\PendaftaranService;
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\Siswa;
@@ -21,10 +22,14 @@ class OrangTuaController extends Controller
 {
     public function __construct(private AkunOrangTuaService $service) {}
 
-    public function beranda(Request $request): Response
+    public function beranda(Request $request, PendaftaranService $pendaftaran): Response
     {
+        $buka = $pendaftaran->periodeBuka();
+
         return Inertia::render('les-ekskul/orang-tua/beranda', [
             'anak' => $this->anak($request->user()),
+            // Pemberitahuan periode pendaftaran yang sedang dibuka (#37)
+            'periodeBuka' => $buka ? ['tanggal_mulai' => $buka->tanggal_mulai->toDateString(), 'tanggal_selesai' => $buka->tanggal_selesai->toDateString()] : null,
         ]);
     }
 
