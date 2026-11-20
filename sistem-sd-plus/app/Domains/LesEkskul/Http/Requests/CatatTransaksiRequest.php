@@ -26,6 +26,7 @@ class CatatTransaksiRequest extends FormRequest
             'tagihan_ids.*' => ['integer'],
             'catatan_transfer' => ['nullable', 'string', 'max:255'],
             'alihkan_kelebihan' => ['boolean'], // kelebihan transfer: alihkan ke bulan berikutnya (true) atau refund (false), #39
+            'kembali' => ['nullable', 'string', 'starts_with:/les-ekskul/tagihan'], // dibuka dari Rekap Iuran: kembali ke rekap (#40)
         ];
     }
 
