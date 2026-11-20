@@ -101,6 +101,9 @@ class TransaksiController extends Controller
                     ->values()
                 : [],
             'hariIni' => today()->toDateString(),
+            // Dibuka dari kotak Rekap Iuran: tagihan itu langsung tercentang, lalu setelah disimpan kembali ke rekap (#40)
+            'tagihanDipilih' => $request->integer('tagihan') ?: null,
+            'kembali' => str_starts_with($request->string('kembali')->toString(), '/les-ekskul/tagihan') ? $request->string('kembali')->toString() : null,
             // Bendahara (tanpa role TU) hanya mencatat transfer dari mutasi rekening (FR-8c); cash hanya di loket TU
             'hanyaTransfer' => ! $request->user()->hasRole('tu'),
         ]);
@@ -128,6 +131,13 @@ class TransaksiController extends Controller
             .($refund > 0 ? ' Kelebihan '.$this->rupiah((int) $refund).' dicatat sebagai refund.' : '');
 
         Inertia::flash('toast', ['type' => 'success', 'message' => $pesan]);
+
+        if ($data['kembali'] ?? null) {
+            // Kotak tagihan yang baru terbayar (termasuk kelebihan yang dialihkan) disorot di Rekap Iuran
+            Inertia::flash('disorot', $transaksi->tagihan()->pluck('tagihan.id')->all());
+
+            return redirect($data['kembali']);
+        }
 
         return to_route('les-ekskul.transaksi.index');
     }

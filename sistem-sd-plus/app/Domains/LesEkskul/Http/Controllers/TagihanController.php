@@ -2,59 +2,62 @@
 
 namespace App\Domains\LesEkskul\Http\Controllers;
 
-use App\Domains\LesEkskul\Enums\StatusTagihan;
 use App\Domains\LesEkskul\Models\Pendaftaran;
-use App\Domains\LesEkskul\Models\Tagihan;
+use App\Domains\LesEkskul\Services\RekapIuranService;
 use App\Domains\LesEkskul\Services\TagihanService;
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
-use App\Models\Siswa;
 use App\Models\TahunAjaran;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class TagihanController extends Controller
 {
-    // Kartu iuran: satu baris per pendaftaran, satu kolom per bulan tagihan tahun ajaran aktif
-    public function index(Request $request): Response
+    // Rekap Iuran: pengganti buku rekap TU, per buku kegiatan, urut kelas lalu abjad (FR-13b, Ringkasan v1.11 #40)
+    public function index(Request $request, RekapIuranService $rekap): Response
     {
-        $tahunAjaran = TahunAjaran::aktif()->firstOrFail();
-        $filter = $request->only('nama', 'kelas', 'status');
+        $daftarTahun = TahunAjaran::orderByDesc('tanggal_mulai')->get(['id', 'nama', 'status_aktif']);
+        $tahunAjaran = $request->integer('tahun')
+            ? TahunAjaran::findOrFail($request->integer('tahun'))
+            : TahunAjaran::aktif()->firstOrFail();
+        $filter = $request->only('buku', 'kelas', 'status', 'nama');
 
-        $pendaftaran = Pendaftaran::query()
-            ->whereHas('tagihan') // kegiatan berbiaya 0 tidak punya tagihan
-            ->where(fn (Builder $q) => $q
-                ->whereHas('lesTambahan', fn (Builder $q) => $q->where('tahun_ajaran_id', $tahunAjaran->id))
-                ->orWhereHas('ekstrakurikuler', fn (Builder $q) => $q->where('tahun_ajaran_id', $tahunAjaran->id)))
-            ->when($filter['nama'] ?? null, fn (Builder $q, string $nama) => $q
-                ->whereHas('siswa', fn (Builder $q) => $q->where('nama', 'ilike', "%{$nama}%")))
-            ->when($filter['kelas'] ?? null, fn (Builder $q, string $kelasId) => $q
-                ->whereHas('siswa.riwayatKelas', fn (Builder $q) => $q->where('kelas_id', $kelasId)))
-            ->when(($filter['status'] ?? null) === 'tunggakan', fn (Builder $q) => $q
-                ->whereHas('tagihan', fn (Builder $q) => $q->tunggakan()))
-            ->when(($filter['status'] ?? null) === 'lunas', fn (Builder $q) => $q
-                ->whereDoesntHave('tagihan', fn (Builder $q) => $q->belumLunas()))
-            ->with([
-                'siswa.kelasTahunAktif.kelas',
-                'lesTambahan.kelas',
-                'ekstrakurikuler',
-                'tagihan' => fn ($q) => $q->withSum('transaksi as terbayar', 'alokasi_transaksi.nominal'),
-            ])
-            ->orderBy(Siswa::select('nama')->whereColumn('siswa.id', 'pendaftaran.siswa_id'))
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Pendaftaran $p) => $this->baris($p));
+        $semua = $rekap->baris($tahunAjaran);
+        $bulan = $rekap->bulan($tahunAjaran);
+
+        $baris = $semua
+            ->when($filter['buku'] ?? null, fn (Collection $c, string $buku) => $c->where('buku', $buku))
+            ->when($filter['kelas'] ?? null, fn (Collection $c, string $kelas) => $c->where('kelas_id', (int) $kelas))
+            ->when(($filter['status'] ?? null) === 'tunggakan', fn (Collection $c) => $c->where('tunggakan', '>', 0))
+            ->when(($filter['status'] ?? null) === 'menunggu', fn (Collection $c) => $c->where('menunggu', true))
+            ->when($filter['nama'] ?? null, fn (Collection $c, string $nama) => $c
+                ->filter(fn (array $b) => Str::contains($b['siswa']['nama'], $nama, ignoreCase: true)))
+            ->map(fn (array $b) => Arr::except($b, ['urut_buku', 'urut_kelas']))
+            ->values();
 
         return Inertia::render('les-ekskul/tagihan/index', [
-            'pendaftaran' => $pendaftaran,
-            'bulan' => $this->bulanTagihan($tahunAjaran),
-            'kelas' => Kelas::where('tahun_ajaran_id', $tahunAjaran->id)->orderBy('nama_kelas')->get()
+            'tahunAjaran' => ['id' => $tahunAjaran->id, 'nama' => $tahunAjaran->nama],
+            'daftarTahun' => $daftarTahun->map(fn (TahunAjaran $t) => ['id' => $t->id, 'nama' => $t->nama]),
+            'bulan' => $bulan,
+            'buku' => $rekap->daftarBuku($semua),
+            'baris' => $baris,
+            'ringkasan' => $rekap->ringkasan($semua, $bulan),
+            'kartu' => [
+                'total_tunggakan' => $semua->sum('tunggakan'),
+                'siswa_menunggak' => $semua->where('tunggakan', '>', 0)->pluck('siswa.id')->unique()->count(),
+                'menunggu_verifikasi' => $semua->where('menunggu', true)->count(),
+            ],
+            'kelas' => Kelas::where('tahun_ajaran_id', $tahunAjaran->id)->orderBy('jenjang')->orderBy('nama_kelas')->get()
                 ->map(fn (Kelas $k) => ['id' => $k->id, 'nama' => $k->nama_lengkap]),
-            'ringkasan' => $this->ringkasan(),
             'filter' => $filter,
+            'bulanIni' => today()->format('Y-m'),
+            // Tombol Catat pembayaran dan Verifikasi transfer di rincian kotak hanya untuk TU (#40)
+            'bisaCatat' => $request->user()->hasRole('tu'),
         ]);
     }
 
@@ -70,61 +73,5 @@ class TagihanController extends Controller
             : ['type' => 'warning', 'message' => 'Tidak ada lagi bulan yang ditagih untuk kegiatan ini sampai akhir tahun ajaran.']);
 
         return back();
-    }
-
-    private function baris(Pendaftaran $pendaftaran): array
-    {
-        $awalBulanIni = today()->startOfMonth();
-
-        return [
-            'id' => $pendaftaran->id,
-            'siswa' => ['id' => $pendaftaran->siswa->id, 'nama' => $pendaftaran->siswa->nama],
-            'kelas' => $pendaftaran->siswa->kelasTahunAktif?->kelas->nama_lengkap,
-            'kegiatan' => $pendaftaran->nama_kegiatan,
-            'status' => $pendaftaran->status,
-            'bulan' => $pendaftaran->tagihan->mapWithKeys(fn (Tagihan $t) => [$t->bulan_tagihan->format('Y-m') => [
-                'status' => $t->status,
-                'harus_dibayar' => $t->harus_dibayar,
-                'sisa' => $t->harus_dibayar - (int) $t->terbayar,
-            ]]),
-            'tunggakan' => $pendaftaran->tagihan
-                ->filter(fn (Tagihan $t) => $t->status === StatusTagihan::Belum && $t->bulan_tagihan->lt($awalBulanIni))
-                ->sum(fn (Tagihan $t) => $t->harus_dibayar - (int) $t->terbayar),
-        ];
-    }
-
-    // Kolom bulan: Agustus–Mei tanpa bulan yang tidak ditagih (config les_ekskul)
-    private function bulanTagihan(TahunAjaran $tahunAjaran): array
-    {
-        $bulan = $tahunAjaran->tanggal_mulai->startOfMonth();
-        $hasil = [];
-
-        while ($bulan->lte($tahunAjaran->tanggal_selesai)) {
-            if (! in_array($bulan->month, config('les_ekskul.bulan_tidak_ditagih'), true)) {
-                $hasil[] = $bulan->format('Y-m');
-            }
-            $bulan = $bulan->addMonth();
-        }
-
-        return $hasil;
-    }
-
-    // Kartu ringkasan di atas tabel
-    private function ringkasan(): array
-    {
-        $tunggakan = Tagihan::tunggakan()
-            ->with('pendaftaran:id,siswa_id')
-            ->withSum('transaksi as terbayar', 'alokasi_transaksi.nominal')
-            ->get();
-
-        $bulanIni = Tagihan::where('bulan_tagihan', today()->startOfMonth()->toDateString())
-            ->where('status', '!=', StatusTagihan::Dibatalkan);
-
-        return [
-            'total_tunggakan' => $tunggakan->sum(fn (Tagihan $t) => $t->harus_dibayar - (int) $t->terbayar),
-            'siswa_menunggak' => $tunggakan->pluck('pendaftaran.siswa_id')->unique()->count(),
-            'bulan_ini_lunas' => (clone $bulanIni)->where('status', StatusTagihan::Lunas)->count(),
-            'bulan_ini_total' => $bulanIni->count(),
-        ];
     }
 }

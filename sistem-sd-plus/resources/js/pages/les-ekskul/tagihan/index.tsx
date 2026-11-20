@@ -1,195 +1,277 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, router, usePage } from '@inertiajs/react';
+import { Printer } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import TagihanController from '@/actions/App/Domains/LesEkskul/Http/Controllers/TagihanController';
 import Heading from '@/components/heading';
-import { Paginasi } from '@/components/les-ekskul/paginasi';
+import { ContohWarna, keterangan, RincianKotak, TabelBuku, TabelRingkasan } from '@/components/les-ekskul/rekap-iuran';
+import type { BarisRekap, KotakDipilih, RingkasanBuku } from '@/components/les-ekskul/rekap-iuran';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { namaBulan, rupiah } from '@/lib/format';
+import { rupiah } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { index } from '@/routes/les-ekskul/tagihan';
-import { create } from '@/routes/les-ekskul/transaksi';
-import type { Paginasi as PaginasiData, StatusTagihan } from '@/types/les-ekskul';
 
-type SelBulan = { status: StatusTagihan; harus_dibayar: number; sisa: number; };
-
-type Baris = {
-    id: number;
-    siswa: { id: number; nama: string };
-    kelas: string | null;
-    kegiatan: string;
-    status: string;
-    bulan: Record<string, SelBulan>;
-    tunggakan: number;
-};
+type Filter = { buku?: string; kelas?: string; status?: string; nama?: string };
 
 type Props = {
-    pendaftaran: PaginasiData<Baris>;
+    tahunAjaran: { id: number; nama: string };
+    daftarTahun: { id: number; nama: string }[];
     bulan: string[];
+    buku: { kunci: string; nama: string; jumlah: number }[];
+    baris: BarisRekap[];
+    ringkasan: RingkasanBuku[];
+    kartu: { total_tunggakan: number; siswa_menunggak: number; menunggu_verifikasi: number };
     kelas: { id: number; nama: string }[];
-    ringkasan: {
-        total_tunggakan: number;
-        siswa_menunggak: number;
-        bulan_ini_lunas: number;
-        bulan_ini_total: number;
-    };
-    filter: { nama?: string; kelas?: string; status?: string };
+    filter: Filter;
+    bulanIni: string;
+    bisaCatat: boolean;
 };
 
-const kelasPilihan =
-    'h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs';
+const kelasPilihan = 'h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs';
 
-// Bulan "YYYY-MM" yang sedang berjalan; tagihan sebelum bulan ini yang belum lunas = tunggakan
-const sekarang = new Date();
-const bulanIni = `${sekarang.getFullYear()}-${String(sekarang.getMonth() + 1).padStart(2, '0')}`;
+// Pilihan Ringkas/Lengkap diingat per browser; aman bila penyimpanan diblokir
+function bacaMode(): boolean {
+    try {
+        return localStorage.getItem('rekap-iuran-lengkap') === '1';
+    } catch {
+        return false;
+    }
+}
 
-export default function TagihanIndex({ pendaftaran, bulan, kelas, ringkasan, filter }: Props) {
+export default function RekapIuran({ tahunAjaran, daftarTahun, bulan, buku, baris, ringkasan, kartu, kelas, filter, bulanIni, bisaCatat }: Props) {
+    const { url, flash } = usePage();
+    const [tab, setTab] = useState<'rekap' | 'ringkasan'>('rekap');
+    const [lengkap, setLengkap] = useState(false);
+    const [dipilih, setDipilih] = useState<KotakDipilih | null>(null);
+    const [disorot, setDisorot] = useState<number[]>([]);
+    const [dicetak, setDicetak] = useState(''); // waktu cetak; diisi di browser supaya sama dengan hasil render server (SSR)
+
+    useEffect(() => {
+        setLengkap(bacaMode());
+        setDicetak(new Date().toLocaleString('id-ID'));
+    }, []);
+
+    // Kotak yang baru dibayar dari Catat Pembayaran disorot beberapa detik (TransaksiController::store, #40)
+    useEffect(() => {
+        const ids = (flash as { disorot?: number[] }).disorot;
+
+        if (!ids?.length) {
+            return;
+        }
+
+        setDisorot(ids);
+        const waktu = setTimeout(() => setDisorot([]), 6000);
+
+        return () => clearTimeout(waktu);
+    }, [flash]);
+
+    useEffect(() => {
+        if (disorot.length) {
+            document.querySelector('.ring-sky-500')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+    }, [disorot]);
+
+    function ubahMode(nilai: boolean) {
+        setLengkap(nilai);
+        try {
+            localStorage.setItem('rekap-iuran-lengkap', nilai ? '1' : '0');
+        } catch {
+            // penyimpanan diblokir: pilihan hanya berlaku sampai halaman ditutup
+        }
+    }
+
+    // Baris dikelompokkan per buku sesuai urutan daftar buku (Les Tambahan dulu, lalu ekskul abjad)
+    const kelompok = useMemo(
+        () =>
+            buku
+                .map((b) => ({ ...b, baris: baris.filter((r) => r.buku === b.kunci) }))
+                .filter((b) => b.baris.length > 0),
+        [buku, baris],
+    );
+
+    const query = (ubah: Filter & { tahun?: number }) => ({ query: { tahun: tahunAjaran.id, ...filter, ...ubah } });
+    const namaBukuDipilih = buku.find((b) => b.kunci === filter.buku)?.nama ?? 'Semua buku';
+
     return (
         <>
-            <Head title="Tagihan" />
+            <Head title="Rekap Iuran" />
+            <style>{'@media print { @page { size: A4 landscape; margin: 8mm; } }'}</style>
 
-            <div className="flex flex-col gap-6 p-4">
-                <Heading
-                    title="Tagihan"
-                    description="Kartu iuran per kegiatan. Hijau = lunas, kuning = dibayar sebagian, merah = tunggakan, abu-abu = belum jatuh tempo."
-                />
-
-                <div className="grid gap-4 md:grid-cols-3">
-                    <Ringkasan judul="Total tunggakan" isi={rupiah(ringkasan.total_tunggakan)} />
-                    <Ringkasan judul="Siswa menunggak" isi={`${ringkasan.siswa_menunggak} siswa`} />
-                    <Ringkasan
-                        judul={`Tagihan ${namaBulan(bulanIni)} lunas`}
-                        isi={`${ringkasan.bulan_ini_lunas} dari ${ringkasan.bulan_ini_total}`}
+            <div className="flex flex-col gap-6 p-4 print:gap-3 print:p-0">
+                <div className="flex flex-wrap items-start justify-between gap-3 print:hidden">
+                    <Heading
+                        title="Rekap Iuran"
+                        description="Pengganti buku rekap TU. Setiap pembayaran yang dicatat langsung masuk ke sini. Klik kotak bulan untuk melihat rinciannya."
                     />
-                </div>
-
-                <Form
-                    {...TagihanController.index.form()}
-                    options={{ preserveScroll: true }}
-                    className="flex flex-wrap items-center gap-2"
-                >
-                    <Input
-                        name='nama'
-                        placeholder='Cari nama siswa'
-                        defaultValue={filter.nama}
-                        className='w-56'
-                    />
-                    <select name="kelas" defaultValue={filter.kelas ?? ''} className={kelasPilihan}>
-                        <option value="">Semua Kelas</option>
-                        {kelas.map((k) => (
-                            <option key={k.id} value={k.id}>
-                                {k.nama}
+                    <select
+                        aria-label="Tahun ajaran"
+                        value={tahunAjaran.id}
+                        onChange={(e) => router.get(index({ query: { tahun: e.target.value } }).url)}
+                        className={kelasPilihan}
+                    >
+                        {daftarTahun.map((t) => (
+                            <option key={t.id} value={t.id}>
+                                Tahun ajaran {t.nama}
                             </option>
                         ))}
                     </select>
-                    <select name="status" defaultValue={filter.status ?? ''} className={kelasPilihan}>
-                        <option value="">Semua Status</option>
-                        <option value="tunggakan">Ada tunggakan</option>
-                        <option value="lunas">Lunas semua</option>
-                    </select>
-                    <Button type="submit" variant="secondary">
-                        Terapkan
-                    </Button>
-                </Form>
-
-                <div className="overflow-x-auto rounded-xl border">
-                    <table className='w-full text-sm'>
-                        <thead className='bg-muted/50 text-left'>
-                            <tr>
-                                <th className='p-3'>Siswa</th>
-                                <th className='p-3'>Kegiatan</th>
-                                {bulan.map((b) => (
-                                    <th key={b} className='p-2 text-center capitalize'>
-                                        {namaBulan(b, true)}
-                                    </th>
-                                ))}
-                                <th className="p-3 text-right">Tunggakan</th>
-                                <th className="p-3" />
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {pendaftaran.data.map((p) => (
-                                <tr key={p.id} className="border-t">
-                                    <td className="p-3">
-                                        <div className="font-medium">{p.siswa.nama}</div>
-                                        <div className="text-xs text-muted-foreground">{p.kelas}</div>
-                                    </td>
-                                    <td className="p-3">
-                                        {p.kegiatan}
-                                        {p.status !== 'aktif' && (
-                                            <div className="text-xs text-muted-foreground">{p.status}</div>
-                                        )}
-                                    </td>
-                                    {bulan.map((b) => (
-                                        <td key={b} className="p-1 text-center">
-                                            <SelTagihan bulan={b} sel={p.bulan[b]} />
-                                        </td>
-                                    ))}
-                                    <td className="p-3 text-right font-medium">
-                                        {p.tunggakan > 0 ? rupiah(p.tunggakan) : '–'}
-                                    </td>
-                                    <td className="p-3">
-                                        <Button size="sm" variant="outline" asChild>
-                                            <Link href={create({ query: { siswa: p.siswa.id } })}>
-                                                Bayar
-                                            </Link>
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))}
-                            {pendaftaran.data.length === 0 && (
-                                <tr>
-                                    <td colSpan={bulan.length + 4} className="p-6 text-center text-muted-foreground">
-                                        Tidak ada tagihan yang cocok dengan filter.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
                 </div>
-                <Paginasi data={pendaftaran} />
+
+                <div className="grid gap-4 md:grid-cols-3 print:hidden">
+                    <Ringkasan judul="Total tunggakan" isi={rupiah(kartu.total_tunggakan)} />
+                    <Ringkasan judul="Siswa menunggak" isi={`${kartu.siswa_menunggak} siswa`} />
+                    <Ringkasan judul="Transfer menunggu verifikasi" isi={`${kartu.menunggu_verifikasi} tagihan`} />
+                </div>
+
+                <div className="flex gap-1 border-b print:hidden">
+                    {(['rekap', 'ringkasan'] as const).map((t) => (
+                        <button
+                            key={t}
+                            type="button"
+                            onClick={() => setTab(t)}
+                            className={cn(
+                                '-mb-px border-b-2 px-4 py-2 text-sm',
+                                tab === t ? 'border-primary font-medium' : 'border-transparent text-muted-foreground hover:text-foreground',
+                            )}
+                        >
+                            {t === 'rekap' ? 'Rekap per buku' : 'Ringkasan'}
+                        </button>
+                    ))}
+                </div>
+
+                {tab === 'ringkasan' ? (
+                    <TabelRingkasan
+                        ringkasan={ringkasan}
+                        bulan={bulan}
+                        bulanIni={bulanIni}
+                        onBuka={(kunci) => {
+                            setTab('rekap');
+                            router.get(index(query({ buku: kunci })).url, {}, { preserveScroll: true });
+                        }}
+                    />
+                ) : (
+                    <>
+                        <div className="flex flex-col gap-3 print:hidden">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-sm text-muted-foreground">Buku</span>
+                                <PilihBuku href={index(query({ buku: undefined })).url} aktif={!filter.buku}>
+                                    Semua
+                                </PilihBuku>
+                                {buku.map((b) => (
+                                    <PilihBuku key={b.kunci} href={index(query({ buku: b.kunci })).url} aktif={filter.buku === b.kunci}>
+                                        {b.nama}
+                                    </PilihBuku>
+                                ))}
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Form {...TagihanController.index.form()} options={{ preserveScroll: true }} className="flex flex-wrap items-center gap-2">
+                                    <input type="hidden" name="tahun" value={tahunAjaran.id} />
+                                    {filter.buku && <input type="hidden" name="buku" value={filter.buku} />}
+                                    <select name="kelas" defaultValue={filter.kelas ?? ''} className={kelasPilihan}>
+                                        <option value="">Semua kelas</option>
+                                        {kelas.map((k) => (
+                                            <option key={k.id} value={k.id}>
+                                                {k.nama}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <select name="status" defaultValue={filter.status ?? ''} className={kelasPilihan}>
+                                        <option value="">Semua status</option>
+                                        <option value="tunggakan">Ada tunggakan</option>
+                                        <option value="menunggu">Transfer menunggu verifikasi</option>
+                                    </select>
+                                    <Input name="nama" placeholder="Cari nama siswa" defaultValue={filter.nama} className="w-48" />
+                                    <Button type="submit" variant="secondary">
+                                        Terapkan
+                                    </Button>
+                                </Form>
+
+                                <div className="ml-auto flex items-center gap-2">
+                                    <div className="flex rounded-md border p-0.5" role="group" aria-label="Isi kotak">
+                                        {[false, true].map((v) => (
+                                            <button
+                                                key={String(v)}
+                                                type="button"
+                                                onClick={() => ubahMode(v)}
+                                                className={cn('rounded px-3 py-1 text-sm', lengkap === v ? 'bg-muted font-medium' : 'text-muted-foreground')}
+                                            >
+                                                {v ? 'Lengkap' : 'Ringkas'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <Button variant="outline" onClick={() => window.print()}>
+                                        <Printer /> Cetak
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                {keterangan.map((k) => (
+                                    <span key={k.status} className="inline-flex items-center gap-1.5">
+                                        <ContohWarna status={k.status} /> {k.label}
+                                    </span>
+                                ))}
+                                <span>C = cash · T = transfer · O = online · paraf = inisial staf yang mencatat</span>
+                            </div>
+                        </div>
+
+                        {kelompok.length === 0 && (
+                            <p className="rounded-xl border p-6 text-center text-sm text-muted-foreground">Tidak ada data yang cocok dengan filter.</p>
+                        )}
+
+                        {kelompok.map((k, i) => (
+                            <section key={k.kunci} className={cn('flex flex-col gap-2', i > 0 && 'print:break-before-page')}>
+                                <h2 className="text-base font-semibold print:text-sm">
+                                    Rekap Iuran {k.nama}
+                                    <span className="ml-2 text-sm font-normal text-muted-foreground print:text-black">
+                                        Tahun ajaran {tahunAjaran.nama} · {k.baris.length} peserta
+                                    </span>
+                                </h2>
+                                <TabelBuku baris={k.baris} bulan={bulan} bulanIni={bulanIni} lengkap={lengkap} disorot={disorot} onPilih={setDipilih} />
+                            </section>
+                        ))}
+
+                        <p className="hidden text-[9px] print:block">
+                            {namaBukuDipilih} · dicetak {dicetak} · C = cash, T = transfer, O = online, paraf = inisial staf yang
+                            mencatat
+                        </p>
+                    </>
+                )}
             </div>
+
+            <RincianKotak dipilih={dipilih} bisaCatat={bisaCatat} kembali={url} onTutup={() => setDipilih(null)} />
         </>
+    );
+}
+
+function PilihBuku({ href, aktif, children }: { href: string; aktif: boolean; children: React.ReactNode }) {
+    return (
+        <Link
+            href={href}
+            preserveScroll
+            className={cn(
+                'rounded-md border px-3 py-1 text-sm',
+                aktif ? 'border-primary bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+            )}
+        >
+            {children}
+        </Link>
     );
 }
 
 function Ringkasan({ judul, isi }: { judul: string; isi: string }) {
     return (
-        <Card className='gap-2 py-4'>
-            <CardHeader className='px-4'>
-                <CardTitle className='text-sm font-normal text-muted-foreground'>{judul}</CardTitle>
+        <Card className="gap-2 py-4">
+            <CardHeader className="px-4">
+                <CardTitle className="text-sm font-normal text-muted-foreground">{judul}</CardTitle>
             </CardHeader>
-            <CardContent className='px-4 text-2xl font-semibold'>{isi}</CardContent>
+            <CardContent className="px-4 text-2xl font-semibold">{isi}</CardContent>
         </Card>
     );
 }
 
-// Satu kotak bulan: warna menunjukkan status, angka menunjukkan sisa yang belum dibayar
-function SelTagihan({ bulan, sel }: { bulan: string; sel?: SelBulan }) {
-    if (!sel) {
-        return <span className="text-muted-foreground">-</span>;
-    }
-
-    const lunas = sel.status === 'lunas';
-    const sebagian = !lunas && sel.sisa < sel.harus_dibayar;
-    const tunggakan = !lunas && bulan < bulanIni;
-
-    return (
-        <div
-            title={lunas ? 'Lunas' : `Sisa ${rupiah(sel.sisa)}`}
-            className={cn(
-                'rounded-md px-1 py-1 text-xs whitespace-nowrap',
-                lunas && 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
-                sebagian && 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-                !lunas && !sebagian && tunggakan && 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
-                !lunas && !sebagian && !tunggakan && 'bg-muted text-muted-foreground',
-            )}
-        >
-            {lunas ? '✓' : `${Math.round(sel.sisa / 1000)}rb`}
-        </div>
-    )
-}
-
-TagihanIndex.layout = {
-    breadcrumbs: [{ title: 'Tagihan', href: index() }],
-}
+RekapIuran.layout = {
+    breadcrumbs: [{ title: 'Rekap Iuran', href: index() }],
+};

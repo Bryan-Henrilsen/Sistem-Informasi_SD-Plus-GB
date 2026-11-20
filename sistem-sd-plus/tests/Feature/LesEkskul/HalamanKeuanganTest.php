@@ -63,13 +63,14 @@ test('tanggal selesai periode harus di bulan periode itu', function () {
         ->assertSessionHasErrors('tanggal_selesai');
 });
 
-test('halaman tagihan menampilkan kartu iuran per bulan', function () {
+test('halaman rekap iuran menampilkan kotak per bulan', function () {
     $this->actingAs($this->tu)->post('/les-ekskul/periode', ['tanggal_selesai' => '2026-09-22']);
 
     $this->actingAs($this->tu)->get('/les-ekskul/tagihan')
         ->assertInertia(fn (Assert $page) => $page->component('les-ekskul/tagihan/index')
-            ->has('pendaftaran.data', 1)
-            ->where('pendaftaran.data.0.bulan.2026-09.sisa', 80000)
+            ->has('baris', 1)
+            ->where('baris.0.bulan.2026-09.sisa', 80000)
+            ->where('baris.0.bulan.2026-09.status', 'belum')
             ->where('bulan.0', '2026-08'));
 });
 

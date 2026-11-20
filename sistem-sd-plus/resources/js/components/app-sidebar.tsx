@@ -54,7 +54,7 @@ const mainNavItems: NavItem[] = [
 // Menu modul Les & Ekskul; hanya tampil untuk role keuangan (sama dengan middleware di routes/les-ekskul.php)
 const lesEkskulNavItems: NavItem[] = [
     { title: 'Periode Laporan', href: periode.index(), icon: CalendarRange },
-    { title: 'Tagihan', href:tagihan.index(), icon: ReceiptText },
+    { title: 'Rekap Iuran', href:tagihan.index(), icon: ReceiptText },
     { title: 'Transaksi', href: transaksi.index(), icon: Wallet },
     { title: 'Laporan Harian', href: laporanHarian.index(), icon: FileCheck2 },
     { title: 'Pendaftaran', href: pendaftaran.index(), icon: ClipboardList },

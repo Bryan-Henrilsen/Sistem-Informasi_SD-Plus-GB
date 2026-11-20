@@ -33,9 +33,11 @@ type Props = {
     pendaftaran: { id: number; kegiatan: string; bulan: string }[]; // bulan = bulan bayar di muka berikutnya
     hariIni: string;
     hanyaTransfer: boolean; // Bendahara: hanya transfer dari mutasi rekening (FR-8c); cash hanya di loket TU
+    tagihanDipilih: number | null; // dibuka dari kotak Rekap Iuran: tagihan ini langsung tercentang (#40)
+    kembali: string | null; // alamat Rekap Iuran untuk kembali setelah disimpan
 };
 
-export default function CatatPembayaran({ cari, hasilCari, siswa, tagihan, pendaftaran, hariIni, hanyaTransfer }: Props) {
+export default function CatatPembayaran({ cari, hasilCari, siswa, tagihan, pendaftaran, hariIni, hanyaTransfer, tagihanDipilih, kembali }: Props) {
     const judul = hanyaTransfer ? 'Catat Transfer dari Mutasi Rekening' : 'Catat Pembayaran';
 
     return (
@@ -60,6 +62,8 @@ export default function CatatPembayaran({ cari, hasilCari, siswa, tagihan, penda
                         pendaftaran={pendaftaran}
                         hariIni={hariIni}
                         hanyaTransfer={hanyaTransfer}
+                        tagihanDipilih={tagihanDipilih}
+                        kembali={kembali}
                     />
                 ) : (
                     <CariSiswa
@@ -75,13 +79,15 @@ export default function CatatPembayaran({ cari, hasilCari, siswa, tagihan, penda
 }
 
 // Langkah 2: centang tagihan + isi data pembayaran, lalu kirim ke TransaksiService::catat()
-function FormPembayaran({ siswa, tagihan, pendaftaran, hariIni, hanyaTransfer }: Omit<Props, 'cari' | 'hasilCari' | 'siswa'> & { siswa: Siswa }) {
+function FormPembayaran({ siswa, tagihan, pendaftaran, hariIni, hanyaTransfer, tagihanDipilih, kembali }: Omit<Props, 'cari' | 'hasilCari' | 'siswa'> & { siswa: Siswa }) {
+    const dipilih = tagihan.find((t) => t.id === tagihanDipilih); // hanya bila tagihan itu memang masih terbuka
     const form = useForm({
         siswa_id: siswa.id,
         metode: hanyaTransfer ? 'transfer' : 'cash',
         tanggal: hariIni,
-        nominal: 0,
-        tagihan_ids: [] as number[],
+        nominal: dipilih?.sisa ?? 0,
+        tagihan_ids: dipilih ? [dipilih.id] : ([] as number[]),
+        kembali: kembali ?? '',
         catatan_transfer: '',
         alihkan_kelebihan: true, // kelebihan transfer: dialihkan ke bulan berikutnya atau direfund (#39)
     });
@@ -288,7 +294,7 @@ function FormPembayaran({ siswa, tagihan, pendaftaran, hariIni, hanyaTransfer }:
                     Simpan pembayaran
                 </Button>
                 <Button type="button" variant="ghost" asChild>
-                    <Link href={index()}>Batal</Link>
+                    <Link href={kembali ?? index()}>{kembali ? 'Kembali ke rekap' : 'Batal'}</Link>
                 </Button>
             </div>
         </form>
