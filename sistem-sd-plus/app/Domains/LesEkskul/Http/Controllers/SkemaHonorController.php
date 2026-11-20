@@ -107,20 +107,10 @@ class SkemaHonorController extends Controller
         return $this->kembali("{$user->name} ditambahkan sebagai penerima tanpa akun login.");
     }
 
-    // Guru, staf, dan penerima tanpa akun: pilihan penerima peran & honor flat
+    // Guru, staf, dan penerima tanpa akun: pilihan penerima peran & honor flat (dipakai juga di Rekap Honor)
     private function orang(): array
     {
-        return User::query()
-            ->where(fn ($q) => $q->whereHas('roles', fn ($r) => $r->whereIn('name', ['guru', 'tu', 'bendahara', 'kepala_sekolah', 'waka_kurikulum']))
-                ->orWhere('email', 'like', '%@'.PengaturanHonorService::DOMAIN_TANPA_AKUN))
-            ->orderBy('name')
-            ->get(['id', 'name', 'email'])
-            ->map(fn (User $u) => [
-                'id' => $u->id,
-                'nama' => $u->name,
-                'tanpa_akun' => str_ends_with((string) $u->email, '@'.PengaturanHonorService::DOMAIN_TANPA_AKUN),
-            ])
-            ->all();
+        return $this->service->orangPenerima();
     }
 
     private function kembali(string $pesan): RedirectResponse

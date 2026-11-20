@@ -2,8 +2,10 @@
 
 namespace App\Domains\LesEkskul\Http\Controllers;
 
+use App\Domains\LesEkskul\Models\HonorFlatJenis;
 use App\Domains\LesEkskul\Models\PeriodeLaporan;
 use App\Domains\LesEkskul\Services\HonorService;
+use App\Domains\LesEkskul\Services\PengaturanHonorService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,7 +45,28 @@ class RekapHonorController extends Controller
             'rekap' => $periode ? $this->service->rekap($periode) : null,
             'bisaHitung' => $user->hasAnyRole(['bendahara', 'kepala_sekolah']),
             'bisaTandai' => $user->hasRole('kepala_sekolah'),
+            // Honor flat periode ini, diatur Kepala Sekolah setelah honor dihitung (#39)
+            'honorFlat' => $periode && $sudah ? $this->service->honorFlatPeriode($periode) : [],
+            'bisaAturFlat' => $user->hasRole('kepala_sekolah') && $sudah && $periode->honor_diketahui_at === null,
+            'orang' => $user->hasRole('kepala_sekolah') ? app(PengaturanHonorService::class)->orangPenerima() : [],
         ]);
+    }
+
+    // Kepala Sekolah: satu jenis honor flat untuk periode ini — penerima & jumlah, atau kosong = tidak dibayar (#39)
+    public function aturFlat(Request $request, PeriodeLaporan $periode, HonorFlatJenis $honorFlatJenis): RedirectResponse
+    {
+        $data = $request->validate([
+            'penerima' => ['array'],
+            'penerima.*.user_id' => ['required', 'integer', 'distinct', 'exists:users,id'],
+            'penerima.*.jumlah' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $penerima = collect($data['penerima'] ?? [])->mapWithKeys(fn (array $p) => [$p['user_id'] => $p['jumlah']])->all();
+        $this->service->aturHonorFlatPeriode($periode, $honorFlatJenis, $penerima);
+
+        return $this->kembali($penerima === []
+            ? "Honor {$honorFlatJenis->nama} tidak dibayar di periode {$this->bulan($periode)}."
+            : "Honor {$honorFlatJenis->nama} periode {$this->bulan($periode)} disimpan untuk ".count($penerima).' orang.');
     }
 
     public function hitung(PeriodeLaporan $periode): RedirectResponse

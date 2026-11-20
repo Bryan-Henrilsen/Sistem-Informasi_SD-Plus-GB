@@ -110,20 +110,34 @@ test('kelebihan transfer mengurangi tagihan bulan berikutnya, dibuat bila belum 
         ->and(PenyesuaianDana::count())->toBe(0); // pengalihan cukup tercatat di alokasi
 });
 
+test('kelebihan boleh dialihkan melewati Desember ke semester genap', function () {
+    $transaksi = catatTransaksi('transfer', 200000, [$this->okt]); // Oktober, November, Desember dilewati, Januari
 
-test('kelebihan yang melewati akhir semester dicatat sebagai refund', function () {
-    $transaksi = catatTransaksi('transfer', 200000, [$this->okt]); // Oktober, November, lalu Desember libur
+    expect(alokasiPerBulan($transaksi))->toBe(['2026-10' => 80000, '2026-11' => 80000, '2027-01' => 40000])
+        ->and(PenyesuaianDana::count())->toBe(0); // tidak ada refund (Ringkasan v1.11 #39)
+});
+
+test('kelebihan yang dipilih untuk direfund dicatat seluruhnya sebagai refund', function () {
+    $transaksi = catatTransaksi('transfer', 200000, [$this->okt], ['alihkanKelebihan' => false]);
 
     $refund = $transaksi->penyesuaianDana()->sole();
 
-    expect(alokasiPerBulan($transaksi))->toBe(['2026-10' => 80000, '2026-11' => 80000])
-        ->and(Tagihan::where('bulan_tagihan', '2027-01-01')->exists())->toBeFalse() // tidak menyeberang ke semester genap
-        ->and($refund->nominal)->toBe(40000)
+    expect(alokasiPerBulan($transaksi))->toBe(['2026-10' => 80000])
+        ->and(Tagihan::where('bulan_tagihan', '2026-11-01')->exists())->toBeFalse()
+        ->and($refund->nominal)->toBe(120000)
         ->and($refund->jenis_penyesuaian)->toBe(JenisPenyesuaian::KelebihanTransfer)
         ->and($refund->status)->toBe(StatusPenyesuaian::Proses)
         ->and($refund->pendaftaran_id)->toBe($this->pendaftaran->id)
         ->and($refund->periode_asal_id)->toBe($this->periode->id)
         ->and($refund->adalahRefund())->toBeTrue();
+});
+
+test('kelebihan yang melewati akhir tahun ajaran tetap direfund', function () {
+    // Oktober–November + Januari–Mei = 7 bulan x 80.000 = 560.000; sisa 40.000 tidak punya bulan tujuan
+    $transaksi = catatTransaksi('transfer', 600000, [$this->okt]);
+
+    expect(array_keys(alokasiPerBulan($transaksi)))->toBe(['2026-10', '2026-11', '2027-01', '2027-02', '2027-03', '2027-04', '2027-05'])
+        ->and($transaksi->penyesuaianDana()->sole()->nominal)->toBe(40000);
 });
 
 test('siswa sudah berhenti: kelebihan langsung direfund', function () {
@@ -257,13 +271,12 @@ test('transfer ditolak: transaksi tetap ada, alokasi dilepas, tagihan bisa dibay
 });
 
 test('transfer ditolak menghapus refund kelebihan yang belum dikirim', function () {
-    $transfer = catatTransaksi('transfer', 200000, [$this->okt]); // Oktober, November, refund 40.000
+    $transfer = catatTransaksi('transfer', 200000, [$this->okt], ['alihkanKelebihan' => false]); // Oktober + refund 120.000
 
     $this->service->tolak($transfer, $this->tu, 'Bukti transfer palsu');
 
     expect(PenyesuaianDana::count())->toBe(0)
-        ->and($this->okt->fresh()->status)->toBe(StatusTagihan::Belum)
-        ->and(Tagihan::where('bulan_tagihan', '2026-11-01')->first()->status)->toBe(StatusTagihan::Belum);
+        ->and($this->okt->fresh()->status)->toBe(StatusTagihan::Belum);
 });
 
 test('penolakan diblokir untuk transfer yang sudah disetujui, sudah ditolak, sudah direfund, atau tanpa alasan', function () {
@@ -273,7 +286,7 @@ test('penolakan diblokir untuk transfer yang sudah disetujui, sudah ditolak, sud
     $ditolak = catatTransaksi('transfer', 80000, [$this->sep]);
     $this->service->tolak($ditolak, $this->tu, 'Tidak ada di mutasi');
 
-    $direfund = catatTransaksi('transfer', 200000, [$this->okt]);
+    $direfund = catatTransaksi('transfer', 200000, [$this->okt], ['alihkanKelebihan' => false]);
     $direfund->penyesuaianDana()->update(['status' => StatusPenyesuaian::Berhasil]);
 
     expect(fn () => $this->service->tolak($disetujui, $this->tu, 'Salah'))->toThrow(ValidationException::class)

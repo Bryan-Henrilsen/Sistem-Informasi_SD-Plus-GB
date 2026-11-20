@@ -4,6 +4,8 @@ import PengajarEkskulController from '@/actions/App/Domains/LesEkskul/Http/Contr
 import RekapHonorController from '@/actions/App/Domains/LesEkskul/Http/Controllers/RekapHonorController';
 import SkemaHonorController from '@/actions/App/Domains/LesEkskul/Http/Controllers/SkemaHonorController';
 import Heading from '@/components/heading';
+import { HonorFlatPeriode } from '@/components/les-ekskul/honor-flat-periode';
+import type { HonorFlatPeriodeData, OrangPenerima } from '@/components/les-ekskul/honor-flat-periode';
 import { LabelStatus } from '@/components/les-ekskul/label-status';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -66,6 +68,9 @@ type Props = {
     rekap: Rekap | null;
     bisaHitung: boolean;
     bisaTandai: boolean;
+    honorFlat: HonorFlatPeriodeData[];
+    bisaAturFlat: boolean;
+    orang: OrangPenerima[];
 };
 
 type Layer = 'kegiatan' | 'orang' | 'akhir';
@@ -78,7 +83,19 @@ const LAYER: { kode: Layer; label: string }[] = [
 
 const kelasPilihan = 'h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs';
 
-export default function RekapHonor({ daftarPeriode, periode, sudahDihitung, tanpaHonor, hambatan, rekap, bisaHitung, bisaTandai }: Props) {
+export default function RekapHonor({
+    daftarPeriode,
+    periode,
+    sudahDihitung,
+    tanpaHonor,
+    hambatan,
+    rekap,
+    bisaHitung,
+    bisaTandai,
+    honorFlat,
+    bisaAturFlat,
+    orang,
+}: Props) {
     const [layer, setLayer] = useState<Layer>('kegiatan');
     const [konfirmasi, setKonfirmasi] = useState<'hitung' | 'diketahui' | null>(null);
     const [proses, setProses] = useState(false);
@@ -222,6 +239,10 @@ export default function RekapHonor({ daftarPeriode, periode, sudahDihitung, tanp
                         {layer === 'kegiatan' && <PerKegiatan kegiatan={rekap.kegiatan} />}
                         {layer === 'orang' && <PerOrang orang={rekap.orang} />}
                         {layer === 'akhir' && periode && <RekapAkhir rekap={rekap} periode={periode} />}
+
+                        {periode && honorFlat.length > 0 && (
+                            <HonorFlatPeriode periodeId={periode.id} data={honorFlat} orang={orang} bisaUbah={bisaAturFlat} />
+                        )}
                     </>
                 )}
             </div>

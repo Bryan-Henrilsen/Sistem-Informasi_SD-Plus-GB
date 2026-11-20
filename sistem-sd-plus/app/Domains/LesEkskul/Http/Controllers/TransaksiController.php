@@ -120,6 +120,7 @@ class TransaksiController extends Controller
             sumber: $user->hasRole('tu') ? SumberInput::Tu : SumberInput::Bendahara, // Bendahara saja → FR-8c
             tanggal: $data['tanggal'],
             catatanTransfer: $data['catatan_transfer'] ?? null,
+            alihkanKelebihan: $request->boolean('alihkan_kelebihan', true),
         );
 
         $refund = $transaksi->penyesuaianDana()->sum('nominal');

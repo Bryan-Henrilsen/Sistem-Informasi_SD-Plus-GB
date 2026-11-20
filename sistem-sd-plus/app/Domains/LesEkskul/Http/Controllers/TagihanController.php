@@ -67,7 +67,7 @@ class TagihanController extends Controller
 
         Inertia::flash('toast', $tagihan
             ? ['type' => 'success', 'message' => 'Tagihan '.$tagihan->bulan_tagihan->locale('id')->translatedFormat('F Y').' ditambahkan.']
-            : ['type' => 'warning', 'message' => 'Tidak ada lagi bulan yang ditagih untuk kegiatan ini di semester ini.']);
+            : ['type' => 'warning', 'message' => 'Tidak ada lagi bulan yang ditagih untuk kegiatan ini sampai akhir tahun ajaran.']);
 
         return back();
     }

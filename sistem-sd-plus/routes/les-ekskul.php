@@ -59,6 +59,9 @@ Route::middleware(['auth'])
             ->middleware('role:bendahara|kepala_sekolah')->name('honor.rekap.hitung');
         Route::post('honor/rekap/{periode}/diketahui', [RekapHonorController::class, 'tandaiDiketahui'])
             ->middleware('role:kepala_sekolah')->name('honor.rekap.diketahui');
+        // Honor flat per periode: dibayar atau tidak, penerima & jumlahnya (#39)
+        Route::post('honor/rekap/{periode}/flat/{honorFlatJenis}', [RekapHonorController::class, 'aturFlat'])
+            ->middleware('role:kepala_sekolah')->name('honor.rekap.flat');
 
         // Catatan kas manual (saldo awal, kolam, ATK, admin bank, setor yayasan, lainnya) oleh Bendahara & Kepala Sekolah (#35)
         Route::middleware('role:bendahara|kepala_sekolah')->group(function () {
