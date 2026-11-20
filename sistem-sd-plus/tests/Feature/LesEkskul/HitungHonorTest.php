@@ -152,3 +152,33 @@ test('halaman rekap honor: semua role keuangan melihat, hanya Bendahara & Kepala
         ->where('tugas', fn ($tugas) => collect($tugas)->firstWhere('judul', 'Honor menunggu Diketahui')['jumlah'] === 1)
     );
 });
+
+test('Kepala Sekolah mengatur honor flat per periode; hitung ulang tidak menimpanya', function () {
+    hhSiapkanReferensi();
+    app(HonorService::class)->hitung($this->periode);
+    $pramuka = HonorFlatJenis::where('kode', 'pramuka')->first();
+    $soal = HonorFlatJenis::where('kode', 'pembuat_soal_les')->first();
+    $wali2B = User::where('name', 'Wali 2B')->first();
+    $atur = fn (User $oleh, HonorFlatJenis $jenis, array $penerima) => $this->actingAs($oleh)
+        ->post("/les-ekskul/honor/rekap/{$this->periode->id}/flat/{$jenis->id}", ['penerima' => $penerima]);
+
+    $atur($this->bendahara, $pramuka, [])->assertForbidden();
+    $atur($this->kepsek, $pramuka, [])->assertSessionHasNoErrors(); // bulan ini tidak ada Pramuka
+    $atur($this->kepsek, $soal, [['user_id' => $wali2B->id, 'jumlah' => 5]])->assertSessionHasNoErrors(); // 5 soal bulan ini
+
+    $flat = fn () => HonorDetail::where('peran', PeranHonor::HonorFlat)->with('penerimaUser')->get()
+        ->mapWithKeys(fn ($d) => [$d->penerimaUser->name => $d->nominal])->all();
+    expect($flat())->toBe(['Wali 2B' => 200000]);
+
+    app(HonorService::class)->hitung($this->periode); // hitung ulang honor persentase
+    expect($flat())->toBe(['Wali 2B' => 200000]);
+
+    $this->actingAs($this->kepsek)->get("/les-ekskul/honor/rekap?periode={$this->periode->id}")->assertInertia(fn (Assert $page) => $page
+        ->where('bisaAturFlat', true)
+        ->where('honorFlat', fn ($j) => collect($j)->firstWhere('nama', 'Pramuka')['dibayar'] === false
+            && collect($j)->firstWhere('nama', 'Pembuat Soal Les')['penerima'][0]['jumlah'] === 5)
+    );
+
+    app(HonorService::class)->tandaiDiketahui($this->periode, $this->kepsek);
+    $atur($this->kepsek, $pramuka, [['user_id' => $wali2B->id, 'jumlah' => 1]])->assertSessionHasErrors('honor');
+});

@@ -124,6 +124,22 @@ class PengaturanHonorService
             ->first();
     }
 
+    // Guru, staf, dan penerima tanpa akun: calon penerima peran pengelola & honor flat
+    public function orangPenerima(): array
+    {
+        return User::query()
+            ->where(fn ($q) => $q->whereHas('roles', fn ($r) => $r->whereIn('name', ['guru', 'tu', 'bendahara', 'kepala_sekolah', 'waka_kurikulum']))
+                ->orWhere('email', 'like', '%@'.self::DOMAIN_TANPA_AKUN))
+            ->orderBy('name')
+            ->get(['id', 'name', 'email'])
+            ->map(fn (User $u) => [
+                'id' => $u->id,
+                'nama' => $u->name,
+                'tanpa_akun' => str_ends_with((string) $u->email, '@'.self::DOMAIN_TANPA_AKUN),
+            ])
+            ->all();
+    }
+
     // Penerima honor flat yang tidak punya akun (mis. petugas kebersihan): baris users tanpa role, tidak bisa membuka menu apa pun
     public function tambahPenerimaTanpaAkun(string $nama): User
     {

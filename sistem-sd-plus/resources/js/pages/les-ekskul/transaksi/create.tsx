@@ -83,6 +83,7 @@ function FormPembayaran({ siswa, tagihan, pendaftaran, hariIni, hanyaTransfer }:
         nominal: 0,
         tagihan_ids: [] as number[],
         catatan_transfer: '',
+        alihkan_kelebihan: true, // kelebihan transfer: dialihkan ke bulan berikutnya atau direfund (#39)
     });
     const [nominalDiubah, setNominalDiubah] = useState(false); // false = nominal mengikuti total tagihan dicentang
 
@@ -238,13 +239,47 @@ function FormPembayaran({ siswa, tagihan, pendaftaran, hariIni, hanyaTransfer }:
                         {selisih < 0 && form.data.nominal > 0 && (
                             <> · kurang {rupiah(-selisih)} (tagihan terakhir terbayar sebagian)</>
                         )}
-                        {selisih > 0 && form.data.metode === 'transfer' && (
-                            <> · kelebihan {rupiah(selisih)} dialihkan ke bulan berikutnya, sisanya direfund</>
-                        )}
+                        {selisih > 0 && form.data.metode === 'transfer' && <> · kelebihan {rupiah(selisih)}</>}
                         {selisih > 0 && form.data.metode === 'cash' && (
                             <> · cash tidak boleh melebihi tagihan, berikan kembalian {rupiah(selisih)}</>
                         )}
                     </div>
+
+                    {selisih > 0 && form.data.metode === 'transfer' && (
+                        // Orang tua yang ingin membayar di muka sampai semester genap, atau yang ingin uangnya dikembalikan (#39)
+                        <fieldset className="flex flex-col gap-2 rounded-md border p-3 text-sm sm:col-span-2">
+                            <legend className="px-1 font-medium">Kelebihan {rupiah(selisih)} digunakan untuk</legend>
+                            <label className="flex cursor-pointer items-start gap-2">
+                                <input
+                                    type="radio"
+                                    name="alihkan_kelebihan"
+                                    className="mt-1"
+                                    checked={form.data.alihkan_kelebihan}
+                                    onChange={() => form.setData('alihkan_kelebihan', true)}
+                                />
+                                <span>
+                                    Bayar bulan berikutnya
+                                    <span className="block text-xs text-muted-foreground">
+                                        Dialihkan berurutan ke bulan-bulan berikutnya sampai akhir tahun ajaran (melewati Desember). Sisa yang tidak
+                                        punya bulan tujuan dicatat sebagai refund.
+                                    </span>
+                                </span>
+                            </label>
+                            <label className="flex cursor-pointer items-start gap-2">
+                                <input
+                                    type="radio"
+                                    name="alihkan_kelebihan"
+                                    className="mt-1"
+                                    checked={!form.data.alihkan_kelebihan}
+                                    onChange={() => form.setData('alihkan_kelebihan', false)}
+                                />
+                                <span>
+                                    Dikembalikan ke orang tua (refund)
+                                    <span className="block text-xs text-muted-foreground">Seluruh kelebihan dicatat di halaman Refund.</span>
+                                </span>
+                            </label>
+                        </fieldset>
+                    )}
                 </CardContent>
             </Card>
 

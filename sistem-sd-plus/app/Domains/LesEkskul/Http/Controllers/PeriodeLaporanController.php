@@ -36,14 +36,15 @@ class PeriodeLaporanController extends Controller
         return Inertia::render('les-ekskul/periode/index', [
             'periode' => $periode,
             'usulan' => array_map(fn ($tanggal) => $tanggal->toDateString(), $usulan),
+            'periodePertama' => $service->periodePertama(), // tanggal mulai boleh dipilih (#39)
         ]);
     }
 
     public function store(Request $request, PeriodeLaporanService $service): RedirectResponse
     {
-        $request->validate(['tanggal_selesai' => ['required', 'date']]);
+        $request->validate(['tanggal_selesai' => ['required', 'date'], 'tanggal_mulai' => ['nullable', 'date']]);
 
-        [$periode, $jumlah] = $service->buka($request->input('tanggal_selesai'));
+        [$periode, $jumlah] = $service->buka($request->input('tanggal_selesai'), $request->input('tanggal_mulai'));
 
         Inertia::flash('toast', [
             'type' => 'success',

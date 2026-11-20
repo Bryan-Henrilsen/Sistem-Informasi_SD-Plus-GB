@@ -39,9 +39,10 @@ type Props = {
         bulan: string;
         tanggal_mulai: string; tanggal_selesai: string;
     };
+    periodePertama: boolean; // belum ada periode: tanggal mulai boleh dipilih (#39)
 };
 
-export default function PeriodeIndex({ periode, usulan }: Props) {
+export default function PeriodeIndex({ periode, usulan, periodePertama }: Props) {
     const { auth } = usePage<{ auth: Auth }>().props;
     const bisaMembuka = auth.roles.some((r) => ['tu', 'bendahara'].includes(r));
 
@@ -62,17 +63,26 @@ export default function PeriodeIndex({ periode, usulan }: Props) {
                             Buka periode {namaBulan(usulan.bulan)}
                         </CardTitle>
                         <CardDescription>
-                            Mulai {tanggal(usulan.tanggal_mulai)} (sehari setelah periode sebelumnya). Pilih tanggal selesainya
+                            {periodePertama
+                                ? 'Periode pertama: pilih tanggal mulai dan selesainya. Periode berikutnya otomatis mulai sehari setelah periode sebelumnya.'
+                                : `Mulai ${tanggal(usulan.tanggal_mulai)} (sehari setelah periode sebelumnya). Pilih tanggal selesainya.`}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Form
                             {...PeriodeLaporanController.store.form()}
                             options={{preserveScroll: true}}
-                            className="flex items-end gap-3"
+                            className="flex flex-wrap items-end gap-3"
                         >
                             {({ processing, errors }) => (
                                 <>
+                                    {periodePertama && (
+                                        <div className="grid flex-1 gap-2">
+                                            <Label htmlFor="tanggal_mulai">Tanggal mulai</Label>
+                                            <Input id="tanggal_mulai" type="date" name="tanggal_mulai" defaultValue={usulan.tanggal_mulai} required />
+                                            <InputError message={errors.tanggal_mulai} />
+                                        </div>
+                                    )}
                                     <div className="grid flex-1 gap-2">
                                         <Label htmlFor="tanggal_selesai">
                                             Tanggal selesai

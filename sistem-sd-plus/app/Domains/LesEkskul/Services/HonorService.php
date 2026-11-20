@@ -8,6 +8,7 @@ use App\Domains\LesEkskul\Enums\TipeKegiatan;
 use App\Domains\LesEkskul\Models\Ekstrakurikuler;
 use App\Domains\LesEkskul\Models\HonorDetail;
 use App\Domains\LesEkskul\Models\HonorFlatJenis;
+use App\Domains\LesEkskul\Models\HonorFlatPengaturan;
 use App\Domains\LesEkskul\Models\HonorKegiatan;
 use App\Domains\LesEkskul\Models\LesTambahan;
 use App\Domains\LesEkskul\Models\PenerimaPeranHonor;
@@ -84,8 +85,10 @@ class HonorService
                 throw ValidationException::withMessages(['honor' => implode(' ', $hambatan)]);
             }
 
+            // Honor flat hanya diisi dari pengaturan saat pertama kali dihitung; setelah itu diatur Kepala Sekolah per periode
+            // (aturHonorFlatPeriode) dan tidak ditimpa hitung ulang (Ringkasan v1.11 #39)
+            $pertamaKali = ! $this->sudahDihitung($periode);
             HonorKegiatan::where('periode_laporan_id', $periode->id)->delete(); // rincian persentase ikut terhapus (cascade)
-            HonorDetail::where('periode_laporan_id', $periode->id)->delete(); // sisa: rincian honor flat
 
             $pengelola = collect(PengaturanHonorService::PERAN_PENGELOLA)
                 ->mapWithKeys(fn (PeranHonor $p) => [$p->value => PenerimaPeranHonor::pemegang($p, today())]);
@@ -99,7 +102,9 @@ class HonorService
                 $this->hitungLesJenjang($periode, $kelasLes, $pendapatan['les'], $pengelola);
             }
 
-            $this->hitungHonorFlat($periode);
+            if ($pertamaKali) {
+                $this->hitungHonorFlat($periode);
+            }
 
             return [
                 'kegiatan' => HonorKegiatan::where('periode_laporan_id', $periode->id)->count(),
@@ -136,6 +141,80 @@ class HonorService
             }
 
             $periode->update(['honor_diketahui_oleh' => $oleh->id, 'honor_diketahui_at' => now()]);
+        });
+    }
+
+    // Kepala Sekolah mengatur satu jenis honor flat khusus periode ini (#39): tidak dibayar (mis. tidak ada Pramuka bulan ini),
+    // atau dibayar ke penerima tertentu dengan jumlah yang bisa berbeda tiap periode (mis. jumlah soal). Nominal per orang
+    // tetap dari pengaturan yang berlaku. $penerima = [user_id => jumlah]; kosong = jenis ini tidak dibayar periode ini
+    public function aturHonorFlatPeriode(PeriodeLaporan $periode, HonorFlatJenis $jenis, array $penerima): void
+    {
+        DB::transaction(function () use ($periode, $jenis, $penerima) {
+            $periode = PeriodeLaporan::whereKey($periode->id)->lockForUpdate()->firstOrFail();
+
+            $masalah = match (true) {
+                $periode->honor_diketahui_at !== null => 'Honor periode ini sudah ditandai Sudah Diketahui dan terkunci.',
+                ! $this->sudahDihitung($periode) => 'Hitung honor periode ini dulu, lalu atur honor flatnya.',
+                default => null,
+            };
+
+            if ($masalah) {
+                throw ValidationException::withMessages(['honor' => $masalah]);
+            }
+
+            // Baris lama jenis ini dihapus lalu dibuat ulang sesuai pilihan
+            HonorDetail::where('periode_laporan_id', $periode->id)
+                ->whereHas('honorFlatPengaturan', fn ($q) => $q->where('honor_flat_jenis_id', $jenis->id))
+                ->delete();
+
+            if ($penerima === []) {
+                return;
+            }
+
+            $pengaturan = $this->pengaturanFlatJenis($periode, $jenis)
+                ?? throw ValidationException::withMessages(['honor' => "Nominal honor {$jenis->nama} belum diatur di halaman Skema Honor."]);
+
+            foreach ($penerima as $userId => $jumlah) {
+                HonorDetail::create([
+                    'periode_laporan_id' => $periode->id,
+                    'honor_flat_pengaturan_id' => $pengaturan->id,
+                    'penerima_user_id' => (int) $userId,
+                    'peran' => PeranHonor::HonorFlat,
+                    'nominal' => $pengaturan->nominal_per_guru * max(1, (int) $jumlah),
+                ]);
+            }
+        });
+    }
+
+    // Honor flat periode ini per jenis untuk diatur Kepala Sekolah: dibayar atau tidak, penerima & jumlahnya
+    public function honorFlatPeriode(PeriodeLaporan $periode): Collection
+    {
+        $baris = HonorDetail::where('periode_laporan_id', $periode->id)
+            ->whereNotNull('honor_flat_pengaturan_id')
+            ->with('honorFlatPengaturan', 'penerimaUser')
+            ->get();
+
+        return HonorFlatJenis::orderBy('id')->get()->map(function (HonorFlatJenis $jenis) use ($periode, $baris) {
+            $milikJenis = $baris->filter(fn (HonorDetail $d) => $d->honorFlatPengaturan->honor_flat_jenis_id === $jenis->id);
+            $pengaturan = $milikJenis->first()?->honorFlatPengaturan ?? $this->pengaturanFlatJenis($periode, $jenis);
+            $nominal = (int) ($pengaturan?->nominal_per_guru ?? 0);
+
+            return [
+                'id' => $jenis->id,
+                'nama' => $jenis->nama,
+                'nominal_per_orang' => $nominal,
+                'dibayar' => $milikJenis->isNotEmpty(),
+                // jumlah = nominal ÷ nominal per orang (honor flat selalu kelipatan nominal per orang)
+                'penerima' => $milikJenis->map(fn (HonorDetail $d) => [
+                    'user_id' => $d->penerima_user_id,
+                    'nama' => $d->penerimaUser?->name,
+                    'jumlah' => $nominal > 0 ? intdiv($d->nominal, $nominal) : 1,
+                ])->values(),
+                'usulan' => $pengaturan
+                    ? $pengaturan->penerima->map(fn (User $u) => ['user_id' => $u->id, 'nama' => $u->name, 'jumlah' => (int) $u->pivot->jumlah])->values()
+                    : [],
+                'total' => (int) $milikJenis->sum('nominal'),
+            ];
         });
     }
 
@@ -382,18 +461,25 @@ class HonorService
     // Pengaturan honor flat yang berlaku di akhir periode dan punya nominal & penerima; kosong untuk bulan tidak ditagih
     private function pengaturanFlat(PeriodeLaporan $periode): Collection
     {
-        $tahunAjaran = TahunAjaran::where('tanggal_mulai', '<=', $periode->tanggal_selesai->toDateString())
-            ->where('tanggal_selesai', '>=', $periode->tanggal_selesai->toDateString())
-            ->first();
-
-        if (! $tahunAjaran || in_array($periode->bulan->month, config('les_ekskul.bulan_tidak_ditagih'), true)) {
+        if (in_array($periode->bulan->month, config('les_ekskul.bulan_tidak_ditagih'), true)) {
             return collect();
         }
 
         return HonorFlatJenis::orderBy('id')->get()
-            ->map(fn (HonorFlatJenis $jenis) => $this->pengaturan->honorFlatBerlaku($jenis, $tahunAjaran, today()))
-            ->filter(fn ($p) => $p && $p->nominal_per_guru > 0 && $p->penerima->isNotEmpty())
+            ->map(fn (HonorFlatJenis $jenis) => $this->pengaturanFlatJenis($periode, $jenis))
+            ->filter(fn ($p) => $p && $p->penerima->isNotEmpty())
             ->values();
+    }
+
+    // Pengaturan satu jenis honor flat yang berlaku untuk tahun ajaran periode ini dan punya nominal; null bila belum diatur
+    private function pengaturanFlatJenis(PeriodeLaporan $periode, HonorFlatJenis $jenis): ?HonorFlatPengaturan
+    {
+        $tahunAjaran = TahunAjaran::where('tanggal_mulai', '<=', $periode->tanggal_selesai->toDateString())
+            ->where('tanggal_selesai', '>=', $periode->tanggal_selesai->toDateString())
+            ->first();
+        $pengaturan = $tahunAjaran ? $this->pengaturan->honorFlatBerlaku($jenis, $tahunAjaran, today()) : null;
+
+        return $pengaturan && $pengaturan->nominal_per_guru > 0 ? $pengaturan : null;
     }
 
     // Kelas les per jenjang: semua kelas les di jenjang yang punya pendapatan ikut dibagi (FR-16c)

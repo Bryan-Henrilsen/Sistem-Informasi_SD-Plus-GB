@@ -29,7 +29,9 @@ class TransaksiService
 {
     public function __construct(private TagihanService $tagihanService) {}
 
-    // Catat uang masuk lalu bagi ke tagihan yang dicentang TU; semua atau tidak sama sekali
+    // Catat uang masuk lalu bagi ke tagihan yang dicentang TU; semua atau tidak sama sekali.
+    // $alihkanKelebihan: kelebihan transfer dialihkan ke bulan berikutnya (sampai akhir tahun ajaran) atau langsung direfund —
+    // dipilih TU saat mencatat (Ringkasan v1.11 #39)
     public function catat(
         Siswa $siswa,
         MetodeTransaksi $metode,
@@ -39,11 +41,12 @@ class TransaksiService
         SumberInput $sumber = SumberInput::Tu,
         CarbonInterface|string|null $tanggal = null,
         ?string $catatanTransfer = null,
+        bool $alihkanKelebihan = true,
     ): Transaksi {
         $tanggal = $tanggal ? Carbon::parse($tanggal)->toImmutable()->startOfDay() : today(); // jamnya dibuang: yang dicatat hanya tanggal
         $this->periksaInput($metode, $sumber, $nominal, $tanggal);
 
-        return DB::transaction(function () use ($siswa, $metode, $nominal, $tagihanIds, $oleh, $sumber, $tanggal, $catatanTransfer) {
+        return DB::transaction(function () use ($siswa, $metode, $nominal, $tagihanIds, $oleh, $sumber, $tanggal, $catatanTransfer, $alihkanKelebihan) {
             $tagihan = $this->ambilTagihan($siswa, $tagihanIds);
 
             // Cash dibayar di loket, jadi kelebihannya langsung dikembalikan; tidak ada kelebihan cash (FR-21 hanya transfer)
@@ -65,7 +68,7 @@ class TransaksiService
 
             $sisaUang = $this->alokasikan($transaksi, $tagihan, $nominal);
 
-            if ($sisaUang > 0) {
+            if ($sisaUang > 0 && $alihkanKelebihan) {
                 $sisaUang = $this->alihkanKelebihan($transaksi, $tagihan->last(), $sisaUang);
             }
 
@@ -218,7 +221,7 @@ class TransaksiService
                 ...$terverifikasi,
                 'status_approval_bendahara' => StatusApprovalBendahara::Disetujui,
                 'diapprove_oleh' => $oleh->id,
-                'tanggal_approval_bendahara' => now()
+                'tanggal_approval_bendahara' => now(),
             ],
 
             // Transfer yang dicatat TU menunggu verifikasi (FR-8) dan approval Bendahara (FR-8b)
@@ -240,7 +243,7 @@ class TransaksiService
         } while ($laporan->sudahDisetujui());
 
         if ($laporan->bisaDitarikKembali()) {
-            throw $this->gagal('laporan', 'Laporan harian ' . $laporan->tanggal->format('d/m/Y') . ' sedang diajukan ke Bendahara. Tarik kembali laporan itu dulu, lalu catat transaksinya');
+            throw $this->gagal('laporan', 'Laporan harian '.$laporan->tanggal->format('d/m/Y').' sedang diajukan ke Bendahara. Tarik kembali laporan itu dulu, lalu catat transaksinya');
         }
 
         return $laporan;
@@ -258,7 +261,7 @@ class TransaksiService
         $periode = PeriodeLaporan::mencakup($hari)->first();
 
         if (! $periode || $periode->sudahDitutup()) {
-            throw $this->gagal('laporan', 'Belum ada periode laporan terbuka untuk tanggal ' . $hari->format('d/m/Y'));
+            throw $this->gagal('laporan', 'Belum ada periode laporan terbuka untuk tanggal '.$hari->format('d/m/Y'));
         }
 
         return LaporanHarian::create(['periode_laporan_id' => $periode->id, 'tanggal' => $hari->toDateString()]);
@@ -285,23 +288,21 @@ class TransaksiService
         return $uang;
     }
 
-    // Kelebihan transfer mengurangi tagihan bulan berikutnya untuk kegiatan yang sama, hanya di semester yang sama;
-    // tagihannya dibuat bila belum ada (FR-21, Ringkasan v1.11 #22)
+    // Kelebihan transfer mengurangi tagihan bulan berikutnya untuk kegiatan yang sama, sampai akhir tahun ajaran
+    // (boleh melewati Desember ke semester genap); tagihannya dibuat bila belum ada (FR-21, Ringkasan v1.11 #22, #39)
     private function alihkanKelebihan(Transaksi $transaksi, Tagihan $terakhir, int $uang): int
     {
         $pendaftaran = $terakhir->pendaftaran;
+        $akhir = $pendaftaran->kegiatan()->tahunAjaran->tanggal_selesai;
         $bulan = $terakhir->bulan_tagihan->addMonth();
 
-        while ($uang > 0) {
-            $baru = $this->tagihanService->buatUntukBulan($pendaftaran, $bulan);
-
-            // Bulan tidak ditagih = akhir semester (Desember, Juni, Mei untuk kelas 6) atau siswa sudah berhenti
-            if (! $baru) {
-                break;
+        while ($uang > 0 && $bulan->lte($akhir)) {
+            // null = bulan tidak ditagih (Desember, Juni, Mei kelas 6) atau siswa sudah berhenti: lewati
+            if ($baru = $this->tagihanService->buatUntukBulan($pendaftaran, $bulan)) {
+                $tagihan = Tagihan::whereKey($baru->id)->bisaDibayarOnline()->lockForUpdate()->get(); // kosong bila sudah lunas
+                $uang = $this->alokasikan($transaksi, $tagihan, $uang);
             }
 
-            $tagihan = Tagihan::whereKey($baru->id)->bisaDibayarOnline()->lockForUpdate()->get(); // kosong bila sudah lunas
-            $uang = $this->alokasikan($transaksi, $tagihan, $uang);
             $bulan = $bulan->addMonth();
         }
 
@@ -331,7 +332,7 @@ class TransaksiService
         return $sisa;
     }
 
-    // Sisa yang tidak punya bulan tujuan di semester ini dikembalikan kepada orang tua;
+    // Kelebihan yang dipilih untuk direfund, atau sisa yang tidak punya bulan tujuan sampai akhir tahun ajaran, dikembalikan kepada orang tua;
     // Status 'proses' sampai TU menandai 'berhasil' setelah uang ditransfer balik
     private function catatRefundKelebihan(Transaksi $transaksi, Tagihan $terakhir, int $uang, User $oleh): void
     {
@@ -357,5 +358,4 @@ class TransaksiService
     {
         return ValidationException::withMessages([$field => $pesan]);
     }
-
 }
