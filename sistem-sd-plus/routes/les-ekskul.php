@@ -3,6 +3,7 @@
 use App\Domains\LesEkskul\Http\Controllers\AkunOrangTuaController;
 use App\Domains\LesEkskul\Http\Controllers\EkstrakurikulerController;
 use App\Domains\LesEkskul\Http\Controllers\KegiatanAnakController;
+use App\Domains\LesEkskul\Http\Controllers\KelasLesController;
 use App\Domains\LesEkskul\Http\Controllers\KonfirmasiTransferController;
 use App\Domains\LesEkskul\Http\Controllers\LaporanController;
 use App\Domains\LesEkskul\Http\Controllers\LaporanKasController;
@@ -31,6 +32,7 @@ Route::middleware(['auth'])
             Route::get('pendaftaran', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
             Route::get('refund', [RefundController::class, 'index'])->name('refund.index');
             Route::get('ekstrakurikuler', [EkstrakurikulerController::class, 'index'])->name('ekstrakurikuler.index'); // data master (#42)
+            Route::get('kelas', [KelasLesController::class, 'index'])->name('kelas.index'); // data master kelas & les (#43)
             Route::get('laporan-harian', [LaporanController::class, 'harian'])->name('laporan-harian.index');
             Route::get('periode/{periode}', [LaporanController::class, 'bulanan'])->name('periode.show');
             Route::get('honor/pengajar', [PengajarEkskulController::class, 'index'])->name('honor.pengajar');
@@ -125,6 +127,13 @@ Route::middleware(['auth'])
             Route::post('tahun-ajaran/{tahunAjaran}/ekstrakurikuler/salin', [EkstrakurikulerController::class, 'salin'])->name('ekstrakurikuler.salin');
             Route::put('ekstrakurikuler/{ekstrakurikuler}', [EkstrakurikulerController::class, 'update'])->name('ekstrakurikuler.update');
             Route::delete('ekstrakurikuler/{ekstrakurikuler}', [EkstrakurikulerController::class, 'destroy'])->name('ekstrakurikuler.destroy');
+
+            // Data master Kelas & Les Tambahan (#43)
+            Route::post('tahun-ajaran/{tahunAjaran}/kelas', [KelasLesController::class, 'store'])->name('kelas.store');
+            Route::post('tahun-ajaran/{tahunAjaran}/kelas/salin', [KelasLesController::class, 'salin'])->name('kelas.salin');
+            Route::post('tahun-ajaran/{tahunAjaran}/kelas/samakan-biaya', [KelasLesController::class, 'samakanBiaya'])->name('kelas.samakan-biaya');
+            Route::put('kelas/{kelas}', [KelasLesController::class, 'update'])->name('kelas.update');
+            Route::delete('kelas/{kelas}', [KelasLesController::class, 'destroy'])->name('kelas.destroy');
         });
 
         // Akun orang tua oleh TU: hapus klaim salah, reset password, tambah siswa yang belum ada (FR-1b, #36)
