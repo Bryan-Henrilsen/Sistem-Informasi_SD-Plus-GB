@@ -5,6 +5,7 @@ namespace App\Domains\LesEkskul\Http\Controllers;
 use App\Domains\LesEkskul\Enums\StatusPendaftaran;
 use App\Domains\LesEkskul\Models\Pendaftaran;
 use App\Domains\LesEkskul\Services\AkunOrangTuaService;
+use App\Domains\LesEkskul\Services\KonfirmasiTransferService;
 use App\Domains\LesEkskul\Services\PendaftaranService;
 use App\Domains\LesEkskul\Services\TagihanOrangTuaService;
 use App\Http\Controllers\Controller;
@@ -72,11 +73,11 @@ class OrangTuaController extends Controller
     }
 
     // Tagihan & status pembayaran semua anak, dengan info rekening transfer manual (FR-15, FR-32; #38)
-    public function tagihan(Request $request, TagihanOrangTuaService $tagihan): Response
+    public function tagihan(Request $request, TagihanOrangTuaService $tagihan, KonfirmasiTransferService $konfirmasi): Response
     {
         return Inertia::render('les-ekskul/orang-tua/tagihan', [
             'anak' => $request->user()->anak()->with('kelasTahunAktif.kelas')->orderBy('nama')->get()
-                ->map(function (Siswa $s) use ($tagihan) {
+                ->map(function (Siswa $s) use ($tagihan, $konfirmasi) {
                     $daftar = $tagihan->tagihan($s);
 
                     return [
@@ -86,6 +87,7 @@ class OrangTuaController extends Controller
                         'ringkasan' => $tagihan->ringkasan($daftar),
                         'tagihan' => $daftar->values(),
                         'ditolak' => $tagihan->transferDitolak($s)->values(),
+                        'konfirmasi' => $konfirmasi->untukOrangTua($s)->values(), // "Saya sudah bayar" menunggu/ditolak (#41)
                     ];
                 })
                 ->values(),

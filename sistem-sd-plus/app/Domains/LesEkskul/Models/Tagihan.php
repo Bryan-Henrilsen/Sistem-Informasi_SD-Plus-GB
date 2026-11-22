@@ -75,6 +75,12 @@ class Tagihan extends Model
             ->withTimestamps();
     }
 
+    // Konfirmasi "Saya sudah bayar" dari orang tua yang memuat tagihan ini (FR-15b)
+    public function konfirmasiTransfer(): BelongsToMany
+    {
+        return $this->belongsToMany(KonfirmasiTransfer::class, 'konfirmasi_transfer_tagihan');
+    }
+
     public function scopeBelumLunas(Builder $query): void
     {
         $query->where('status', StatusTagihan::Belum);

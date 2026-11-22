@@ -2,6 +2,8 @@ import { Form, Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import TransaksiController from '@/actions/App/Domains/LesEkskul/Http/Controllers/TransaksiController';
 import Heading from '@/components/heading';
+import { DaftarKonfirmasi } from '@/components/les-ekskul/konfirmasi-transfer';
+import type { KonfirmasiMenunggu } from '@/components/les-ekskul/konfirmasi-transfer';
 import InputError from '@/components/input-error';
 import { AksiTransfer, DialogTolakTransfer } from '@/components/les-ekskul/aksi-transfer';
 import type { TransferRingkas } from '@/components/les-ekskul/aksi-transfer';
@@ -34,11 +36,12 @@ type Props = {
     transaksi: PaginasiData<Transaksi>;
     filter: { nama?: string; status?: string; metode?: string };
     jumlah: { pending: number; menunggu_bendahara: number };
+    konfirmasi: KonfirmasiMenunggu[]; // "Saya sudah bayar" dari orang tua, khusus TU (#41)
 };
 
 const kelasPilihan = 'h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs';
 
-export default function TransaksiIndex({ transaksi, filter, jumlah }: Props) {
+export default function TransaksiIndex({ transaksi, filter, jumlah, konfirmasi }: Props) {
     const { auth, errors } = usePage<{ auth: Auth; errors: Record<string, string> }>().props;
     const punya = (role: string) => auth.roles.includes(role);
     const [ditolak, setDitolak] = useState<TransferRingkas | null>(null); // transaksi yang sedang dibuka di dialog tolak
@@ -59,6 +62,8 @@ export default function TransaksiIndex({ transaksi, filter, jumlah }: Props) {
                         </Button>
                     )}
                 </div>
+
+                <DaftarKonfirmasi data={konfirmasi} />
 
                 <Form
                     {...TransaksiController.index.form()}

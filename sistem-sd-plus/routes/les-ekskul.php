@@ -2,6 +2,7 @@
 
 use App\Domains\LesEkskul\Http\Controllers\AkunOrangTuaController;
 use App\Domains\LesEkskul\Http\Controllers\KegiatanAnakController;
+use App\Domains\LesEkskul\Http\Controllers\KonfirmasiTransferController;
 use App\Domains\LesEkskul\Http\Controllers\LaporanController;
 use App\Domains\LesEkskul\Http\Controllers\LaporanKasController;
 use App\Domains\LesEkskul\Http\Controllers\OrangTuaController;
@@ -112,6 +113,9 @@ Route::middleware(['auth'])
             ->middleware('role:tu')->name('transaksi.verifikasi'); // FR-8
         Route::post('transaksi/{transaksi}/setujui', [TransaksiController::class, 'setujui'])
             ->middleware('role:bendahara')->name('transaksi.setujui'); // FR-8b
+        // Konfirmasi "Saya sudah bayar" dari orang tua: TU menolak bila transfer tidak ditemukan (FR-15b, #41)
+        Route::post('konfirmasi-transfer/{konfirmasiTransfer}/tolak', [KonfirmasiTransferController::class, 'tolak'])
+            ->middleware('role:tu')->name('konfirmasi-transfer.tolak');
 
         // Akun orang tua oleh TU: hapus klaim salah, reset password, tambah siswa yang belum ada (FR-1b, #36)
         Route::middleware('role:tu')->group(function () {
@@ -138,5 +142,9 @@ Route::middleware(['auth', 'role:orang_tua'])
         Route::get('anak/{siswa}/kegiatan', [KegiatanAnakController::class, 'show'])->name('anak.kegiatan');
         Route::post('anak/{siswa}/kegiatan', [KegiatanAnakController::class, 'daftar'])->name('anak.daftar');
         Route::get('tagihan', [OrangTuaController::class, 'tagihan'])->name('tagihan');
+        // Transfer manual + "Saya sudah bayar" (FR-15b, Ringkasan v1.11 #41)
+        Route::get('bayar', [KonfirmasiTransferController::class, 'bayar'])->name('bayar');
+        Route::post('bayar', [KonfirmasiTransferController::class, 'ajukan'])->name('bayar.ajukan');
+        Route::delete('konfirmasi/{konfirmasiTransfer}', [KonfirmasiTransferController::class, 'batalkan'])->name('konfirmasi.batalkan');
         Route::get('akun', [OrangTuaController::class, 'akun'])->name('akun');
     });
