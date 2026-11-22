@@ -18,6 +18,7 @@ import {
     Shapes,
     School,
     GraduationCap,
+    CalendarDays,
     Undo2,
     Users,
     Wallet,
@@ -46,6 +47,7 @@ import tagihan from '@/routes/les-ekskul/tagihan';
 import ekstrakurikuler from '@/routes/les-ekskul/ekstrakurikuler';
 import kelas from '@/routes/les-ekskul/kelas';
 import dataSiswa from '@/routes/les-ekskul/data-siswa';
+import tahunAjaran from '@/routes/les-ekskul/tahun-ajaran';
 import transaksi from '@/routes/les-ekskul/transaksi';
 import type { Auth, NavItem } from '@/types';
 
@@ -67,6 +69,7 @@ const lesEkskulNavItems: NavItem[] = [
     { title: 'Kegiatan Ekskul', href: ekstrakurikuler.index(), icon: Shapes },
     { title: 'Kelas & Les', href: kelas.index(), icon: School },
     { title: 'Data Siswa', href: dataSiswa.index(), icon: GraduationCap },
+    { title: 'Tahun Ajaran', href: tahunAjaran.index(), icon: CalendarDays },
     { title: 'Refund', href: refund.index(), icon: Undo2 },
     { title: 'Laporan Kas', href: laporanKas.index(), icon: Landmark },
 ];

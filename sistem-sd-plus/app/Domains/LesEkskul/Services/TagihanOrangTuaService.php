@@ -32,7 +32,10 @@ class TagihanOrangTuaService
         return Tagihan::query()
             ->whereHas('pendaftaran', fn (Builder $q) => $q->where('siswa_id', $siswa->id))
             ->where('status', '!=', StatusTagihan::Dibatalkan)
-            ->whereBetween('bulan_tagihan', [$tahunAjaran->tanggal_mulai->toDateString(), $tahunAjaran->tanggal_selesai->toDateString()])
+            // Tahun ajaran aktif, ditambah tagihan tahun ajaran sebelumnya yang belum lunas (tetap tunggakan, Ringkasan v1.11 #45)
+            ->where(fn (Builder $q) => $q
+                ->whereBetween('bulan_tagihan', [$tahunAjaran->tanggal_mulai->toDateString(), $tahunAjaran->tanggal_selesai->toDateString()])
+                ->orWhere(fn (Builder $q) => $q->where('bulan_tagihan', '<', $tahunAjaran->tanggal_mulai->toDateString())->where('status', StatusTagihan::Belum)))
             ->with(['pendaftaran.lesTambahan.kelas', 'pendaftaran.ekstrakurikuler.induk', 'transaksi', 'pembayaranOnline',
                 'konfirmasiTransfer' => fn ($q) => $q->where('status', StatusKonfirmasiTransfer::Menunggu)])
             ->orderByDesc('bulan_tagihan')
