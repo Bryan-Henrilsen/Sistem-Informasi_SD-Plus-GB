@@ -6,6 +6,8 @@ use App\Domains\LesEkskul\Enums\StatusKonfirmasiTransfer;
 use App\Domains\LesEkskul\Enums\StatusPembayaranOnline;
 use App\Domains\LesEkskul\Enums\StatusTagihan;
 use App\Domains\LesEkskul\Enums\StatusTransaksi;
+use App\Domains\LesEkskul\Models\KegiatanLibur;
+use App\Domains\LesEkskul\Models\Pendaftaran;
 use App\Domains\LesEkskul\Models\Tagihan;
 use App\Domains\LesEkskul\Models\Transaksi;
 use App\Models\Siswa;
@@ -103,6 +105,39 @@ class TagihanOrangTuaService
                 'tanggal' => $tr->tanggal->toDateString(),
                 'nominal' => $tr->nominal,
                 'alasan' => $tr->alasan_ditolak,
+            ]);
+    }
+
+    // Kegiatan anak yang tidak berlangsung sebulan penuh di tahun ajaran aktif (FR-23, #48): tidak ditagih bulan itu,
+    // uang yang sudah dibayar dialihkan ke bulan berikutnya. Penandaan ekskul induk berlaku juga untuk kelas paralelnya
+    public function kegiatanLibur(Siswa $siswa): Collection
+    {
+        $tahunAjaran = TahunAjaran::aktif()->first();
+
+        if (! $tahunAjaran) {
+            return collect();
+        }
+
+        $pendaftaran = Pendaftaran::where('siswa_id', $siswa->id)
+            ->tahunAjaran($tahunAjaran->id)
+            ->with(['lesTambahan.kelas', 'ekstrakurikuler.induk'])
+            ->get();
+
+        $ekskulIds = $pendaftaran->flatMap(fn (Pendaftaran $p) => [$p->ekstrakurikuler_id, $p->ekstrakurikuler?->parent_ekstrakurikuler_id])->filter();
+
+        return KegiatanLibur::query()
+            ->whereBetween('bulan', [$tahunAjaran->tanggal_mulai->startOfMonth()->toDateString(), $tahunAjaran->tanggal_selesai->toDateString()])
+            ->where(fn (Builder $q) => $q
+                ->whereIn('les_tambahan_id', $pendaftaran->pluck('les_tambahan_id')->filter())
+                ->orWhereIn('ekstrakurikuler_id', $ekskulIds))
+            ->with(['lesTambahan.kelas', 'ekstrakurikuler'])
+            ->orderByDesc('bulan')
+            ->get()
+            ->map(fn (KegiatanLibur $l) => [
+                'id' => $l->id,
+                'kegiatan' => $l->nama_kegiatan,
+                'bulan' => $l->bulan->toDateString(),
+                'alasan' => $l->alasan,
             ]);
     }
 

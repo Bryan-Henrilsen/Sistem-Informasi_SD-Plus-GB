@@ -2,7 +2,6 @@
 
 namespace App\Domains\LesEkskul\Http\Controllers;
 
-use App\Domains\LesEkskul\Enums\JenisPenyesuaian;
 use App\Domains\LesEkskul\Enums\StatusPenyesuaian;
 use App\Domains\LesEkskul\Models\PenyesuaianDana;
 use App\Domains\LesEkskul\Services\PerubahanPendaftaranService;
@@ -20,7 +19,7 @@ class RefundController extends Controller
         $status = $request->string('status')->toString() === 'berhasil' ? StatusPenyesuaian::Berhasil : StatusPenyesuaian::Proses;
 
         $refund = PenyesuaianDana::query()
-            ->whereIn('jenis_penyesuaian', [JenisPenyesuaian::KelebihanTransfer, JenisPenyesuaian::RefundBerhenti])
+            ->whereIn('jenis_penyesuaian', PenyesuaianDana::jenisRefund())
             ->where('status', $status)
             ->with(['pendaftaran.siswa', 'pendaftaran.lesTambahan.kelas', 'pendaftaran.ekstrakurikuler', 'transaksi', 'diprosesOlehUser'])
             ->latest('id')
@@ -42,7 +41,7 @@ class RefundController extends Controller
         return Inertia::render('les-ekskul/refund/index', [
             'refund' => $refund,
             'status' => $status,
-            'totalBelum' => (int) PenyesuaianDana::whereIn('jenis_penyesuaian', [JenisPenyesuaian::KelebihanTransfer, JenisPenyesuaian::RefundBerhenti])
+            'totalBelum' => (int) PenyesuaianDana::whereIn('jenis_penyesuaian', PenyesuaianDana::jenisRefund())
                 ->where('status', StatusPenyesuaian::Proses)->sum('nominal'),
         ]);
     }

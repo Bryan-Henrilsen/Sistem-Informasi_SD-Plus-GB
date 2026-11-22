@@ -14,7 +14,7 @@ type Refund = {
     id: number;
     siswa: string;
     kegiatan: string;
-    jenis: 'kelebihan_transfer' | 'refund_berhenti';
+    jenis: 'kelebihan_transfer' | 'refund_berhenti' | 'kegiatan_tidak_berlangsung';
     nominal: number;
     keterangan: string | null;
     dicatat: string;
@@ -31,6 +31,7 @@ type Props = {
 const asal: Record<Refund['jenis'], string> = {
     kelebihan_transfer: 'Kelebihan transfer',
     refund_berhenti: 'Berhenti / pindah',
+    kegiatan_tidak_berlangsung: 'Kegiatan tidak berlangsung',
 };
 
 export default function RefundIndex({ refund, status, totalBelum }: Props) {

@@ -292,9 +292,27 @@ class TransaksiService
     // (boleh melewati Desember ke semester genap); tagihannya dibuat bila belum ada (FR-21, Ringkasan v1.11 #22, #39)
     private function alihkanKelebihan(Transaksi $transaksi, Tagihan $terakhir, int $uang): int
     {
-        $pendaftaran = $terakhir->pendaftaran;
+        return $this->alihkanSampaiAkhirTahunAjaran($transaksi, $terakhir->pendaftaran, $terakhir->bulan_tagihan->addMonth(), $uang);
+    }
+
+    // Kegiatan tidak berlangsung (FR-23, #48): uang yang dilepas dari bulan libur membayar bulan ditagih berikutnya
+    // untuk kegiatan yang sama sampai akhir tahun ajaran, seperti kelebihan transfer.
+    // $uangPerTransaksi = [transaksi_id => nominal]. Hasilnya sisa uang yang tidak punya bulan tujuan (direfund oleh pemanggil)
+    public function alihkanKeBulanBerikutnya(array $uangPerTransaksi, Pendaftaran $pendaftaran, CarbonInterface $mulai): int
+    {
+        $sisa = 0;
+
+        foreach (Transaksi::whereKey(array_keys($uangPerTransaksi))->orderBy('id')->get() as $transaksi) {
+            $sisa += $this->alihkanSampaiAkhirTahunAjaran($transaksi, $pendaftaran, $mulai, $uangPerTransaksi[$transaksi->id]);
+        }
+
+        return $sisa;
+    }
+
+    private function alihkanSampaiAkhirTahunAjaran(Transaksi $transaksi, Pendaftaran $pendaftaran, CarbonInterface $mulai, int $uang): int
+    {
         $akhir = $pendaftaran->kegiatan()->tahunAjaran->tanggal_selesai;
-        $bulan = $terakhir->bulan_tagihan->addMonth();
+        $bulan = $mulai->toImmutable()->startOfMonth();
 
         while ($uang > 0 && $bulan->lte($akhir)) {
             // null = bulan tidak ditagih (Desember, Juni, Mei kelas 6) atau siswa sudah berhenti: lewati
@@ -320,9 +338,19 @@ class TransaksiService
             $uang = $uangPerTransaksi[$transaksi->id];
             $bulan = $mulai->toImmutable()->startOfMonth();
 
-            while ($uang > 0 && ($baru = $this->tagihanService->buatUntukBulan($tujuan, $bulan))) {
-                $tagihan = Tagihan::whereKey($baru->id)->belumLunas()->lockForUpdate()->get(); // kosong bila sudah lunas
-                $uang = $this->alokasikan($transaksi, $tagihan, $uang);
+            while ($uang > 0) {
+                $baru = $this->tagihanService->buatUntukBulan($tujuan, $bulan);
+
+                // Bulan tidak ditagih = batas semester, berhenti; bulan libur kegiatan (FR-23, #48) dilewati saja
+                if (! $baru && ! $this->tagihanService->sedangLibur($tujuan, $bulan)) {
+                    break;
+                }
+
+                if ($baru) {
+                    $tagihan = Tagihan::whereKey($baru->id)->belumLunas()->lockForUpdate()->get(); // kosong bila sudah lunas
+                    $uang = $this->alokasikan($transaksi, $tagihan, $uang);
+                }
+
                 $bulan = $bulan->addMonth();
             }
 
