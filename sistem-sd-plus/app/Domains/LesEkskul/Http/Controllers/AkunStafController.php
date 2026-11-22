@@ -4,6 +4,7 @@ namespace App\Domains\LesEkskul\Http\Controllers;
 
 use App\Domains\LesEkskul\Services\AkunStafService;
 use App\Http\Controllers\Controller;
+use App\Models\MataPelajaran;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,6 +21,8 @@ class AkunStafController extends Controller
         return Inertia::render('les-ekskul/akun-staf', [
             'akun' => $this->service->daftar(),
             'saya' => $request->user()->id,
+            // Pilihan mapel yang diampu guru (#47); yang nonaktif ditandai
+            'mapel' => MataPelajaran::orderBy('nama')->get(['id', 'kode', 'nama', 'aktif']),
         ]);
     }
 
@@ -76,6 +79,8 @@ class AkunStafController extends Controller
             'peran.*' => ['string'],
             'kode_guru' => ['nullable', 'string', 'max:10'],
             'nuptk' => ['nullable', 'string', 'max:30'],
+            'mapel_ids' => ['array'],
+            'mapel_ids.*' => ['integer'],
         ], ['nama.required' => 'Nama wajib diisi.', 'email.required' => 'Email wajib diisi.', 'email.email' => 'Format email tidak valid.']);
     }
 

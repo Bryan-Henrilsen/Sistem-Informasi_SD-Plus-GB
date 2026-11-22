@@ -12,6 +12,7 @@ interface GuruOption {
     id: number;
     kode_guru: string;
     nama: string;
+    mapel_ids: number[]; // mapel yang diampu guru (Ringkasan v1.11 #47)
 }
 
 interface KelasOption {
@@ -122,6 +123,16 @@ export default function KisiKisiTugas({
     const { flash } = usePage<PageProps>().props;
     const form = useForm<AllocationForm>(initialForm);
     const formErrors = form.errors as Record<string, string>;
+
+    // Pilihan mapel = mapel yang diampu guru terpilih (Ringkasan v1.11 #47); guru tanpa data mapel tetap melihat semua mapel.
+    // Mapel yang sedang dipilih tetap ditampilkan agar data lama bisa diubah
+    const mapelGuru = useMemo(() => {
+        const diampu = guruList.find((guru) => String(guru.id) === form.data.guru_id)?.mapel_ids ?? [];
+
+        return diampu.length === 0
+            ? mapelList
+            : mapelList.filter((mapel) => diampu.includes(mapel.id) || String(mapel.id) === form.data.mapel_id);
+    }, [guruList, mapelList, form.data.guru_id, form.data.mapel_id]);
 
     const [searchGuru, setSearchGuru] = useState('');
     const [filterType, setFilterType] = useState<Record<JenisTugasKode, boolean>>({
@@ -592,8 +603,11 @@ export default function KisiKisiTugas({
                                             className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[#A9784F] disabled:bg-gray-100"
                                         >
                                             <option value="">Pilih mata pelajaran</option>
-                                            {mapelList.map((mapel) => <option key={mapel.id} value={mapel.id}>{mapel.nama} ({mapel.kode})</option>)}
+                                            {mapelGuru.map((mapel) => <option key={mapel.id} value={mapel.id}>{mapel.nama} ({mapel.kode})</option>)}
                                         </select>
+                                        {mapelGuru.length === mapelList.length && form.data.guru_id && (
+                                            <p className="mt-1 text-xs text-gray-500">Guru ini belum punya data mapel yang diampu; semua mapel ditampilkan.</p>
+                                        )}
                                         {form.errors.mapel_id && <p className="mt-1 text-xs text-red-600">{form.errors.mapel_id}</p>}
                                     </div>
                                 </div>

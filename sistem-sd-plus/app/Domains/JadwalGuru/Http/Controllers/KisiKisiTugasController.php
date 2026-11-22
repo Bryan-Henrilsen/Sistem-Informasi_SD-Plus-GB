@@ -66,7 +66,7 @@ class KisiKisiTugasController extends Controller
             ->values();
 
         $guruList = Guru::query()
-            ->with('user:id,name')
+            ->with('user:id,name', 'mataPelajaran:id')
             ->where('status_aktif', true)
             ->orderBy('kode_guru')
             ->get()
@@ -74,10 +74,14 @@ class KisiKisiTugasController extends Controller
                 'id' => $guru->id,
                 'kode_guru' => $guru->kode_guru,
                 'nama' => $guru->user?->name ?? 'Nama guru belum tersedia',
+                // Mapel yang diampu guru, untuk menyaring pilihan mapel (Ringkasan v1.11 #47)
+                'mapel_ids' => $guru->mataPelajaran->pluck('id')->values(),
             ])
             ->values();
 
+        // Mapel nonaktif tidak ditawarkan, kecuali yang sudah dipakai kisi-kisi tahun ini agar data lama tetap bisa diubah (#47)
         $mapelList = MataPelajaran::query()
+            ->where(fn ($query) => $query->where('aktif', true)->orWhereIn('id', KisiKisiTugas::where('tahun_ajaran_id', $tahunAjaran->id)->whereNotNull('mapel_id')->select('mapel_id')))
             ->orderBy('nama')
             ->get(['id', 'kode', 'nama']);
 

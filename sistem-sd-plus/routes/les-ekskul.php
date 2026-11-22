@@ -9,6 +9,7 @@ use App\Domains\LesEkskul\Http\Controllers\KelasLesController;
 use App\Domains\LesEkskul\Http\Controllers\KonfirmasiTransferController;
 use App\Domains\LesEkskul\Http\Controllers\LaporanController;
 use App\Domains\LesEkskul\Http\Controllers\LaporanKasController;
+use App\Domains\LesEkskul\Http\Controllers\MataPelajaranController;
 use App\Domains\LesEkskul\Http\Controllers\OrangTuaController;
 use App\Domains\LesEkskul\Http\Controllers\PendaftaranController;
 use App\Domains\LesEkskul\Http\Controllers\PengajarEkskulController;
@@ -166,6 +167,16 @@ Route::middleware(['auth'])
         Route::middleware('role:tu|kepala_sekolah')->group(function () {
             Route::get('tahun-ajaran/{tahunAjaran}/kenaikan', [TahunAjaranController::class, 'kenaikan'])->name('tahun-ajaran.kenaikan');
             Route::post('tahun-ajaran/{tahunAjaran}/kenaikan', [TahunAjaranController::class, 'jalankanKenaikan'])->name('tahun-ajaran.kenaikan.jalankan');
+        });
+
+        // Mata pelajaran & jenis tugas — Waka Kurikulum & Kepala Sekolah (#47)
+        Route::middleware('role:waka_kurikulum|kepala_sekolah')->group(function () {
+            Route::get('mata-pelajaran', [MataPelajaranController::class, 'index'])->name('mata-pelajaran.index');
+            Route::post('mata-pelajaran', [MataPelajaranController::class, 'store'])->name('mata-pelajaran.store');
+            Route::put('mata-pelajaran/{mataPelajaran}', [MataPelajaranController::class, 'update'])->name('mata-pelajaran.update');
+            Route::post('mata-pelajaran/{mataPelajaran}/aktif', [MataPelajaranController::class, 'aktif'])->name('mata-pelajaran.aktif');
+            Route::delete('mata-pelajaran/{mataPelajaran}', [MataPelajaranController::class, 'destroy'])->name('mata-pelajaran.destroy');
+            Route::put('jenis-tugas/{jenisTugas}', [MataPelajaranController::class, 'ubahJenisTugas'])->name('jenis-tugas.update');
         });
 
         // Akun orang tua oleh TU: hapus klaim salah, reset password, tambah siswa yang belum ada (FR-1b, #36)
