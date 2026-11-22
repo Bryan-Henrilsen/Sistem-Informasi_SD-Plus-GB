@@ -2,19 +2,17 @@
 
 namespace App\Models;
 
-use App\Models\Siswa;
-use App\Models\Guru;
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Spatie\Permission\Traits\HasRoles;
 
 /**
  * @property int $id
@@ -36,7 +34,12 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable, TwoFactorAuthenticatable;
 
-    protected $fillable = ['name', 'email', 'no_hp', 'password'];
+    protected $fillable = ['name', 'email', 'no_hp', 'password', 'aktif'];
+
+    // Akun baru selalu aktif; akun nonaktif tidak dapat login (#46)
+    protected $attributes = [
+        'aktif' => true,
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -48,6 +51,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'aktif' => 'boolean',
         ];
     }
 
