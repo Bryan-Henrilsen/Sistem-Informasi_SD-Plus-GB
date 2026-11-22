@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\LesEkskul\Http\Controllers\AkunOrangTuaController;
+use App\Domains\LesEkskul\Http\Controllers\EkstrakurikulerController;
 use App\Domains\LesEkskul\Http\Controllers\KegiatanAnakController;
 use App\Domains\LesEkskul\Http\Controllers\KonfirmasiTransferController;
 use App\Domains\LesEkskul\Http\Controllers\LaporanController;
@@ -29,6 +30,7 @@ Route::middleware(['auth'])
             Route::get('transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
             Route::get('pendaftaran', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
             Route::get('refund', [RefundController::class, 'index'])->name('refund.index');
+            Route::get('ekstrakurikuler', [EkstrakurikulerController::class, 'index'])->name('ekstrakurikuler.index'); // data master (#42)
             Route::get('laporan-harian', [LaporanController::class, 'harian'])->name('laporan-harian.index');
             Route::get('periode/{periode}', [LaporanController::class, 'bulanan'])->name('periode.show');
             Route::get('honor/pengajar', [PengajarEkskulController::class, 'index'])->name('honor.pengajar');
@@ -116,6 +118,14 @@ Route::middleware(['auth'])
         // Konfirmasi "Saya sudah bayar" dari orang tua: TU menolak bila transfer tidak ditemukan (FR-15b, #41)
         Route::post('konfirmasi-transfer/{konfirmasiTransfer}/tolak', [KonfirmasiTransferController::class, 'tolak'])
             ->middleware('role:tu')->name('konfirmasi-transfer.tolak');
+
+        // Data master Kegiatan Ekstrakurikuler: kegiatan, jadwal, kelas paralel, salin dari tahun lalu — TU (#42)
+        Route::middleware('role:tu')->group(function () {
+            Route::post('tahun-ajaran/{tahunAjaran}/ekstrakurikuler', [EkstrakurikulerController::class, 'store'])->name('ekstrakurikuler.store');
+            Route::post('tahun-ajaran/{tahunAjaran}/ekstrakurikuler/salin', [EkstrakurikulerController::class, 'salin'])->name('ekstrakurikuler.salin');
+            Route::put('ekstrakurikuler/{ekstrakurikuler}', [EkstrakurikulerController::class, 'update'])->name('ekstrakurikuler.update');
+            Route::delete('ekstrakurikuler/{ekstrakurikuler}', [EkstrakurikulerController::class, 'destroy'])->name('ekstrakurikuler.destroy');
+        });
 
         // Akun orang tua oleh TU: hapus klaim salah, reset password, tambah siswa yang belum ada (FR-1b, #36)
         Route::middleware('role:tu')->group(function () {
