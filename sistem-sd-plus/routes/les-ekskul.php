@@ -5,6 +5,7 @@ use App\Domains\LesEkskul\Http\Controllers\AkunStafController;
 use App\Domains\LesEkskul\Http\Controllers\DataSiswaController;
 use App\Domains\LesEkskul\Http\Controllers\EkstrakurikulerController;
 use App\Domains\LesEkskul\Http\Controllers\KegiatanAnakController;
+use App\Domains\LesEkskul\Http\Controllers\KegiatanLiburController;
 use App\Domains\LesEkskul\Http\Controllers\KelasLesController;
 use App\Domains\LesEkskul\Http\Controllers\KonfirmasiTransferController;
 use App\Domains\LesEkskul\Http\Controllers\LaporanController;
@@ -45,6 +46,7 @@ Route::middleware(['auth'])
             Route::get('honor/skema', [SkemaHonorController::class, 'index'])->name('honor.skema');
             Route::get('honor/rekap', [RekapHonorController::class, 'index'])->name('honor.rekap');
             Route::get('laporan-kas', [LaporanKasController::class, 'index'])->name('laporan-kas.index');
+            Route::get('kegiatan-libur', [KegiatanLiburController::class, 'index'])->name('kegiatan-libur.index'); // FR-23 (#48)
         });
 
         // Pengaturan honor oleh TU & Kepala Sekolah: data pengajar, penugasan, cara hitung, penerima tanpa akun (#33)
@@ -189,6 +191,11 @@ Route::middleware(['auth'])
             // Jendela pendaftaran oleh orang tua (FR-2, #37)
             Route::post('periode-pendaftaran', [PendaftaranController::class, 'simpanPeriode'])->name('periode-pendaftaran.store');
             Route::delete('periode-pendaftaran/{periodePendaftaran}', [PendaftaranController::class, 'hapusPeriode'])->name('periode-pendaftaran.destroy');
+
+            // Kegiatan tidak berlangsung sebulan penuh (FR-23, #48)
+            Route::post('kegiatan-libur/pratinjau', [KegiatanLiburController::class, 'pratinjau'])->name('kegiatan-libur.pratinjau');
+            Route::post('kegiatan-libur', [KegiatanLiburController::class, 'store'])->name('kegiatan-libur.store');
+            Route::delete('kegiatan-libur/{kegiatanLibur}', [KegiatanLiburController::class, 'destroy'])->name('kegiatan-libur.destroy');
         });
     });
 

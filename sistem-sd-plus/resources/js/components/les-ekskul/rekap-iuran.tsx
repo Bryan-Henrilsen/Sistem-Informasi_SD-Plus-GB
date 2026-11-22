@@ -8,7 +8,11 @@ import { create } from '@/routes/les-ekskul/transaksi';
 import type { MetodeTransaksi, StatusPendaftaran, StatusTransaksi } from '@/types/les-ekskul';
 
 // Bentuk data dari RekapIuranService (Ringkasan v1.11 #40)
-export type StatusKotak = 'lunas' | 'menunggu' | 'sebagian' | 'tunggakan' | 'belum' | 'batal';
+// 'libur' = tagihan dibatalkan karena kegiatan tidak berlangsung bulan itu (FR-23, #48)
+export type StatusKotak = 'lunas' | 'menunggu' | 'sebagian' | 'tunggakan' | 'belum' | 'batal' | 'libur';
+
+// Kotak yang tidak perlu dibayar lagi
+const dibatalkan = (status: StatusKotak) => status === 'batal' || status === 'libur';
 
 export type Pembayaran = {
     transaksi_id: number;
@@ -40,6 +44,7 @@ export type BarisRekap = {
     kegiatan: string | null; // nama kelas paralel, mis. English Club Flyer
     status: StatusPendaftaran;
     bulan: Record<string, Kotak>;
+    libur: Record<string, string>; // bulan kegiatan tidak berlangsung => alasan
     tunggakan: number;
     menunggu: boolean;
 };
@@ -65,6 +70,7 @@ const warna: Record<StatusKotak, string> = {
     tunggakan: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
     belum: 'bg-muted text-muted-foreground',
     batal: 'text-muted-foreground line-through',
+    libur: 'bg-sky-50 text-sky-700 italic dark:bg-sky-950/40 dark:text-sky-300',
 };
 
 export const keterangan: { status: StatusKotak; label: string }[] = [
@@ -73,6 +79,7 @@ export const keterangan: { status: StatusKotak; label: string }[] = [
     { status: 'sebagian', label: 'Dibayar sebagian (sisa)' },
     { status: 'tunggakan', label: 'Tunggakan' },
     { status: 'belum', label: 'Belum dibayar' },
+    { status: 'libur', label: 'Kegiatan tidak berlangsung' },
 ];
 
 // "2026-08-12" -> "12/8", seperti tulisan tangan di buku
@@ -84,7 +91,30 @@ export function ContohWarna({ status }: { status: StatusKotak }) {
 }
 
 // Satu kotak bulan. Ringkas: tanggal + metode. Lengkap (dan selalu saat dicetak): + nominal + paraf
-function SelKotak({ kotak, lengkap, disorot, mendatang, onPilih }: { kotak?: Kotak; lengkap: boolean; disorot: boolean; mendatang: boolean; onPilih: () => void }) {
+function SelKotak({
+    kotak,
+    libur,
+    lengkap,
+    disorot,
+    mendatang,
+    onPilih,
+}: {
+    kotak?: Kotak;
+    libur?: string;
+    lengkap: boolean;
+    disorot: boolean;
+    mendatang: boolean;
+    onPilih: () => void;
+}) {
+    if (!kotak && libur !== undefined) {
+        // Libur tanpa tagihan: tagihannya memang tidak dibuat (mis. periode dibuka setelah ditandai)
+        return (
+            <span title={libur} className={cn('block rounded-md px-0.5 py-1 text-[11px] leading-tight print:bg-transparent print:text-black', warna.libur)}>
+                libur
+            </span>
+        );
+    }
+
     if (!kotak) {
         // Bulan mendatang belum punya tagihan (dibuat saat periode dibuka) → kosong; bulan lalu tanpa tagihan = tidak ditagih
         return mendatang ? null : <span className="text-muted-foreground">–</span>;
@@ -127,6 +157,7 @@ function SelKotak({ kotak, lengkap, disorot, mendatang, onPilih }: { kotak?: Kot
                 <span className="block">{kotak.status === 'tunggakan' ? ribuan(kotak.sisa) : <>&nbsp;</>}</span>
             )}
             {kotak.status === 'batal' && <span className="block">batal</span>}
+            {kotak.status === 'libur' && <span className="block">libur</span>}
         </button>
     );
 }
@@ -151,7 +182,7 @@ export function TabelBuku({
         baris.reduce((jumlah, r) => {
             const k = r.bulan[b];
 
-            return k && k.status !== 'batal' ? jumlah + k.harus_dibayar - k.sisa : jumlah;
+            return k && !dibatalkan(k.status) ? jumlah + k.harus_dibayar - k.sisa : jumlah;
         }, 0),
     );
 
@@ -188,6 +219,7 @@ export function TabelBuku({
                                     <td key={b} className="p-0.5 text-center align-top">
                                         <SelKotak
                                             kotak={r.bulan[b]}
+                                            libur={r.libur[b]}
                                             lengkap={lengkap}
                                             disorot={!!r.bulan[b] && disorot.includes(r.bulan[b].tagihan_id)}
                                             mendatang={b > bulanIni && r.status === 'aktif'}
@@ -234,6 +266,7 @@ export function RincianKotak({
         tunggakan: 'Belum dibayar (tunggakan)',
         belum: 'Belum dibayar',
         batal: 'Dibatalkan (berhenti/pindah)',
+        libur: 'Dibatalkan (kegiatan tidak berlangsung)',
     };
 
     return (
@@ -261,7 +294,13 @@ export function RincianKotak({
                                         <dd className="text-right">{rupiah(k.diskon)}</dd>
                                     </>
                                 )}
-                                {k.sisa > 0 && k.status !== 'batal' && (
+                                {dipilih.baris.libur[dipilih.bulan] !== undefined && (
+                                    <>
+                                        <dt className="text-muted-foreground">Alasan libur</dt>
+                                        <dd className="text-right">{dipilih.baris.libur[dipilih.bulan]}</dd>
+                                    </>
+                                )}
+                                {k.sisa > 0 && !dibatalkan(k.status) && (
                                     <>
                                         <dt className="text-muted-foreground">Sisa</dt>
                                         <dd className="text-right font-medium">{rupiah(k.sisa)}</dd>
@@ -303,7 +342,7 @@ export function RincianKotak({
                                 </ul>
                             </div>
 
-                            {bisaCatat && k.sisa > 0 && k.status !== 'batal' && (
+                            {bisaCatat && k.sisa > 0 && !dibatalkan(k.status) && (
                                 <Button asChild>
                                     <Link href={create({ query: { siswa: dipilih.baris.siswa.id, tagihan: k.tagihan_id, kembali } })}>
                                         Catat pembayaran

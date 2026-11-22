@@ -2,7 +2,6 @@
 
 namespace App\Domains\LesEkskul\Services;
 
-use App\Domains\LesEkskul\Enums\JenisPenyesuaian;
 use App\Domains\LesEkskul\Enums\MetodeTransaksi;
 use App\Domains\LesEkskul\Enums\StatusApprovalBendahara;
 use App\Domains\LesEkskul\Enums\StatusLaporanHarian;
@@ -172,7 +171,7 @@ class RingkasanTugasService
 
     public function refundBelumDikembalikan(): Builder
     {
-        return PenyesuaianDana::whereIn('jenis_penyesuaian', [JenisPenyesuaian::KelebihanTransfer, JenisPenyesuaian::RefundBerhenti])
+        return PenyesuaianDana::whereIn('jenis_penyesuaian', PenyesuaianDana::jenisRefund())
             ->where('status', StatusPenyesuaian::Proses);
     }
 

@@ -5,6 +5,7 @@ namespace App\Domains\LesEkskul\Services;
 use App\Domains\LesEkskul\Enums\MetodeTransaksi;
 use App\Domains\LesEkskul\Enums\StatusTagihan;
 use App\Domains\LesEkskul\Enums\StatusTransaksi;
+use App\Domains\LesEkskul\Models\KegiatanLibur;
 use App\Domains\LesEkskul\Models\Pendaftaran;
 use App\Domains\LesEkskul\Models\Tagihan;
 use App\Domains\LesEkskul\Models\Transaksi;
@@ -39,6 +40,7 @@ class RekapIuranService
     public function baris(TahunAjaran $tahunAjaran): Collection
     {
         $awalBulanIni = today()->startOfMonth();
+        $libur = $this->bulanLibur($tahunAjaran);
 
         return Pendaftaran::query()
             ->whereHas('tagihan') // kegiatan berbiaya 0 (Olimpiade) tidak punya tagihan
@@ -52,7 +54,7 @@ class RekapIuranService
                 'tagihan.transaksi.diinputOlehUser:id,name',
             ])
             ->get()
-            ->map(fn (Pendaftaran $p) => $this->satuBaris($p, $awalBulanIni))
+            ->map(fn (Pendaftaran $p) => $this->satuBaris($p, $awalBulanIni, $libur))
             ->sort(fn (array $a, array $b) => [$a['urut_buku'], $a['urut_kelas'], $a['siswa']['nama']]
                 <=> [$b['urut_buku'], $b['urut_kelas'], $b['siswa']['nama']])
             ->values();
@@ -81,7 +83,7 @@ class RekapIuranService
             return [
                 ...$buku,
                 'bulan' => collect($bulan)->mapWithKeys(function (string $b) use ($isi) {
-                    $kotak = $isi->pluck("bulan.{$b}")->filter(fn ($k) => $k && $k['status'] !== 'batal');
+                    $kotak = $isi->pluck("bulan.{$b}")->filter(fn ($k) => $k && ! in_array($k['status'], ['batal', 'libur'], true));
 
                     return [$b => [
                         'total' => $kotak->count(),
@@ -107,7 +109,16 @@ class RekapIuranService
             ->implode('');
     }
 
-    private function satuBaris(Pendaftaran $pendaftaran, $awalBulanIni): array
+    // Kegiatan tidak berlangsung (FR-23, #48): ['les-<id>' / 'ekskul-<id>' => ['Y-m' => alasan]]
+    private function bulanLibur(TahunAjaran $tahunAjaran): Collection
+    {
+        return KegiatanLibur::whereBetween('bulan', [$tahunAjaran->tanggal_mulai->startOfMonth()->toDateString(), $tahunAjaran->tanggal_selesai->toDateString()])
+            ->get()
+            ->groupBy(fn (KegiatanLibur $l) => $l->les_tambahan_id ? "les-{$l->les_tambahan_id}" : "ekskul-{$l->ekstrakurikuler_id}")
+            ->map(fn (Collection $isi) => $isi->mapWithKeys(fn (KegiatanLibur $l) => [$l->bulan->format('Y-m') => $l->alasan]));
+    }
+
+    private function satuBaris(Pendaftaran $pendaftaran, $awalBulanIni, Collection $libur): array
     {
         $kelas = $pendaftaran->adalahLesTambahan()
             ? $pendaftaran->lesTambahan->kelas
@@ -115,8 +126,13 @@ class RekapIuranService
         $ekskul = $pendaftaran->ekstrakurikuler;
         $induk = $ekskul?->induk;
 
+        // Penandaan ekskul induk berlaku juga untuk kelas paralelnya
+        $bulanLibur = $pendaftaran->adalahLesTambahan()
+            ? $libur->get("les-{$pendaftaran->les_tambahan_id}", collect())
+            : $libur->get("ekskul-{$ekskul->id}", collect())->union($induk ? $libur->get("ekskul-{$induk->id}", collect()) : []);
+
         $kotak = $pendaftaran->tagihan->mapWithKeys(fn (Tagihan $t) => [
-            $t->bulan_tagihan->format('Y-m') => $this->kotak($t, $awalBulanIni),
+            $t->bulan_tagihan->format('Y-m') => $this->kotak($t, $awalBulanIni, $bulanLibur->has($t->bulan_tagihan->format('Y-m'))),
         ]);
 
         return [
@@ -131,7 +147,8 @@ class RekapIuranService
             'kegiatan' => $induk ? $ekskul->nama : null, // nama kelas paralel, mis. English Club Flyer
             'status' => $pendaftaran->status,
             'bulan' => $kotak,
-            'tunggakan' => $kotak->where('status', '!=', 'batal')
+            'libur' => $bulanLibur, // bulan kegiatan tidak berlangsung => alasan; kotaknya tampil "libur" walau tagihannya tidak ada
+            'tunggakan' => $kotak->whereNotIn('status', ['batal', 'libur'])
                 ->filter(fn (array $k, string $b) => $k['status'] !== 'lunas' && $k['status'] !== 'menunggu' && $b < $awalBulanIni->format('Y-m'))
                 ->sum('sisa'),
             'menunggu' => $kotak->contains('ada_pending', true), // ada transfer yang belum diverifikasi TU
@@ -139,7 +156,7 @@ class RekapIuranService
     }
 
     // Satu kotak bulan: status warna + rincian pembayaran (tanggal, metode, nominal, paraf) seperti di buku
-    private function kotak(Tagihan $tagihan, $awalBulanIni): array
+    private function kotak(Tagihan $tagihan, $awalBulanIni, bool $libur): array
     {
         $bayar = $tagihan->transaksi->sortBy('tanggal')->values()->map(fn (Transaksi $t) => [
             'transaksi_id' => $t->id,
@@ -153,7 +170,7 @@ class RekapIuranService
         $sisa = $tagihan->harus_dibayar - $bayar->sum('nominal');
 
         $status = match (true) {
-            $tagihan->status === StatusTagihan::Dibatalkan => 'batal',
+            $tagihan->status === StatusTagihan::Dibatalkan => $libur ? 'libur' : 'batal',
             $tagihan->status === StatusTagihan::Lunas => $bayar->contains('status', StatusTransaksi::Pending) ? 'menunggu' : 'lunas',
             $sisa < $tagihan->harus_dibayar => 'sebagian',
             $tagihan->bulan_tagihan->lt($awalBulanIni) => 'tunggakan',

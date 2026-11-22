@@ -6,6 +6,7 @@ import SkemaHonorController from '@/actions/App/Domains/LesEkskul/Http/Controlle
 import {
     BookMarked,
     BookOpen,
+    CalendarOff,
     CalendarRange,
     ClipboardList,
     Coins,
@@ -47,6 +48,7 @@ import periode from '@/routes/les-ekskul/periode';
 import refund from '@/routes/les-ekskul/refund';
 import tagihan from '@/routes/les-ekskul/tagihan';
 import ekstrakurikuler from '@/routes/les-ekskul/ekstrakurikuler';
+import kegiatanLibur from '@/routes/les-ekskul/kegiatan-libur';
 import kelas from '@/routes/les-ekskul/kelas';
 import dataSiswa from '@/routes/les-ekskul/data-siswa';
 import tahunAjaran from '@/routes/les-ekskul/tahun-ajaran';
@@ -71,6 +73,7 @@ const lesEkskulNavItems: NavItem[] = [
     { title: 'Laporan Harian', href: laporanHarian.index(), icon: FileCheck2 },
     { title: 'Pendaftaran', href: pendaftaran.index(), icon: ClipboardList },
     { title: 'Kegiatan Ekskul', href: ekstrakurikuler.index(), icon: Shapes },
+    { title: 'Kegiatan Tidak Berlangsung', href: kegiatanLibur.index(), icon: CalendarOff },
     { title: 'Refund', href: refund.index(), icon: Undo2 },
     { title: 'Laporan Kas', href: laporanKas.index(), icon: Landmark },
 ];

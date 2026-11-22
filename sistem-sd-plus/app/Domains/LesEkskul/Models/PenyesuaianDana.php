@@ -61,8 +61,15 @@ class PenyesuaianDana extends Model
         return $this->belongsTo(User::class, 'diproses_oleh');
     }
 
+    // Jenis yang bisa berupa refund ke orang tua; untuk kegiatan tidak berlangsung (#48) hanya bila statusnya proses/berhasil,
+    // karena bagian yang dialihkan ke bulan berikutnya berstatus selesai
+    public static function jenisRefund(): array
+    {
+        return [JenisPenyesuaian::KelebihanTransfer, JenisPenyesuaian::RefundBerhenti, JenisPenyesuaian::KegiatanTidakBerlangsung];
+    }
+
     public function adalahRefund(): bool
     {
-        return in_array($this->jenis_penyesuaian, [JenisPenyesuaian::RefundBerhenti, JenisPenyesuaian::KelebihanTransfer], true);
+        return in_array($this->jenis_penyesuaian, self::jenisRefund(), true) && $this->status !== StatusPenyesuaian::Selesai;
     }
 }

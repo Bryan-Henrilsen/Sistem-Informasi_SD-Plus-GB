@@ -41,6 +41,7 @@ type Anak = {
     tagihan: Tagihan[];
     ditolak: { id: number; tanggal: string; nominal: number; alasan: string | null }[];
     konfirmasi: Konfirmasi[];
+    libur: { id: number; kegiatan: string; bulan: string; alasan: string }[]; // kegiatan tidak berlangsung (FR-23, #48)
 };
 type Rekening = { bank: string | null; nomor: string; atas_nama: string | null };
 
@@ -125,6 +126,21 @@ function TagihanAnak({ anak }: { anak: Anak }) {
                             ))}
                         </ul>
                         <p className="mt-1 text-xs">Tagihan terkait kembali belum dibayar. Hubungi TU bila ada pertanyaan.</p>
+                    </div>
+                )}
+
+                {anak.libur.length > 0 && (
+                    <div className="rounded-md border border-sky-300 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200">
+                        <p className="font-medium">Kegiatan tidak berlangsung</p>
+                        <ul className="mt-1 flex flex-col gap-1">
+                            {anak.libur.map((l) => (
+                                <li key={l.id}>
+                                    {l.kegiatan} · <span className="capitalize">{namaBulan(l.bulan)}</span>
+                                    <span className="block text-xs">Alasan: {l.alasan}</span>
+                                </li>
+                            ))}
+                        </ul>
+                        <p className="mt-1 text-xs">Bulan itu tidak ditagih. Pembayaran yang sudah masuk untuk bulan itu dipakai untuk bulan berikutnya, atau dikembalikan TU bila tidak ada lagi bulan yang ditagih.</p>
                     </div>
                 )}
 

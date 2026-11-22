@@ -3,6 +3,7 @@
 namespace App\Domains\LesEkskul\Services;
 
 use App\Domains\LesEkskul\Enums\StatusPendaftaran;
+use App\Domains\LesEkskul\Models\KegiatanLibur;
 use App\Domains\LesEkskul\Models\Pendaftaran;
 use App\Domains\LesEkskul\Models\PeriodeLaporan;
 use App\Domains\LesEkskul\Models\Tagihan;
@@ -114,7 +115,22 @@ class TagihanService
             && $bulan->between($tahunAjaran->tanggal_mulai->startOfMonth(), $tahunAjaran->tanggal_selesai)
             && $pendaftaran->tanggal_daftar->lte($bulan->copy()->endOfMonth()) // sudah terdaftar di bulan itu
             && $this->masihIkut($pendaftaran, $bulan)
-            && ! in_array($bulan->month, $this->bulanLiburJenjang($pendaftaran), true);
+            && ! in_array($bulan->month, $this->bulanLiburJenjang($pendaftaran), true)
+            && ! $this->sedangLibur($pendaftaran, $bulan); // kegiatan tidak berlangsung bulan itu (FR-23, #48)
+    }
+
+    // Kegiatan pendaftaran ini ditandai tidak berlangsung di bulan itu; penandaan ekskul induk berlaku juga untuk kelas paralelnya
+    public function sedangLibur(Pendaftaran $pendaftaran, CarbonInterface $bulan): bool
+    {
+        $libur = KegiatanLibur::where('bulan', $bulan->copy()->startOfMonth()->toDateString());
+
+        if ($pendaftaran->adalahLesTambahan()) {
+            return $libur->where('les_tambahan_id', $pendaftaran->les_tambahan_id)->exists();
+        }
+
+        $ekskul = $pendaftaran->ekstrakurikuler;
+
+        return $libur->whereIn('ekstrakurikuler_id', array_filter([$ekskul->id, $ekskul->parent_ekstrakurikuler_id]))->exists();
     }
 
     // Bulan tidak ditagih khusus jenjang siswa (config les_ekskul.bulan_tidak_ditagih_per_jenjang)

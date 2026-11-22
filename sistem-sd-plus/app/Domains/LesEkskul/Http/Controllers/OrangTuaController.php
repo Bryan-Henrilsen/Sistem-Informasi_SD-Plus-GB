@@ -88,6 +88,7 @@ class OrangTuaController extends Controller
                         'tagihan' => $daftar->values(),
                         'ditolak' => $tagihan->transferDitolak($s)->values(),
                         'konfirmasi' => $konfirmasi->untukOrangTua($s)->values(), // "Saya sudah bayar" menunggu/ditolak (#41)
+                        'libur' => $tagihan->kegiatanLibur($s)->values(), // kegiatan tidak berlangsung (FR-23, #48)
                     ];
                 })
                 ->values(),
