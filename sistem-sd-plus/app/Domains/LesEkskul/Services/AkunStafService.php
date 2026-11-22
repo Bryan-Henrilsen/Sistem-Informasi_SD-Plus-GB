@@ -5,6 +5,7 @@ namespace App\Domains\LesEkskul\Services;
 use App\Domains\LesEkskul\Models\PengajarEkskul;
 use App\Models\Guru;
 use App\Models\Kelas;
+use App\Models\MataPelajaran;
 use App\Models\TahunAjaran;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -24,7 +25,7 @@ class AkunStafService
         $wali = Kelas::where('tahun_ajaran_id', $tahunAktif)->whereNotNull('wali_kelas_id')->get()->keyBy('wali_kelas_id');
 
         return User::role(self::PERAN)
-            ->with(['roles:id,name', 'guru'])
+            ->with(['roles:id,name', 'guru.mataPelajaran:id,kode'])
             ->orderByDesc('aktif')
             ->orderBy('name')
             ->get()
@@ -35,6 +36,8 @@ class AkunStafService
                 'peran' => $u->roles->pluck('name')->intersect(self::PERAN)->values(),
                 'kode_guru' => $u->guru?->kode_guru,
                 'nuptk' => $u->guru?->nuptk,
+                'mapel_ids' => $u->guru?->mataPelajaran->pluck('id')->values() ?? [], // mapel yang diampu (#47)
+                'mapel' => $u->guru?->mataPelajaran->pluck('kode')->values() ?? [],
                 'wali_kelas' => $u->guru ? $wali->get($u->guru->id)?->nama_lengkap : null,
                 'aktif' => $u->aktif,
             ]);
@@ -171,11 +174,19 @@ class AkunStafService
             return;
         }
 
-        $user->guru()->updateOrCreate([], [
+        $guru = $user->guru()->updateOrCreate([], [
             'kode_guru' => Str::upper(trim($data['kode_guru'])),
             'nuptk' => filled($data['nuptk'] ?? null) ? trim($data['nuptk']) : null,
             'status_aktif' => $user->aktif,
         ]);
+
+        // Mapel yang diampu (#47): mapel baru harus aktif; mapel nonaktif yang sudah tercatat boleh tetap dipertahankan
+        if (array_key_exists('mapel_ids', $data)) {
+            $dipilih = collect($data['mapel_ids'] ?? [])->map(fn ($id) => (int) $id)->unique();
+            $sudahAda = $guru->mataPelajaran()->pluck('mata_pelajaran.id');
+            $sah = MataPelajaran::whereKey($dipilih)->where(fn ($q) => $q->where('aktif', true)->orWhereIn('id', $sudahAda))->pluck('id');
+            $guru->mataPelajaran()->sync($sah);
+        }
     }
 
     private function pastikanStaf(User $user): void

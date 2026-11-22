@@ -21,10 +21,13 @@ type Akun = {
     peran: Peran[];
     kode_guru: string | null;
     nuptk: string | null;
+    mapel_ids: number[];
+    mapel: string[];
     wali_kelas: string | null;
     aktif: boolean;
 };
 type PasswordBaru = { nama: string; email: string; password: string };
+type Mapel = { id: number; kode: string; nama: string; aktif: boolean };
 
 const PERAN: Record<Peran, string> = {
     kepala_sekolah: 'Kepala Sekolah',
@@ -35,7 +38,7 @@ const PERAN: Record<Peran, string> = {
 };
 
 // Akun Guru & Staf, khusus Kepala Sekolah (Ringkasan v1.11 #46): tambah/ubah, reset password, nonaktifkan
-export default function AkunStaf({ akun, saya }: { akun: Akun[]; saya: number }) {
+export default function AkunStaf({ akun, saya, mapel }: { akun: Akun[]; saya: number; mapel: Mapel[] }) {
     const { flash } = usePage();
     const [dibuka, setDibuka] = useState<Akun | 'baru' | null>(null);
     const [password, setPassword] = useState<PasswordBaru | null>(null);
@@ -107,6 +110,7 @@ export default function AkunStaf({ akun, saya }: { akun: Akun[]; saya: number })
                                             <>
                                                 Kode {a.kode_guru}
                                                 {a.nuptk && <span className="block text-muted-foreground">NUPTK {a.nuptk}</span>}
+                                                {a.mapel.length > 0 && <span className="block text-muted-foreground">Mapel {a.mapel.join(', ')}</span>}
                                                 {a.wali_kelas && <span className="block text-muted-foreground">Wali {a.wali_kelas}</span>}
                                             </>
                                         ) : (
@@ -164,7 +168,13 @@ export default function AkunStaf({ akun, saya }: { akun: Akun[]; saya: number })
             <Sheet open={dibuka !== null} onOpenChange={(buka) => !buka && setDibuka(null)}>
                 <SheetContent className="w-full overflow-y-auto sm:max-w-md">
                     {dibuka !== null && (
-                        <FormAkun key={dibuka === 'baru' ? 'baru' : dibuka.id} akun={dibuka === 'baru' ? null : dibuka} saya={saya} onSelesai={() => setDibuka(null)} />
+                        <FormAkun
+                            key={dibuka === 'baru' ? 'baru' : dibuka.id}
+                            akun={dibuka === 'baru' ? null : dibuka}
+                            saya={saya}
+                            mapel={mapel}
+                            onSelesai={() => setDibuka(null)}
+                        />
                     )}
                 </SheetContent>
             </Sheet>
@@ -202,14 +212,17 @@ export default function AkunStaf({ akun, saya }: { akun: Akun[]; saya: number })
 }
 
 // Form tambah/ubah akun; aturan email/kode guru unik & pengaman Kepala Sekolah dijaga AkunStafService
-function FormAkun({ akun, saya, onSelesai }: { akun: Akun | null; saya: number; onSelesai: () => void }) {
+function FormAkun({ akun, saya, mapel, onSelesai }: { akun: Akun | null; saya: number; mapel: Mapel[]; onSelesai: () => void }) {
     const form = useForm({
         nama: akun?.nama ?? '',
         email: akun?.email ?? '',
         peran: akun?.peran ?? (['guru'] as Peran[]),
         kode_guru: akun?.kode_guru ?? '',
         nuptk: akun?.nuptk ?? '',
+        mapel_ids: akun?.mapel_ids ?? ([] as number[]),
     });
+    // Mapel nonaktif hanya ditampilkan bila sudah tercatat diampu guru ini (#47)
+    const pilihanMapel = mapel.filter((m) => m.aktif || akun?.mapel_ids.includes(m.id));
     const d = form.data;
     const errors = form.errors as Record<string, string | undefined>;
 
@@ -274,6 +287,24 @@ function FormAkun({ akun, saya, onSelesai }: { akun: Akun | null; saya: number; 
                         <Input id="nuptk" value={d.nuptk} onChange={(e) => form.setData('nuptk', e.target.value)} />
                         <InputError message={errors.nuptk} />
                     </div>
+                    <fieldset className="col-span-2 flex flex-col gap-1.5">
+                        <legend className="mb-1 text-sm font-medium">Mapel yang diampu</legend>
+                        <div className="grid grid-cols-2 gap-1.5">
+                            {pilihanMapel.map((m) => (
+                                <label key={m.id} className="flex items-center gap-2 text-sm">
+                                    <Checkbox
+                                        checked={d.mapel_ids.includes(m.id)}
+                                        onCheckedChange={(v) =>
+                                            form.setData('mapel_ids', v === true ? [...d.mapel_ids, m.id] : d.mapel_ids.filter((x) => x !== m.id))
+                                        }
+                                    />
+                                    {m.nama}
+                                    {!m.aktif && <span className="text-xs text-muted-foreground">(nonaktif)</span>}
+                                </label>
+                            ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground">Dipakai menyaring pilihan mapel guru ini di kisi-kisi Jadwal Guru.</p>
+                    </fieldset>
                 </div>
             )}
 

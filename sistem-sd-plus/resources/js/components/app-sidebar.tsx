@@ -4,6 +4,7 @@ import PengajarEkskulController from '@/actions/App/Domains/LesEkskul/Http/Contr
 import RekapHonorController from '@/actions/App/Domains/LesEkskul/Http/Controllers/RekapHonorController';
 import SkemaHonorController from '@/actions/App/Domains/LesEkskul/Http/Controllers/SkemaHonorController';
 import {
+    BookMarked,
     BookOpen,
     CalendarRange,
     ClipboardList,
@@ -50,6 +51,7 @@ import kelas from '@/routes/les-ekskul/kelas';
 import dataSiswa from '@/routes/les-ekskul/data-siswa';
 import tahunAjaran from '@/routes/les-ekskul/tahun-ajaran';
 import akunStaf from '@/routes/les-ekskul/akun-staf';
+import mataPelajaran from '@/routes/les-ekskul/mata-pelajaran';
 import transaksi from '@/routes/les-ekskul/transaksi';
 import type { Auth, NavItem } from '@/types';
 
@@ -69,9 +71,6 @@ const lesEkskulNavItems: NavItem[] = [
     { title: 'Laporan Harian', href: laporanHarian.index(), icon: FileCheck2 },
     { title: 'Pendaftaran', href: pendaftaran.index(), icon: ClipboardList },
     { title: 'Kegiatan Ekskul', href: ekstrakurikuler.index(), icon: Shapes },
-    { title: 'Kelas & Les', href: kelas.index(), icon: School },
-    { title: 'Data Siswa', href: dataSiswa.index(), icon: GraduationCap },
-    { title: 'Tahun Ajaran', href: tahunAjaran.index(), icon: CalendarDays },
     { title: 'Refund', href: refund.index(), icon: Undo2 },
     { title: 'Laporan Kas', href: laporanKas.index(), icon: Landmark },
 ];
@@ -83,6 +82,15 @@ const honorNavItems: NavItem[] = [
     { title: 'Rekap Honor', href: RekapHonorController.index(), icon: Coins },
 ];
 const roleKeuangan = ['tu', 'bendahara', 'kepala_sekolah'];
+
+// Kelompok Data Sekolah (#47): data master bersama; tiap menu hanya untuk role yang diizinkan route-nya
+const dataSekolahNavItems: (NavItem & { roles: string[] })[] = [
+    { title: 'Tahun Ajaran', href: tahunAjaran.index(), icon: CalendarDays, roles: roleKeuangan },
+    { title: 'Kelas & Les', href: kelas.index(), icon: School, roles: roleKeuangan },
+    { title: 'Data Siswa', href: dataSiswa.index(), icon: GraduationCap, roles: roleKeuangan },
+    { title: 'Akun Guru & Staf', href: akunStaf.index(), icon: UserCog, roles: ['kepala_sekolah'] },
+    { title: 'Mata Pelajaran', href: mataPelajaran.index(), icon: BookMarked, roles: ['waka_kurikulum', 'kepala_sekolah'] },
+];
 
 const footerNavItems: NavItem[] = [
     {
@@ -112,10 +120,9 @@ export function AppSidebar() {
         Refund: badge?.refund,
     };
     const menuLesEkskul = lesEkskulNavItems.map((item) => ({ ...item, badge: jumlah[item.title] }));
-    // Akun Guru & Staf hanya untuk Kepala Sekolah (#46)
-    if (auth.roles.includes('kepala_sekolah')) {
-        menuLesEkskul.push({ title: 'Akun Guru & Staf', href: akunStaf.index(), icon: UserCog, badge: undefined });
-    }
+    const menuDataSekolah: NavItem[] = dataSekolahNavItems
+        .filter((item) => item.roles.some((role) => auth.roles.includes(role)))
+        .map(({ roles: _roles, ...item }) => item);
     // Akun Orang Tua hanya untuk TU (#36)
     if (auth.roles.includes('tu')) {
         menuLesEkskul.push({ title: 'Akun Orang Tua', href: AkunOrangTuaController.index(), icon: Contact, badge: undefined });
@@ -143,6 +150,7 @@ export function AppSidebar() {
                     <NavMain items={menuLesEkskul} label="Les & Ekskul" />
                 )}
                 {bisaLihatKeuangan && <NavMain items={honorNavItems} label="Honor" />}
+                {menuDataSekolah.length > 0 && <NavMain items={menuDataSekolah} label="Data Sekolah" />}
                 {menuOrangTua.length > 0 && <NavMain items={menuOrangTua} label="Orang Tua" />}
             </SidebarContent>
 
