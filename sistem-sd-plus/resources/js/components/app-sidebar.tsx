@@ -17,6 +17,7 @@ import {
     ReceiptText,
     Shapes,
     School,
+    GraduationCap,
     Undo2,
     Users,
     Wallet,
@@ -44,6 +45,7 @@ import refund from '@/routes/les-ekskul/refund';
 import tagihan from '@/routes/les-ekskul/tagihan';
 import ekstrakurikuler from '@/routes/les-ekskul/ekstrakurikuler';
 import kelas from '@/routes/les-ekskul/kelas';
+import dataSiswa from '@/routes/les-ekskul/data-siswa';
 import transaksi from '@/routes/les-ekskul/transaksi';
 import type { Auth, NavItem } from '@/types';
 
@@ -64,6 +66,7 @@ const lesEkskulNavItems: NavItem[] = [
     { title: 'Pendaftaran', href: pendaftaran.index(), icon: ClipboardList },
     { title: 'Kegiatan Ekskul', href: ekstrakurikuler.index(), icon: Shapes },
     { title: 'Kelas & Les', href: kelas.index(), icon: School },
+    { title: 'Data Siswa', href: dataSiswa.index(), icon: GraduationCap },
     { title: 'Refund', href: refund.index(), icon: Undo2 },
     { title: 'Laporan Kas', href: laporanKas.index(), icon: Landmark },
 ];

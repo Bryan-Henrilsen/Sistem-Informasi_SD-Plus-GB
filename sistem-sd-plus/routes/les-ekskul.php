@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\LesEkskul\Http\Controllers\AkunOrangTuaController;
+use App\Domains\LesEkskul\Http\Controllers\DataSiswaController;
 use App\Domains\LesEkskul\Http\Controllers\EkstrakurikulerController;
 use App\Domains\LesEkskul\Http\Controllers\KegiatanAnakController;
 use App\Domains\LesEkskul\Http\Controllers\KelasLesController;
@@ -33,6 +34,7 @@ Route::middleware(['auth'])
             Route::get('refund', [RefundController::class, 'index'])->name('refund.index');
             Route::get('ekstrakurikuler', [EkstrakurikulerController::class, 'index'])->name('ekstrakurikuler.index'); // data master (#42)
             Route::get('kelas', [KelasLesController::class, 'index'])->name('kelas.index'); // data master kelas & les (#43)
+            Route::get('data-siswa', [DataSiswaController::class, 'index'])->name('data-siswa.index'); // data master siswa (#44)
             Route::get('laporan-harian', [LaporanController::class, 'harian'])->name('laporan-harian.index');
             Route::get('periode/{periode}', [LaporanController::class, 'bulanan'])->name('periode.show');
             Route::get('honor/pengajar', [PengajarEkskulController::class, 'index'])->name('honor.pengajar');
@@ -134,6 +136,13 @@ Route::middleware(['auth'])
             Route::post('tahun-ajaran/{tahunAjaran}/kelas/samakan-biaya', [KelasLesController::class, 'samakanBiaya'])->name('kelas.samakan-biaya');
             Route::put('kelas/{kelas}', [KelasLesController::class, 'update'])->name('kelas.update');
             Route::delete('kelas/{kelas}', [KelasLesController::class, 'destroy'])->name('kelas.destroy');
+
+            // Data master Siswa (#44)
+            Route::post('tahun-ajaran/{tahunAjaran}/data-siswa', [DataSiswaController::class, 'store'])->name('data-siswa.store');
+            Route::put('tahun-ajaran/{tahunAjaran}/data-siswa/{siswa}', [DataSiswaController::class, 'update'])->name('data-siswa.update');
+            Route::post('data-siswa/{siswa}/keluar', [DataSiswaController::class, 'keluar'])->name('data-siswa.keluar');
+            Route::post('data-siswa/{siswa}/aktifkan', [DataSiswaController::class, 'aktifkan'])->name('data-siswa.aktifkan');
+            Route::delete('data-siswa/{siswa}', [DataSiswaController::class, 'destroy'])->name('data-siswa.destroy');
         });
 
         // Akun orang tua oleh TU: hapus klaim salah, reset password, tambah siswa yang belum ada (FR-1b, #36)
