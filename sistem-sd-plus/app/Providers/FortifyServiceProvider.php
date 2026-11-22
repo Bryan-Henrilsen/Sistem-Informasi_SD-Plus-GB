@@ -52,7 +52,8 @@ class FortifyServiceProvider extends ServiceProvider
                 ? User::where('no_hp', NomorHp::normal($isian) ?? $isian)->first()
                 : User::where('email', $isian)->first();
 
-            return $user && Hash::check((string) $request->input('password'), $user->password) ? $user : null;
+            // Akun guru/staf yang dinonaktifkan Kepala Sekolah tidak dapat login lagi (#46)
+            return $user && $user->aktif && Hash::check((string) $request->input('password'), $user->password) ? $user : null;
         });
     }
 

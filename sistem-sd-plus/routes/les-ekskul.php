@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\LesEkskul\Http\Controllers\AkunOrangTuaController;
+use App\Domains\LesEkskul\Http\Controllers\AkunStafController;
 use App\Domains\LesEkskul\Http\Controllers\DataSiswaController;
 use App\Domains\LesEkskul\Http\Controllers\EkstrakurikulerController;
 use App\Domains\LesEkskul\Http\Controllers\KegiatanAnakController;
@@ -153,6 +154,14 @@ Route::middleware(['auth'])
             Route::put('tahun-ajaran/{tahunAjaran}', [TahunAjaranController::class, 'update'])->name('tahun-ajaran.update');
             Route::post('tahun-ajaran/{tahunAjaran}/aktifkan', [TahunAjaranController::class, 'aktifkan'])->name('tahun-ajaran.aktifkan');
             Route::delete('tahun-ajaran/{tahunAjaran}', [TahunAjaranController::class, 'destroy'])->name('tahun-ajaran.destroy');
+
+            // Akun Guru & Staf (#46)
+            Route::get('akun-staf', [AkunStafController::class, 'index'])->name('akun-staf.index');
+            Route::post('akun-staf', [AkunStafController::class, 'store'])->name('akun-staf.store');
+            Route::put('akun-staf/{user}', [AkunStafController::class, 'update'])->name('akun-staf.update');
+            Route::post('akun-staf/{user}/reset-password', [AkunStafController::class, 'resetPassword'])->name('akun-staf.reset-password');
+            Route::post('akun-staf/{user}/nonaktifkan', [AkunStafController::class, 'nonaktifkan'])->name('akun-staf.nonaktifkan');
+            Route::post('akun-staf/{user}/aktifkan', [AkunStafController::class, 'aktifkan'])->name('akun-staf.aktifkan');
         });
         Route::middleware('role:tu|kepala_sekolah')->group(function () {
             Route::get('tahun-ajaran/{tahunAjaran}/kenaikan', [TahunAjaranController::class, 'kenaikan'])->name('tahun-ajaran.kenaikan');

@@ -19,6 +19,7 @@ import {
     School,
     GraduationCap,
     CalendarDays,
+    UserCog,
     Undo2,
     Users,
     Wallet,
@@ -48,6 +49,7 @@ import ekstrakurikuler from '@/routes/les-ekskul/ekstrakurikuler';
 import kelas from '@/routes/les-ekskul/kelas';
 import dataSiswa from '@/routes/les-ekskul/data-siswa';
 import tahunAjaran from '@/routes/les-ekskul/tahun-ajaran';
+import akunStaf from '@/routes/les-ekskul/akun-staf';
 import transaksi from '@/routes/les-ekskul/transaksi';
 import type { Auth, NavItem } from '@/types';
 
@@ -110,6 +112,10 @@ export function AppSidebar() {
         Refund: badge?.refund,
     };
     const menuLesEkskul = lesEkskulNavItems.map((item) => ({ ...item, badge: jumlah[item.title] }));
+    // Akun Guru & Staf hanya untuk Kepala Sekolah (#46)
+    if (auth.roles.includes('kepala_sekolah')) {
+        menuLesEkskul.push({ title: 'Akun Guru & Staf', href: akunStaf.index(), icon: UserCog, badge: undefined });
+    }
     // Akun Orang Tua hanya untuk TU (#36)
     if (auth.roles.includes('tu')) {
         menuLesEkskul.push({ title: 'Akun Orang Tua', href: AkunOrangTuaController.index(), icon: Contact, badge: undefined });
