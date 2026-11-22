@@ -16,6 +16,7 @@ use App\Domains\LesEkskul\Http\Controllers\RefundController;
 use App\Domains\LesEkskul\Http\Controllers\RekapHonorController;
 use App\Domains\LesEkskul\Http\Controllers\SkemaHonorController;
 use App\Domains\LesEkskul\Http\Controllers\TagihanController;
+use App\Domains\LesEkskul\Http\Controllers\TahunAjaranController;
 use App\Domains\LesEkskul\Http\Controllers\TransaksiController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +36,7 @@ Route::middleware(['auth'])
             Route::get('ekstrakurikuler', [EkstrakurikulerController::class, 'index'])->name('ekstrakurikuler.index'); // data master (#42)
             Route::get('kelas', [KelasLesController::class, 'index'])->name('kelas.index'); // data master kelas & les (#43)
             Route::get('data-siswa', [DataSiswaController::class, 'index'])->name('data-siswa.index'); // data master siswa (#44)
+            Route::get('tahun-ajaran', [TahunAjaranController::class, 'index'])->name('tahun-ajaran.index'); // tahun ajaran & semester (#45)
             Route::get('laporan-harian', [LaporanController::class, 'harian'])->name('laporan-harian.index');
             Route::get('periode/{periode}', [LaporanController::class, 'bulanan'])->name('periode.show');
             Route::get('honor/pengajar', [PengajarEkskulController::class, 'index'])->name('honor.pengajar');
@@ -143,6 +145,18 @@ Route::middleware(['auth'])
             Route::post('data-siswa/{siswa}/keluar', [DataSiswaController::class, 'keluar'])->name('data-siswa.keluar');
             Route::post('data-siswa/{siswa}/aktifkan', [DataSiswaController::class, 'aktifkan'])->name('data-siswa.aktifkan');
             Route::delete('data-siswa/{siswa}', [DataSiswaController::class, 'destroy'])->name('data-siswa.destroy');
+        });
+
+        // Tahun ajaran & semester — Kepala Sekolah; kenaikan kelas massal — TU & Kepala Sekolah (#45)
+        Route::middleware('role:kepala_sekolah')->group(function () {
+            Route::post('tahun-ajaran', [TahunAjaranController::class, 'store'])->name('tahun-ajaran.store');
+            Route::put('tahun-ajaran/{tahunAjaran}', [TahunAjaranController::class, 'update'])->name('tahun-ajaran.update');
+            Route::post('tahun-ajaran/{tahunAjaran}/aktifkan', [TahunAjaranController::class, 'aktifkan'])->name('tahun-ajaran.aktifkan');
+            Route::delete('tahun-ajaran/{tahunAjaran}', [TahunAjaranController::class, 'destroy'])->name('tahun-ajaran.destroy');
+        });
+        Route::middleware('role:tu|kepala_sekolah')->group(function () {
+            Route::get('tahun-ajaran/{tahunAjaran}/kenaikan', [TahunAjaranController::class, 'kenaikan'])->name('tahun-ajaran.kenaikan');
+            Route::post('tahun-ajaran/{tahunAjaran}/kenaikan', [TahunAjaranController::class, 'jalankanKenaikan'])->name('tahun-ajaran.kenaikan.jalankan');
         });
 
         // Akun orang tua oleh TU: hapus klaim salah, reset password, tambah siswa yang belum ada (FR-1b, #36)

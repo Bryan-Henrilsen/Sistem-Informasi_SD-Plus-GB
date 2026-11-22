@@ -37,7 +37,7 @@ class DataSiswaService
             ->when($filter['kelas'] ?? null, fn (Builder $q, $kelas) => $q->where('siswa_kelas.kelas_id', $kelas))
             ->when($filter['nama'] ?? null, fn (Builder $q, $nama) => $q->where('siswa.nama', 'ilike', "%{$nama}%"))
             ->when($filter['status'] ?? null, fn (Builder $q, $status) => $q->where('siswa.status_sekolah', $status))
-            ->with(['kelas', 'siswa' => fn ($q) => $q->with('anakGuru.user:id,name')->withCount(['orangTua', 'pendaftaran as kegiatan_aktif' => fn ($q) => $q->aktif()])])
+            ->with(['kelas', 'siswa' => fn ($q) => $q->with('anakGuru.user:id,name')->withCount(['orangTua', 'pendaftaran as kegiatan_aktif' => fn ($q) => $q->aktif()->tahunAjaran($tahunAjaran->id)])])
             ->orderBy('kelas.jenjang')
             ->orderBy('kelas.nama_kelas')
             ->orderBy('siswa.nama')
@@ -100,7 +100,9 @@ class DataSiswaService
             }
 
             $refund = 0;
-            $kegiatan = $siswa->pendaftaran()->aktif()->get();
+            // Hanya kegiatan tahun ajaran aktif; pendaftaran tahun lalu sudah selesai dengan sendirinya (#45)
+            $tahunAktif = TahunAjaran::aktif()->value('id');
+            $kegiatan = $siswa->pendaftaran()->aktif()->when($tahunAktif, fn ($q) => $q->tahunAjaran($tahunAktif))->get();
             foreach ($kegiatan as $p) {
                 // konfirmasi = true: peringatan batas semester dilewati, keluar sekolah adalah alasan sah
                 $hasil = $this->perubahan->berhenti($p, $tanggal, 'Keluar sekolah: '.trim($alasan), true, $oleh);
@@ -142,7 +144,7 @@ class DataSiswaService
     private function pindahKelas(SiswaKelas $sekarang, Kelas $tujuan): ?string
     {
         $asal = $sekarang->kelas;
-        $aktif = Pendaftaran::aktif()->where('siswa_id', $sekarang->siswa_id)->get();
+        $aktif = Pendaftaran::aktif()->tahunAjaran($sekarang->tahun_ajaran_id)->where('siswa_id', $sekarang->siswa_id)->get();
 
         if ($asal->jenjang !== $tujuan->jenjang && $aktif->isNotEmpty()) {
             throw ValidationException::withMessages([

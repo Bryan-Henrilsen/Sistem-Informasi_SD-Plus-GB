@@ -4,12 +4,12 @@ namespace App\Domains\LesEkskul\Models;
 
 use App\Domains\LesEkskul\Enums\StatusPendaftaran;
 use App\Models\Siswa;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Pendaftaran extends Model
 {
@@ -80,6 +80,14 @@ class Pendaftaran extends Model
     public function scopeAktif(Builder $query): void
     {
         $query->where('status', StatusPendaftaran::Aktif);
+    }
+
+    // Pendaftaran pada kegiatan tahun ajaran tertentu; pendaftaran tahun lalu dianggap selesai tanpa mengubah datanya (#45)
+    public function scopeTahunAjaran(Builder $query, int $tahunAjaranId): void
+    {
+        $query->where(fn (Builder $q) => $q
+            ->whereHas('lesTambahan', fn (Builder $q) => $q->where('tahun_ajaran_id', $tahunAjaranId))
+            ->orWhereHas('ekstrakurikuler', fn (Builder $q) => $q->where('tahun_ajaran_id', $tahunAjaranId)));
     }
 
     public function kegiatan(): LesTambahan|Ekstrakurikuler
