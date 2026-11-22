@@ -1,10 +1,13 @@
-import { Head } from '@inertiajs/react';
-import { Copy, Landmark } from 'lucide-react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { Landmark, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
+import KonfirmasiTransferController from '@/actions/App/Domains/LesEkskul/Http/Controllers/KonfirmasiTransferController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { namaBulan, rupiah, tanggal } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { bayar } from '@/routes/ortu';
 
 type StatusTagihan = 'lunas' | 'menunggu_verifikasi' | 'menunggu_online' | 'sebagian' | 'belum';
 type Tagihan = {
@@ -18,8 +21,18 @@ type Tagihan = {
     sisa: number;
     status: StatusTagihan;
     tunggakan: boolean;
+    bisa_dipilih: boolean; // boleh dicentang untuk "Saya sudah bayar" (#41)
 };
 type Ringkasan = { tunggakan: number; bulan_ini: number; menunggu_verifikasi: number };
+type Konfirmasi = {
+    id: number;
+    status: 'menunggu' | 'ditolak';
+    nominal: number;
+    tanggal_transfer: string;
+    alasan: string | null;
+    berita: string;
+    whatsapp: string | null; // tautan wa.me dengan pesan terisi; null bila nomor TU belum diatur
+};
 type Anak = {
     id: number;
     nama: string;
@@ -27,6 +40,7 @@ type Anak = {
     ringkasan: Ringkasan;
     tagihan: Tagihan[];
     ditolak: { id: number; tanggal: string; nominal: number; alasan: string | null }[];
+    konfirmasi: Konfirmasi[];
 };
 type Rekening = { bank: string | null; nomor: string; atas_nama: string | null };
 
@@ -38,8 +52,11 @@ const LABEL: Record<StatusTagihan, { teks: string; kelas: string }> = {
     belum: { teks: 'Belum dibayar', kelas: 'bg-muted text-muted-foreground' },
 };
 
-// Tagihan & status pembayaran per anak (FR-15) dan cara bayar transfer manual (FR-32; Ringkasan v1.11 #38)
-export default function TagihanOrangTua({ anak, rekening, waTu }: { anak: Anak[]; rekening: Rekening | null; waTu: string | null }) {
+// Tagihan & status pembayaran per anak (FR-15). Orang tua mencentang tagihan lalu lanjut ke halaman Pembayaran
+// untuk transfer manual + "Saya sudah bayar" (FR-15b, Ringkasan v1.11 #41)
+export default function TagihanOrangTua({ anak, rekening }: { anak: Anak[]; rekening: Rekening | null }) {
+    const { errors } = usePage<{ errors: Record<string, string> }>().props;
+
     return (
         <>
             <Head title="Tagihan" />
@@ -47,25 +64,38 @@ export default function TagihanOrangTua({ anak, rekening, waTu }: { anak: Anak[]
             <div className="flex flex-col gap-4">
                 <h1 className="text-lg font-semibold">Tagihan</h1>
 
+                {(errors.tagihan || errors.siswa) && (
+                    <p className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+                        {errors.tagihan ?? errors.siswa}
+                    </p>
+                )}
+
                 {anak.length === 0 && <p className="text-sm text-muted-foreground">Tambahkan anak Anda dulu di menu Anak untuk melihat tagihannya.</p>}
 
                 {anak.map((a) => (
                     <TagihanAnak key={a.id} anak={a} />
                 ))}
 
-                <CaraBayar rekening={rekening} waTu={waTu} />
+                <CaraBayar rekening={rekening} />
             </div>
         </>
     );
 }
 
 function TagihanAnak({ anak }: { anak: Anak }) {
+    const [dipilih, setDipilih] = useState<number[]>([]);
+
     // Kelompokkan per bulan tagihan (data sudah urut terbaru dulu)
     const perBulan = anak.tagihan.reduce<Record<string, Tagihan[]>>((acc, t) => {
         (acc[t.bulan] ??= []).push(t);
 
         return acc;
     }, {});
+    const total = anak.tagihan.filter((t) => dipilih.includes(t.id)).reduce((jumlah, t) => jumlah + t.sisa, 0);
+
+    function centang(id: number, ya: boolean) {
+        setDipilih((lama) => (ya ? [...lama, id] : lama.filter((x) => x !== id)));
+    }
 
     return (
         <Card className="gap-3 py-4">
@@ -78,6 +108,10 @@ function TagihanAnak({ anak }: { anak: Anak }) {
                     <Angka label="Tunggakan" nilai={anak.ringkasan.tunggakan} merah={anak.ringkasan.tunggakan > 0} />
                     <Angka label="Belum dibayar bulan ini" nilai={anak.ringkasan.bulan_ini} />
                 </div>
+
+                {anak.konfirmasi.map((k) => (
+                    <KartuKonfirmasi key={k.id} konfirmasi={k} />
+                ))}
 
                 {anak.ditolak.length > 0 && (
                     <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
@@ -96,16 +130,24 @@ function TagihanAnak({ anak }: { anak: Anak }) {
 
                 {anak.tagihan.length === 0 && <p className="text-sm text-muted-foreground">Belum ada tagihan tahun ajaran ini.</p>}
 
+                {anak.tagihan.some((t) => t.bisa_dipilih) && (
+                    <p className="text-xs text-muted-foreground">Centang tagihan yang akan dibayar, lalu tekan "Lanjut ke pembayaran".</p>
+                )}
+
                 {Object.entries(perBulan).map(([bulan, daftar]) => (
                     <div key={bulan} className="flex flex-col gap-2">
                         <p className="text-sm font-medium">{namaBulan(bulan)}</p>
                         {daftar.map((t) => (
-                            <div key={t.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
-                                <div className="min-w-0">
+                            <label
+                                key={t.id}
+                                className={cn('flex items-start gap-3 rounded-md border p-3', t.bisa_dipilih && 'cursor-pointer', dipilih.includes(t.id) && 'border-primary bg-muted/40')}
+                            >
+                                {t.bisa_dipilih && (
+                                    <Checkbox className="mt-0.5" checked={dipilih.includes(t.id)} onCheckedChange={(v) => centang(t.id, v === true)} />
+                                )}
+                                <div className="min-w-0 flex-1">
                                     <p className="text-sm">{t.kegiatan}</p>
-                                    <span className={cn('mt-1 inline-block rounded-full px-2 py-0.5 text-xs', LABEL[t.status].kelas)}>
-                                        {LABEL[t.status].teks}
-                                    </span>
+                                    <span className={cn('mt-1 inline-block rounded-full px-2 py-0.5 text-xs', LABEL[t.status].kelas)}>{LABEL[t.status].teks}</span>
                                     {t.tunggakan && <span className="ml-1 text-xs text-red-600 dark:text-red-400">Tunggakan</span>}
                                 </div>
                                 <div className="shrink-0 text-right text-sm tabular-nums">
@@ -113,26 +155,74 @@ function TagihanAnak({ anak }: { anak: Anak }) {
                                     {t.diskon > 0 && <p className="text-xs text-muted-foreground line-through">{rupiah(t.nominal)}</p>}
                                     {t.status === 'sebagian' && <p className="text-xs text-amber-700 dark:text-amber-400">sisa {rupiah(t.sisa)}</p>}
                                 </div>
-                            </div>
+                            </label>
                         ))}
                     </div>
                 ))}
+
+                {dipilih.length > 0 && (
+                    // Tetap terlihat di bawah layar HP selama ada tagihan yang dicentang
+                    <div className="sticky bottom-20 z-10 flex items-center justify-between gap-3 rounded-lg border bg-background p-3 shadow-md">
+                        <div className="text-sm">
+                            <p className="text-muted-foreground">{dipilih.length} tagihan dipilih</p>
+                            <p className="font-semibold tabular-nums">{rupiah(total)}</p>
+                        </div>
+                        <Button onClick={() => router.get(bayar().url, { siswa: anak.id, tagihan: dipilih })}>Lanjut ke pembayaran</Button>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );
 }
 
-// Pembayaran: cash di loket TU atau transfer manual (bukti dikirim ke TU, tidak diunggah ke aplikasi)
-function CaraBayar({ rekening, waTu }: { rekening: Rekening | null; waTu: string | null }) {
-    const [tersalin, setTersalin] = useState(false);
-
-    function salin(nomor: string) {
-        void navigator.clipboard?.writeText(nomor).then(() => {
-            setTersalin(true);
-            setTimeout(() => setTersalin(false), 2000);
-        });
+// Konfirmasi "Saya sudah bayar" yang menunggu TU (kirim bukti lewat WhatsApp, bisa dibatalkan) atau ditolak beserta alasannya
+function KartuKonfirmasi({ konfirmasi: k }: { konfirmasi: Konfirmasi }) {
+    if (k.status === 'ditolak') {
+        return (
+            <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+                <p className="font-medium">Konfirmasi transfer ditolak TU</p>
+                <p>
+                    {tanggal(k.tanggal_transfer)} · {rupiah(k.nominal)} · {k.berita}
+                </p>
+                {k.alasan && <p className="text-xs">Alasan: {k.alasan}</p>}
+                <p className="mt-1 text-xs">Tagihannya bisa dipilih lagi. Hubungi TU bila transfer sudah dilakukan.</p>
+            </div>
+        );
     }
 
+    return (
+        <div className="flex flex-col gap-2 rounded-md border border-sky-300 bg-sky-50 p-3 text-sm text-sky-950 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-100">
+            <p className="font-medium">Menunggu verifikasi TU</p>
+            <p>
+                Transfer {rupiah(k.nominal)} tanggal {tanggal(k.tanggal_transfer)} untuk {k.berita}.
+            </p>
+            <p className="text-xs">Mohon kirim bukti transfer ke Tata Usaha agar segera diverifikasi.</p>
+            <div className="flex flex-wrap gap-2">
+                {k.whatsapp && (
+                    <Button size="sm" asChild>
+                        <a href={k.whatsapp} target="_blank" rel="noreferrer">
+                            <MessageCircle /> Kirim bukti ke TU via WhatsApp
+                        </a>
+                    </Button>
+                )}
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                        if (confirm('Batalkan konfirmasi ini? Tagihannya bisa dipilih lagi.')) {
+                            router.delete(KonfirmasiTransferController.batalkan.url(k.id), { preserveScroll: true });
+                        }
+                    }}
+                >
+                    Batalkan
+                </Button>
+            </div>
+        </div>
+    );
+}
+
+// Cara membayar fase sekarang: transfer manual ke rekening sekolah (pembayaran online & QRIS menyusul, #41)
+function CaraBayar({ rekening }: { rekening: Rekening | null }) {
     return (
         <Card className="gap-3 py-4">
             <CardHeader className="px-4">
@@ -141,27 +231,12 @@ function CaraBayar({ rekening, waTu }: { rekening: Rekening | null; waTu: string
                     Cara membayar
                 </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3 px-4 text-sm">
-                <p>Bayar tunai di loket Tata Usaha (TU), atau transfer ke rekening sekolah.</p>
-                {rekening ? (
-                    <div className="rounded-md bg-muted/60 p-3">
-                        <p className="text-xs text-muted-foreground">{rekening.bank}</p>
-                        <div className="flex items-center justify-between gap-2">
-                            <p className="font-mono text-lg tracking-wide">{rekening.nomor}</p>
-                            <Button variant="ghost" size="sm" onClick={() => salin(rekening.nomor)}>
-                                <Copy className="size-4" />
-                                {tersalin ? 'Tersalin' : 'Salin'}
-                            </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground">a.n. {rekening.atas_nama}</p>
-                    </div>
-                ) : (
-                    <p className="text-muted-foreground">Nomor rekening sekolah dapat ditanyakan ke TU.</p>
-                )}
-                <p className="text-muted-foreground">
-                    Setelah transfer, kirim bukti transfer ke TU{waTu ? ` (WhatsApp ${waTu})` : ''} dengan menyebutkan nama anak dan bulan yang dibayar. Status
-                    tagihan berubah setelah TU memverifikasi.
+            <CardContent className="flex flex-col gap-2 px-4 text-sm text-muted-foreground">
+                <p>
+                    Centang tagihan, tekan "Lanjut ke pembayaran", lalu transfer ke rekening {rekening?.bank ?? 'sekolah'} sesuai total yang tertera. Setelah
+                    transfer, tekan "Saya sudah bayar" dan kirim bukti transfer ke TU lewat WhatsApp.
                 </p>
+                <p>Pembayaran tunai tetap bisa dilakukan di loket Tata Usaha.</p>
             </CardContent>
         </Card>
     );

@@ -20,6 +20,14 @@ class NomorHp
         return preg_match('/^08\d{8,12}$/', $digit) ? $digit : null;
     }
 
+    // Bentuk internasional tanpa "+" untuk tautan WhatsApp wa.me ("0812…" → "62812…"), atau null bila tidak sah
+    public static function internasional(?string $nomor): ?string
+    {
+        $normal = self::normal($nomor);
+
+        return $normal ? '62'.substr($normal, 1) : null;
+    }
+
     // Isian login berupa nomor HP bila tidak memuat "@"
     public static function bukanEmail(?string $isian): bool
     {

@@ -7,9 +7,11 @@ use App\Domains\LesEkskul\Enums\StatusApprovalBendahara;
 use App\Domains\LesEkskul\Enums\StatusTransaksi;
 use App\Domains\LesEkskul\Enums\SumberInput;
 use App\Domains\LesEkskul\Http\Requests\CatatTransaksiRequest;
+use App\Domains\LesEkskul\Models\KonfirmasiTransfer;
 use App\Domains\LesEkskul\Models\Pendaftaran;
 use App\Domains\LesEkskul\Models\Tagihan;
 use App\Domains\LesEkskul\Models\Transaksi;
+use App\Domains\LesEkskul\Services\KonfirmasiTransferService;
 use App\Domains\LesEkskul\Services\RingkasanTugasService;
 use App\Domains\LesEkskul\Services\TagihanService;
 use App\Domains\LesEkskul\Services\TransaksiService;
@@ -67,6 +69,8 @@ class TransaksiController extends Controller
         return Inertia::render('les-ekskul/transaksi/index', [
             'transaksi' => $transaksi,
             'filter' => $filter,
+            // "Saya sudah bayar" dari orang tua yang menunggu TU dicatat/ditolak (FR-15b, #41)
+            'konfirmasi' => $request->user()->hasRole('tu') ? app(KonfirmasiTransferService::class)->daftarMenunggu() : [],
             'jumlah' => [
                 'pending' => Transaksi::where('status', StatusTransaksi::Pending)->count(),
                 'menunggu_bendahara' => Transaksi::where('status', StatusTransaksi::Terverifikasi)
@@ -78,7 +82,12 @@ class TransaksiController extends Controller
     // Form Catat Pembayaran: cari siswa, lalu tampilkan tagihan yang masih bisa dibayar
     public function create(Request $request, TagihanService $tagihanService): Response
     {
-        $siswa = $request->integer('siswa') ? Siswa::with('kelasTahunAktif.kelas')->find($request->integer('siswa')) : null;
+        // Dibuka dari konfirmasi orang tua: siswa, tagihan, nominal, dan tanggal transfer diisi dari konfirmasi itu (#41)
+        $konfirmasi = $request->integer('konfirmasi') && $request->user()->hasRole('tu')
+            ? KonfirmasiTransfer::menunggu()->with('tagihan')->find($request->integer('konfirmasi'))
+            : null;
+        $siswaId = $konfirmasi?->siswa_id ?? $request->integer('siswa');
+        $siswa = $siswaId ? Siswa::with('kelasTahunAktif.kelas')->find($siswaId) : null;
 
         return Inertia::render('les-ekskul/transaksi/create', [
             'cari' => $request->string('cari')->toString(),
@@ -103,6 +112,13 @@ class TransaksiController extends Controller
             'hariIni' => today()->toDateString(),
             // Dibuka dari kotak Rekap Iuran: tagihan itu langsung tercentang, lalu setelah disimpan kembali ke rekap (#40)
             'tagihanDipilih' => $request->integer('tagihan') ?: null,
+            'konfirmasi' => $konfirmasi ? [
+                'id' => $konfirmasi->id,
+                'tagihan_ids' => $konfirmasi->tagihan->pluck('id'),
+                'nominal' => $konfirmasi->nominal,
+                'tanggal_transfer' => $konfirmasi->tanggal_transfer->toDateString(),
+                'nama_pengirim' => $konfirmasi->nama_pengirim,
+            ] : null,
             'kembali' => str_starts_with($request->string('kembali')->toString(), '/les-ekskul/tagihan') ? $request->string('kembali')->toString() : null,
             // Bendahara (tanpa role TU) hanya mencatat transfer dari mutasi rekening (FR-8c); cash hanya di loket TU
             'hanyaTransfer' => ! $request->user()->hasRole('tu'),
@@ -114,7 +130,7 @@ class TransaksiController extends Controller
         $data = $request->validated();
         $user = $request->user();
 
-        $transaksi = $this->service->catat(
+        $catat = fn () => $this->service->catat(
             siswa: Siswa::findOrFail($data['siswa_id']),
             metode: MetodeTransaksi::from($data['metode']),
             nominal: (int) $data['nominal'],
@@ -125,6 +141,11 @@ class TransaksiController extends Controller
             catatanTransfer: $data['catatan_transfer'] ?? null,
             alihkanKelebihan: $request->boolean('alihkan_kelebihan', true),
         );
+
+        // Dari konfirmasi orang tua: transaksi dan status konfirmasinya disimpan bersamaan (#41)
+        $transaksi = ($data['konfirmasi_transfer_id'] ?? null)
+            ? app(KonfirmasiTransferService::class)->catatTransaksi(KonfirmasiTransfer::findOrFail($data['konfirmasi_transfer_id']), $user, $catat)
+            : $catat();
 
         $refund = $transaksi->penyesuaianDana()->sum('nominal');
         $pesan = 'Pembayaran '.$this->rupiah($transaksi->nominal).' dicatat.'

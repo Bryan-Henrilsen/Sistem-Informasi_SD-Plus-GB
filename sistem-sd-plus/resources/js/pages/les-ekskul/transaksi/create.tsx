@@ -35,9 +35,12 @@ type Props = {
     hanyaTransfer: boolean; // Bendahara: hanya transfer dari mutasi rekening (FR-8c); cash hanya di loket TU
     tagihanDipilih: number | null; // dibuka dari kotak Rekap Iuran: tagihan ini langsung tercentang (#40)
     kembali: string | null; // alamat Rekap Iuran untuk kembali setelah disimpan
+    konfirmasi: Konfirmasi | null; // dibuka dari "Saya sudah bayar" orang tua (#41)
 };
 
-export default function CatatPembayaran({ cari, hasilCari, siswa, tagihan, pendaftaran, hariIni, hanyaTransfer, tagihanDipilih, kembali }: Props) {
+type Konfirmasi = { id: number; tagihan_ids: number[]; nominal: number; tanggal_transfer: string; nama_pengirim: string | null };
+
+export default function CatatPembayaran({ cari, hasilCari, siswa, tagihan, pendaftaran, hariIni, hanyaTransfer, tagihanDipilih, kembali, konfirmasi }: Props) {
     const judul = hanyaTransfer ? 'Catat Transfer dari Mutasi Rekening' : 'Catat Pembayaran';
 
     return (
@@ -64,6 +67,7 @@ export default function CatatPembayaran({ cari, hasilCari, siswa, tagihan, penda
                         hanyaTransfer={hanyaTransfer}
                         tagihanDipilih={tagihanDipilih}
                         kembali={kembali}
+                        konfirmasi={konfirmasi}
                     />
                 ) : (
                     <CariSiswa
@@ -79,19 +83,22 @@ export default function CatatPembayaran({ cari, hasilCari, siswa, tagihan, penda
 }
 
 // Langkah 2: centang tagihan + isi data pembayaran, lalu kirim ke TransaksiService::catat()
-function FormPembayaran({ siswa, tagihan, pendaftaran, hariIni, hanyaTransfer, tagihanDipilih, kembali }: Omit<Props, 'cari' | 'hasilCari' | 'siswa'> & { siswa: Siswa }) {
+function FormPembayaran({ siswa, tagihan, pendaftaran, hariIni, hanyaTransfer, tagihanDipilih, kembali, konfirmasi }: Omit<Props, 'cari' | 'hasilCari' | 'siswa'> & { siswa: Siswa }) {
     const dipilih = tagihan.find((t) => t.id === tagihanDipilih); // hanya bila tagihan itu memang masih terbuka
+    // Dari konfirmasi orang tua: hanya tagihan konfirmasi yang masih terbuka yang dicentang (#41)
+    const dariKonfirmasi = konfirmasi ? tagihan.filter((t) => konfirmasi.tagihan_ids.includes(t.id)).map((t) => t.id) : [];
     const form = useForm({
         siswa_id: siswa.id,
-        metode: hanyaTransfer ? 'transfer' : 'cash',
-        tanggal: hariIni,
-        nominal: dipilih?.sisa ?? 0,
-        tagihan_ids: dipilih ? [dipilih.id] : ([] as number[]),
+        metode: konfirmasi || hanyaTransfer ? 'transfer' : 'cash',
+        tanggal: konfirmasi?.tanggal_transfer ?? hariIni,
+        nominal: konfirmasi?.nominal ?? dipilih?.sisa ?? 0,
+        tagihan_ids: konfirmasi ? dariKonfirmasi : dipilih ? [dipilih.id] : ([] as number[]),
         kembali: kembali ?? '',
-        catatan_transfer: '',
+        konfirmasi_transfer_id: konfirmasi?.id ?? null,
+        catatan_transfer: konfirmasi ? `Konfirmasi orang tua${konfirmasi.nama_pengirim ? `, a.n. ${konfirmasi.nama_pengirim}` : ''}` : '',
         alihkan_kelebihan: true, // kelebihan transfer: dialihkan ke bulan berikutnya atau direfund (#39)
     });
-    const [nominalDiubah, setNominalDiubah] = useState(false); // false = nominal mengikuti total tagihan dicentang
+    const [nominalDiubah, setNominalDiubah] = useState(konfirmasi !== null); // false = nominal mengikuti total tagihan dicentang; dari konfirmasi tetap nominal yang ditransfer
 
     const totalDicentang = tagihan
         .filter((t) => form.data.tagihan_ids.includes(t.id))
@@ -119,6 +126,12 @@ function FormPembayaran({ siswa, tagihan, pendaftaran, hariIni, hanyaTransfer, t
 
     return (
         <form onSubmit={simpan} className="flex flex-col gap-6">
+            {konfirmasi && (
+                <p className="rounded-md border border-sky-300 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200">
+                    Diisi dari konfirmasi "Saya sudah bayar" orang tua (transfer {rupiah(konfirmasi.nominal)}). Pastikan transfernya sudah ada di
+                    mutasi BCA sebelum disimpan.
+                </p>
+            )}
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <div>

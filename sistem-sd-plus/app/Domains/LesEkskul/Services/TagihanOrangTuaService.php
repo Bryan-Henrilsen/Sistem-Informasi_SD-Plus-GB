@@ -2,6 +2,7 @@
 
 namespace App\Domains\LesEkskul\Services;
 
+use App\Domains\LesEkskul\Enums\StatusKonfirmasiTransfer;
 use App\Domains\LesEkskul\Enums\StatusPembayaranOnline;
 use App\Domains\LesEkskul\Enums\StatusTagihan;
 use App\Domains\LesEkskul\Enums\StatusTransaksi;
@@ -32,7 +33,8 @@ class TagihanOrangTuaService
             ->whereHas('pendaftaran', fn (Builder $q) => $q->where('siswa_id', $siswa->id))
             ->where('status', '!=', StatusTagihan::Dibatalkan)
             ->whereBetween('bulan_tagihan', [$tahunAjaran->tanggal_mulai->toDateString(), $tahunAjaran->tanggal_selesai->toDateString()])
-            ->with(['pendaftaran.lesTambahan.kelas', 'pendaftaran.ekstrakurikuler.induk', 'transaksi', 'pembayaranOnline'])
+            ->with(['pendaftaran.lesTambahan.kelas', 'pendaftaran.ekstrakurikuler.induk', 'transaksi', 'pembayaranOnline',
+                'konfirmasiTransfer' => fn ($q) => $q->where('status', StatusKonfirmasiTransfer::Menunggu)])
             ->orderByDesc('bulan_tagihan')
             ->orderBy('id')
             ->get()
@@ -41,9 +43,11 @@ class TagihanOrangTuaService
                 $sisa = $t->harus_dibayar - $dibayar;
                 $menungguOnline = $t->pembayaranOnline->contains(fn ($o) => $o->status === StatusPembayaranOnline::Menunggu);
                 $menungguVerifikasi = $t->transaksi->contains(fn (Transaksi $tr) => $tr->status === StatusTransaksi::Pending);
+                $dikonfirmasi = $t->konfirmasiTransfer->isNotEmpty(); // orang tua sudah menekan "Saya sudah bayar" (#41)
 
                 $status = match (true) {
                     $sisa <= 0 && $menungguVerifikasi => 'menunggu_verifikasi',
+                    $sisa > 0 && $dikonfirmasi => 'menunggu_verifikasi',
                     $sisa <= 0 => 'lunas',
                     $menungguOnline => 'menunggu_online',
                     $dibayar > 0 => 'sebagian',
@@ -61,7 +65,9 @@ class TagihanOrangTuaService
                     'sisa' => max($sisa, 0),
                     'status' => $status,
                     // Tunggakan = bulan yang sudah lewat dan belum lunas (scope Tagihan::tunggakan)
-                    'tunggakan' => $sisa > 0 && $t->bulan_tagihan->lt($bulanIni),
+                    'tunggakan' => $sisa > 0 && ! $dikonfirmasi && $t->bulan_tagihan->lt($bulanIni),
+                    // Boleh dicentang untuk konfirmasi transfer: sama dengan KonfirmasiTransferService::tagihanBisaDipilih
+                    'bisa_dipilih' => $t->status === StatusTagihan::Belum && ! $menungguOnline && ! $dikonfirmasi,
                 ];
             });
     }
@@ -73,7 +79,8 @@ class TagihanOrangTuaService
 
         return [
             'tunggakan' => (int) $tagihan->where('tunggakan', true)->sum('sisa'),
-            'bulan_ini' => (int) $tagihan->where('bulan', $bulanIni)->sum('sisa'),
+            // Tagihan yang sudah dikonfirmasi "Saya sudah bayar" tidak dihitung belum dibayar (#41)
+            'bulan_ini' => (int) $tagihan->where('bulan', $bulanIni)->where('status', '!=', 'menunggu_verifikasi')->sum('sisa'),
             'menunggu_verifikasi' => $tagihan->where('status', 'menunggu_verifikasi')->count(),
         ];
     }

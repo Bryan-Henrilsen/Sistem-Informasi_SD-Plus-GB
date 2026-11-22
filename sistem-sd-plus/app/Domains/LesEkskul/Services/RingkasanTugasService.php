@@ -10,6 +10,7 @@ use App\Domains\LesEkskul\Enums\StatusPenyesuaian;
 use App\Domains\LesEkskul\Enums\StatusPeriodeLaporan;
 use App\Domains\LesEkskul\Enums\StatusTagihan;
 use App\Domains\LesEkskul\Enums\StatusTransaksi;
+use App\Domains\LesEkskul\Models\KonfirmasiTransfer;
 use App\Domains\LesEkskul\Models\LaporanHarian;
 use App\Domains\LesEkskul\Models\PenyesuaianDana;
 use App\Domains\LesEkskul\Models\PeriodeLaporan;
@@ -34,7 +35,7 @@ class RingkasanTugasService
         $bendahara = $user->hasRole('bendahara');
 
         return [
-            'transaksi' => ($tu ? $this->transferMenungguVerifikasi()->count() : 0)
+            'transaksi' => ($tu ? $this->transferMenungguVerifikasi()->count() + KonfirmasiTransfer::menunggu()->count() : 0)
                 + ($bendahara ? $this->transferMenungguBendahara()->count() : 0),
             'laporan_harian' => ($tu ? $this->laporanBelumDiajukan()->count() : 0)
                 + ($bendahara ? $this->laporanMenungguBendahara()->count() : 0),
@@ -48,6 +49,8 @@ class RingkasanTugasService
         $kartu = [];
 
         if ($user->hasRole('tu')) {
+            $kartu[] = $this->kartu('Konfirmasi transfer dari orang tua', KonfirmasiTransfer::menunggu()->count(),
+                'Orang tua menekan "Saya sudah bayar". Cek mutasi BCA, lalu catat atau tolak.', route('les-ekskul.transaksi.index', [], false));
             $kartu[] = $this->kartu('Transfer perlu diverifikasi', $this->transferMenungguVerifikasi()->count(),
                 'Cocokkan bukti transfer dari orang tua dengan tagihan siswa.', route('les-ekskul.transaksi.index', ['status' => 'pending'], false));
             $kartu[] = $this->kartu('Laporan harian belum diajukan', $this->laporanBelumDiajukan()->count(),
