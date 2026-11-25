@@ -30,7 +30,7 @@ class PengajarEkskulController extends Controller
             ->kegiatanInduk()
             ->where('wajib_otomatis', false)
             ->where('honor_flat', false)
-            ->with(['pengajar', 'pendamping', 'kelasParalel' => fn ($q) => $q->orderBy('nama')->with('pengajar', 'pendamping')])
+            ->with(['pengajar', 'riwayatPengajar', 'pendamping', 'kelasParalel' => fn ($q) => $q->orderBy('nama')->with('pengajar', 'riwayatPengajar', 'pendamping')])
             ->orderBy('nama')
             ->get();
 
@@ -53,7 +53,13 @@ class PengajarEkskulController extends Controller
                 'punya_paralel' => $e->kelasParalel->isNotEmpty(),
                 // Baris tempat pengajar dicatat: kelas paralel bila ada, selain itu kegiatan induknya
                 'baris' => ($e->kelasParalel->isNotEmpty() ? $e->kelasParalel : collect([$e]))
-                    ->map(fn (Ekstrakurikuler $b) => ['id' => $b->id, 'nama' => $b->nama, 'pengajar_ids' => $b->pengajar->pluck('id')])
+                    ->map(fn (Ekstrakurikuler $b) => [
+                        'id' => $b->id,
+                        'nama' => $b->nama,
+                        'pengajar_ids' => $b->pengajar->pluck('id'),
+                        // Riwayat hanya ditampilkan bila pernah ada pergantian (#50)
+                        'riwayat' => $b->riwayatPengajar->count() > $b->pengajar->count() ? $this->service->riwayat($b) : [],
+                    ])
                     ->values(),
                 // Unit honor tempat pendamping dicatat: induk bila digabung, tiap kelas bila per kelas
                 'unit' => $this->service->unitHonor($e)
@@ -104,6 +110,26 @@ class PengajarEkskulController extends Controller
         $this->service->aturPengajar($ekstrakurikuler, $data['pengajar_ids'] ?? []);
 
         return $this->kembali("Pengajar {$ekstrakurikuler->nama} disimpan.");
+    }
+
+    // Pergantian pengajar di tengah tahun; honor bulan pergantian dibagi per pertemuan (#50)
+    public function gantiPengajar(Request $request, Ekstrakurikuler $ekstrakurikuler): RedirectResponse
+    {
+        $data = $request->validate([
+            'pengajar_lama_id' => ['required', 'integer'],
+            'tanggal_terakhir' => ['required', 'date'],
+            'pengajar_baru_id' => ['required', 'integer', 'exists:pengajar_ekskul,id'],
+            'tanggal_mulai' => ['required', 'date'],
+        ], [
+            'pengajar_lama_id.required' => 'Pilih pengajar lama.',
+            'pengajar_baru_id.required' => 'Pilih pengajar baru.',
+            'tanggal_terakhir.required' => 'Isi tanggal terakhir pengajar lama mengajar.',
+            'tanggal_mulai.required' => 'Isi tanggal mulai pengajar baru.',
+        ]);
+
+        $this->service->gantiPengajar($ekstrakurikuler, $data['pengajar_lama_id'], $data['tanggal_terakhir'], $data['pengajar_baru_id'], $data['tanggal_mulai']);
+
+        return $this->kembali("Pengajar {$ekstrakurikuler->nama} diganti. Honor periode yang sudah dihitung perlu dihitung ulang bila terdampak.");
     }
 
     public function aturPendamping(Request $request, Ekstrakurikuler $ekstrakurikuler): RedirectResponse

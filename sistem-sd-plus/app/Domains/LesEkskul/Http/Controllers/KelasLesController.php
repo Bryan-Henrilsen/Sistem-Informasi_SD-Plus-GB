@@ -79,6 +79,24 @@ class KelasLesController extends Controller
         return $this->kembali("{$jumlah} kelas disalin. Isi wali kelas tiap kelas untuk tahun ajaran ini.");
     }
 
+    // Pergantian wali kelas di tengah tahun ajaran; honor les bulan pergantian dibagi per hari sekolah (#50)
+    public function gantiWali(Request $request, Kelas $kelas): RedirectResponse
+    {
+        $data = $request->validate([
+            'guru_id' => ['required', 'integer', 'exists:guru,id'],
+            'tanggal_terakhir' => ['required', 'date'],
+            'tanggal_mulai' => ['required', 'date'],
+        ], [
+            'guru_id.required' => 'Pilih wali kelas baru.',
+            'tanggal_terakhir.required' => 'Isi tanggal terakhir wali lama bertugas.',
+            'tanggal_mulai.required' => 'Isi tanggal mulai wali baru.',
+        ]);
+
+        $this->service->gantiWali($kelas, $data['guru_id'], $data['tanggal_terakhir'], $data['tanggal_mulai'], $request->user());
+
+        return $this->kembali("Wali kelas {$kelas->nama_lengkap} diganti. Honor les periode yang sudah dihitung perlu dihitung ulang bila terdampak.");
+    }
+
     private function validasi(Request $request): array
     {
         return $request->validate([
