@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Domains\JurnalGuru\Services\ForumService;
 use App\Domains\LesEkskul\Services\RingkasanTugasService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -47,6 +48,10 @@ class HandleInertiaRequests extends Middleware
             // Angka badge menu Les & Ekskul (yang menunggu tindakan role pengguna); null untuk role non-keuangan
             'badge' => fn () => $request->user()?->hasAnyRole(RingkasanTugasService::ROLE_KEUANGAN)
                 ? app(RingkasanTugasService::class)->badge($request->user())
+                : null,
+            // Badge menu Forum Guru: pesan yang belum dibaca (Jurnal Guru #51); null untuk selain guru & Kepala Sekolah
+            'badgeForum' => fn () => $request->user()?->hasAnyRole(['guru', 'kepala_sekolah'])
+                ? app(ForumService::class)->jumlahBelumDibaca($request->user())
                 : null,
         ];
     }

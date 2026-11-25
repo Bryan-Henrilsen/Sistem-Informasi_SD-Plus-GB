@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domains\JurnalGuru\Services\ForumService;
 use App\Domains\LesEkskul\Services\RingkasanTugasService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,10 @@ class DashboardController extends Controller
         $keuangan = $user->hasAnyRole(RingkasanTugasService::ROLE_KEUANGAN);
 
         return Inertia::render('dashboard', [
-            'tugas' => $keuangan ? $ringkasan->kartuTugas($user) : [],
+            'tugas' => [
+                ...($keuangan ? $ringkasan->kartuTugas($user) : []),
+                ...app(ForumService::class)->kartuTugas($user), // Jurnal Guru: pesan forum belum dibaca (#51)
+            ],
             'keuangan' => $keuangan ? $ringkasan->ringkasanKeuangan() : null,
         ]);
     }
