@@ -41,6 +41,7 @@ Route::middleware(['auth'])
             Route::get('data-siswa', [DataSiswaController::class, 'index'])->name('data-siswa.index'); // data master siswa (#44)
             Route::get('tahun-ajaran', [TahunAjaranController::class, 'index'])->name('tahun-ajaran.index'); // tahun ajaran & semester (#45)
             Route::get('laporan-harian', [LaporanController::class, 'harian'])->name('laporan-harian.index');
+            Route::get('laporan-harian/{laporanHarian}/cetak-cash', [LaporanController::class, 'cetakCash'])->name('laporan-harian.cetak-cash'); // arsip fisik cash (#49)
             Route::get('periode/{periode}', [LaporanController::class, 'bulanan'])->name('periode.show');
             Route::get('honor/pengajar', [PengajarEkskulController::class, 'index'])->name('honor.pengajar');
             Route::get('honor/skema', [SkemaHonorController::class, 'index'])->name('honor.skema');

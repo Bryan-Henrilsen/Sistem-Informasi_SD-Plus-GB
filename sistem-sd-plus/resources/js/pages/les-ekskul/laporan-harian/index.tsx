@@ -1,4 +1,5 @@
 import { Form, Head, Link, router, usePage } from '@inertiajs/react';
+import { Printer } from 'lucide-react';
 import { useState } from 'react';
 import LaporanController from '@/actions/App/Domains/LesEkskul/Http/Controllers/LaporanController';
 import Heading from '@/components/heading';
@@ -19,7 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { hariTanggal, namaBulan, rupiah, tanggal } from '@/lib/format';
-import { index } from '@/routes/les-ekskul/laporan-harian';
+import { cetakCash, index } from '@/routes/les-ekskul/laporan-harian';
 import { show } from '@/routes/les-ekskul/periode';
 import type { Auth } from '@/types';
 
@@ -87,6 +88,14 @@ export default function LaporanHarianIndex({ daftarPeriode, periode, laporan, ti
                             Tolak
                         </Button>
                     </>
+                )}
+                {l.total_cash > 0 && (
+                    // Lembar cash untuk diserahkan ke Bendahara bersama uangnya (#49); dibuka di tab baru
+                    <Button size="sm" variant="outline" asChild>
+                        <a href={cetakCash.url(l.id)} target="_blank" rel="noreferrer">
+                            <Printer /> Cetak cash
+                        </a>
+                    </Button>
                 )}
             </>
         );
