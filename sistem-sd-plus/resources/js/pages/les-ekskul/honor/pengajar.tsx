@@ -11,12 +11,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { tanggal } from '@/lib/format';
 
 type Pengajar = {
     id: number;
@@ -34,10 +36,14 @@ type Kegiatan = {
     kategori: 'seni' | 'olahraga' | null;
     per_kelas: boolean;
     punya_paralel: boolean;
-    baris: { id: number; nama: string; pengajar_ids: number[] }[]; // tempat pengajar dicatat
+    baris: Baris[]; // tempat pengajar dicatat
     unit: { id: number; nama: string; pendamping_ids: number[] }[]; // unit honor tempat pendamping dicatat
     masalah: string[];
 };
+
+// Riwayat penugasan, terisi bila pernah ada pergantian pengajar (#50)
+type Riwayat = { id: number; nama: string; jenis: 'internal' | 'eksternal'; mulai: string | null; selesai: string | null };
+type Baris = { id: number; nama: string; pengajar_ids: number[]; riwayat: Riwayat[] };
 
 type Props = {
     pengajar: Pengajar[];
@@ -55,6 +61,7 @@ const kelasPilihan = 'h-9 rounded-md border border-input bg-transparent px-3 tex
 export default function PengajarEkskulIndex({ pengajar, kegiatan, masalahLes, orang, bisaAturPendamping, bisaUbah }: Props) {
     const [formPengajar, setFormPengajar] = useState<Pengajar | 'baru' | null>(null);
     const [pilihan, setPilihan] = useState<Pilihan | null>(null);
+    const [ganti, setGanti] = useState<Baris | null>(null); // baris kegiatan yang pengajarnya diganti di tengah tahun
 
     const namaPengajar = new Map(pengajar.map((p) => [p.id, p]));
     const namaOrang = new Map(orang.map((o) => [o.id, o.nama]));
@@ -124,38 +131,58 @@ export default function PengajarEkskulIndex({ pengajar, kegiatan, masalahLes, or
                             </CardHeader>
                             <CardContent className="flex flex-col gap-3 text-sm">
                                 {k.baris.map((b) => (
-                                    <Baris
-                                        key={`p-${b.id}`}
-                                        label={k.punya_paralel ? b.nama : 'Pengajar'}
-                                        isi={b.pengajar_ids.map((id) => namaPengajar.get(id)).filter((p) => p !== undefined).map((p) => (
-                                            <Badge key={p.id} variant={p.jenis === 'eksternal' ? 'outline' : 'secondary'}>
-                                                {p.nama} · {p.jenis}
-                                            </Badge>
-                                        ))}
-                                        tombol={
-                                            bisaUbah && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        setPilihan({
-                                                            judul: `Pengajar ${b.nama}`,
-                                                            opsi: opsiPengajar,
-                                                            terpilih: b.pengajar_ids,
-                                                            url: PengajarEkskulController.aturPengajar.url(b.id),
-                                                            field: 'pengajar_ids',
-                                                        })
-                                                    }
-                                                >
-                                                    Atur pengajar
-                                                </Button>
-                                            )
-                                        }
-                                    />
+                                    <div key={`p-${b.id}`} className="flex flex-col gap-1">
+                                        <BarisPenugasan
+                                            label={k.punya_paralel ? b.nama : 'Pengajar'}
+                                            isi={b.pengajar_ids.map((id) => namaPengajar.get(id)).filter((p) => p !== undefined).map((p) => (
+                                                <Badge key={p.id} variant={p.jenis === 'eksternal' ? 'outline' : 'secondary'}>
+                                                    {p.nama} · {p.jenis}
+                                                </Badge>
+                                            ))}
+                                            tombol={
+                                                bisaUbah && (
+                                                    <span className="flex gap-1">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() =>
+                                                                setPilihan({
+                                                                    judul: `Pengajar ${b.nama}`,
+                                                                    deskripsi: 'Untuk membetulkan salah input. Pergantian pengajar di tengah tahun pakai tombol Ganti pengajar.',
+                                                                    opsi: opsiPengajar,
+                                                                    terpilih: b.pengajar_ids,
+                                                                    url: PengajarEkskulController.aturPengajar.url(b.id),
+                                                                    field: 'pengajar_ids',
+                                                                })
+                                                            }
+                                                        >
+                                                            Atur pengajar
+                                                        </Button>
+                                                        {b.pengajar_ids.length > 0 && (
+                                                            <Button size="sm" variant="ghost" onClick={() => setGanti(b)}>
+                                                                Ganti pengajar
+                                                            </Button>
+                                                        )}
+                                                    </span>
+                                                )
+                                            }
+                                        />
+                                        {b.riwayat.length > 0 && (
+                                            <ul className="text-xs text-muted-foreground sm:pl-50">
+                                                {b.riwayat.map((r) => (
+                                                    <li key={r.id}>
+                                                        {r.nama} · {r.jenis}
+                                                        {r.mulai && ` · mulai ${tanggal(r.mulai)}`}
+                                                        {r.selesai ? ` · s.d. ${tanggal(r.selesai)}` : ' · sekarang'}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
                                 ))}
 
                                 {k.unit.map((u) => (
-                                    <Baris
+                                    <BarisPenugasan
                                         key={`d-${u.id}`}
                                         label={k.unit.length > 1 || k.punya_paralel ? `Pendamping ${u.nama}` : 'Pendamping'}
                                         isi={u.pendamping_ids.map((id) => (
@@ -248,6 +275,11 @@ export default function PengajarEkskulIndex({ pengajar, kegiatan, masalahLes, or
             </div>
 
             <DialogPengajar data={formPengajar} orang={orang} onClose={() => setFormPengajar(null)} />
+            <Dialog open={ganti !== null} onOpenChange={(b) => !b && setGanti(null)}>
+                <DialogContent>
+                    {ganti && <FormGantiPengajar baris={ganti} pengajar={pengajar} onClose={() => setGanti(null)} />}
+                </DialogContent>
+            </Dialog>
             <DialogPilihBanyak
                 buka={pilihan !== null}
                 judul={pilihan?.judul ?? ''}
@@ -262,13 +294,89 @@ export default function PengajarEkskulIndex({ pengajar, kegiatan, masalahLes, or
     );
 }
 
-function Baris({ label, isi, tombol }: { label: string; isi: React.ReactNode[]; tombol: React.ReactNode }) {
+function BarisPenugasan({ label, isi, tombol }: { label: string; isi: React.ReactNode[]; tombol: React.ReactNode }) {
     return (
         <div className="flex flex-wrap items-center gap-2">
             <span className="w-48 text-muted-foreground">{label}</span>
             <span className="flex flex-1 flex-wrap gap-1">{isi.length > 0 ? isi : <span className="text-muted-foreground">–</span>}</span>
             {tombol}
         </div>
+    );
+}
+
+// Pergantian pengajar di tengah tahun (#50): honor bulan pergantian dibagi per pertemuan sesuai jadwal kegiatan.
+// Pengajar baru sebaiknya berjenis sama (eksternal → eksternal); beda jenis di satu periode menahan perhitungan honor
+function FormGantiPengajar({ baris, pengajar, onClose }: { baris: Baris; pengajar: Pengajar[]; onClose: () => void }) {
+    const sekarang = pengajar.filter((p) => baris.pengajar_ids.includes(p.id));
+    const calon = pengajar.filter((p) => p.status_aktif && !baris.pengajar_ids.includes(p.id));
+
+    return (
+        <Form
+            {...PengajarEkskulController.gantiPengajar.form(baris.id)}
+            options={{ preserveScroll: true }}
+            onSuccess={onClose}
+            className="flex flex-col gap-4"
+        >
+            {({ processing, errors }) => (
+                <>
+                    <DialogHeader>
+                        <DialogTitle>Ganti pengajar {baris.nama}</DialogTitle>
+                        <DialogDescription>
+                            Honor bulan pergantian dibagi menurut jumlah pertemuan (hari jadwal kegiatan) setiap pengajar. Pilih pengajar baru yang
+                            jenisnya sama; internal dan eksternal tercampur di satu periode membuat honor belum bisa dihitung.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="pengajar_lama_id">Pengajar lama</Label>
+                        <select id="pengajar_lama_id" name="pengajar_lama_id" defaultValue={sekarang.length === 1 ? sekarang[0].id : ''} className={kelasPilihan}>
+                            {sekarang.length > 1 && <option value="">Pilih</option>}
+                            {sekarang.map((p) => (
+                                <option key={p.id} value={p.id}>
+                                    {p.nama} · {p.jenis}
+                                </option>
+                            ))}
+                        </select>
+                        <InputError message={errors.pengajar_lama_id ?? errors.kegiatan} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="tanggal_terakhir">Tanggal terakhir pengajar lama mengajar</Label>
+                        <Input id="tanggal_terakhir" name="tanggal_terakhir" type="date" />
+                        <InputError message={errors.tanggal_terakhir} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="pengajar_baru_id">Pengajar baru</Label>
+                        <select id="pengajar_baru_id" name="pengajar_baru_id" defaultValue="" className={kelasPilihan}>
+                            <option value="">Pilih</option>
+                            {calon.map((p) => (
+                                <option key={p.id} value={p.id}>
+                                    {p.nama} · {p.jenis}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-muted-foreground">Pengajar baru yang belum terdaftar ditambahkan dulu lewat Tambah pengajar.</p>
+                        <InputError message={errors.pengajar_baru_id} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="tanggal_mulai">Tanggal mulai pengajar baru</Label>
+                        <Input id="tanggal_mulai" name="tanggal_mulai" type="date" />
+                        <InputError message={errors.tanggal_mulai} />
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="button" variant="ghost" onClick={onClose}>
+                            Batal
+                        </Button>
+                        <Button type="submit" disabled={processing}>
+                            Simpan pergantian
+                        </Button>
+                    </DialogFooter>
+                </>
+            )}
+        </Form>
     );
 }
 

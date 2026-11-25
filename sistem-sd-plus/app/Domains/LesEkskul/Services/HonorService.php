@@ -13,9 +13,11 @@ use App\Domains\LesEkskul\Models\HonorKegiatan;
 use App\Domains\LesEkskul\Models\LesTambahan;
 use App\Domains\LesEkskul\Models\PenerimaPeranHonor;
 use App\Domains\LesEkskul\Models\PeriodeLaporan;
+use App\Domains\LesEkskul\Models\RiwayatWaliKelas;
 use App\Domains\LesEkskul\Models\SkemaHonor;
 use App\Models\TahunAjaran;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -27,7 +29,11 @@ use Illuminate\Validation\ValidationException;
 // dimaksudkan untuk memakai data yang sudah dibetulkan, dan pengaturan pertama kali dibuat setelah periode berakhir
 class HonorService
 {
-    public function __construct(private PengajarEkskulService $pengajar, private PengaturanHonorService $pengaturan) {}
+    public function __construct(
+        private PengajarEkskulService $pengajar,
+        private PengaturanHonorService $pengaturan,
+        private PembagianPertemuanService $pertemuan,
+    ) {}
 
     public function sudahDihitung(PeriodeLaporan $periode): bool
     {
@@ -64,11 +70,18 @@ class HonorService
                 $hambatan = [...$hambatan, ...$this->pengajar->masalahKegiatan($induk)];
             });
 
+        // Pengajar per bulan tagihan: ada pengajar di setiap bulan dan tidak campur internal/eksternal (#50)
+        foreach ($pendapatan['ekskul'] as $u) {
+            $hambatan = [...$hambatan, ...$this->pembagianEkskul($u)['masalah']];
+        }
+
         foreach ($this->lesPerJenjang($pendapatan['les']) as $kelasLes) {
+            $bulanList = array_keys($this->pendapatanJenjangPerBulan($kelasLes, $pendapatan['les_bulan']));
             foreach ($kelasLes as $les) {
                 if (! $les->kelas->waliKelas?->user) {
                     $hambatan[] = "Kelas {$les->kelas->nama_lengkap}: belum punya wali kelas (pengajar les).";
                 }
+                $hambatan = [...$hambatan, ...$this->pembagianLes($les, $bulanList)['masalah']];
             }
         }
 
@@ -99,7 +112,7 @@ class HonorService
             }
 
             foreach ($this->lesPerJenjang($pendapatan['les']) as $kelasLes) {
-                $this->hitungLesJenjang($periode, $kelasLes, $pendapatan['les'], $pengelola);
+                $this->hitungLesJenjang($periode, $kelasLes, $pendapatan['les'], $pendapatan['les_bulan'], $pengelola);
             }
 
             if ($pertamaKali) {
@@ -226,9 +239,10 @@ class HonorService
             ->orderBy('id')
             ->get();
 
-        $kegiatan = HonorKegiatan::where('periode_laporan_id', $periode->id)
-            ->with(['ekstrakurikuler', 'lesTambahan.kelas'])
-            ->get()
+        $kegiatan = HonorKegiatan::where('periode_laporan_id', $periode->id)->with(['ekstrakurikuler', 'lesTambahan.kelas'])->get();
+        $catatan = $kegiatan->isEmpty() ? [] : $this->catatanPergantian($periode);
+
+        $kegiatan = $kegiatan
             ->map(fn (HonorKegiatan $k) => [
                 'id' => $k->id,
                 'nama' => $this->namaKegiatan($k),
@@ -236,6 +250,8 @@ class HonorService
                 'total' => $k->total_pendapatan,
                 'non_honor' => $k->total_pendapatan - $k->dasar_honor,
                 'dasar' => $k->dasar_honor,
+                // Pergantian pengajar/wali: "September 2026: A 2 dari 4 pertemuan, B 2 dari 4 pertemuan" (#50)
+                'catatan' => $catatan[$k->les_tambahan_id ? 'l'.$k->les_tambahan_id : 'e'.$k->ekstrakurikuler_id] ?? [],
                 'rincian' => $detail->where('honor_kegiatan_id', $k->id)->values()->map(fn (HonorDetail $d) => [
                     'peran' => PengaturanHonorService::labelPeran($d->peran),
                     'penerima' => $d->namaPenerima(),
@@ -290,6 +306,42 @@ class HonorService
         ];
     }
 
+    // Keterangan pembagian per pertemuan untuk bulan yang pengajarnya tidak hadir penuh (ada pergantian), per unit honor
+    private function catatanPergantian(PeriodeLaporan $periode): array
+    {
+        $teks = function (array $hadir, callable $nama): array {
+            $hasil = [];
+            foreach ($hadir as $bulan => $h) {
+                $jumlah = $h['jumlah'];
+                unset($h['jumlah']);
+                if (min($h) < $jumlah) {
+                    $orang = collect($h)->map(fn (int $n, int $kunci) => $nama($kunci)." {$n} dari {$jumlah} pertemuan")->implode(', ');
+                    $hasil[] = CarbonImmutable::parse($bulan)->locale('id')->translatedFormat('F Y').": {$orang}";
+                }
+            }
+
+            return $hasil;
+        };
+
+        $pendapatan = $this->pendapatan($periode);
+        $catatan = [];
+
+        foreach ($pendapatan['ekskul'] as $u) {
+            $p = $this->pembagianEkskul($u);
+            $catatan['e'.$u->unit->id] = $teks($p['hadir'], fn (int $id) => $p['pengajar'][$id]->nama ?? "#{$id}");
+        }
+
+        foreach ($this->lesPerJenjang($pendapatan['les']) as $kelasLes) {
+            $bulanList = array_keys($this->pendapatanJenjangPerBulan($kelasLes, $pendapatan['les_bulan']));
+            foreach ($kelasLes as $les) {
+                $p = $this->pembagianLes($les, $bulanList);
+                $catatan['l'.$les->id] = $teks($p['hadir'], fn (int $id) => $p['wali'][$id]->user->name ?? "#{$id}");
+            }
+        }
+
+        return array_filter($catatan);
+    }
+
     private function namaKegiatan(HonorKegiatan $k): string
     {
         return $k->lesTambahan ? 'Les Kelas '.$k->lesTambahan->kelas->nama_lengkap : $k->ekstrakurikuler->nama;
@@ -306,18 +358,30 @@ class HonorService
     }
 
     // Pendapatan yang diakui periode ini, dikelompokkan per unit honor.
-    // ekskul: [unit (Ekstrakurikuler), induk, total, non_honor]; les: [les_tambahan_id => total]
+    // ekskul: [unit (Ekstrakurikuler), induk, total, non_honor, per_bulan]; les: [les_tambahan_id => total];
+    // les_bulan: [les_tambahan_id => [bulan => total]]. per_bulan = pendapatan per bulan tagihan, dasar pembagian
+    // honor ke pengajar pada bulan tagihannya (#50)
     private function pendapatan(PeriodeLaporan $periode): array
     {
-        $baris = DB::table('alokasi_transaksi as a')
+        $rinci = DB::table('alokasi_transaksi as a')
             ->join('tagihan as t', 't.id', '=', 'a.tagihan_id')
             ->join('pendaftaran as p', 'p.id', '=', 't.pendaftaran_id')
             ->where('a.diakui_periode_id', $periode->id)
-            ->groupBy('p.les_tambahan_id', 'p.ekstrakurikuler_id')
-            ->get(['p.les_tambahan_id', 'p.ekstrakurikuler_id', DB::raw('SUM(a.nominal) as total')]);
+            ->groupBy('p.les_tambahan_id', 'p.ekstrakurikuler_id', 't.bulan_tagihan')
+            ->get(['p.les_tambahan_id', 'p.ekstrakurikuler_id', 't.bulan_tagihan', DB::raw('SUM(a.nominal) as total')]);
+
+        // Total per kegiatan tetap dihitung seperti sebelumnya (bagian non-honor per baris kegiatan), baru dipecah per bulan
+        $baris = $rinci->groupBy(fn ($b) => $b->les_tambahan_id.'-'.$b->ekstrakurikuler_id)
+            ->map(fn (Collection $c) => (object) [
+                'les_tambahan_id' => $c->first()->les_tambahan_id,
+                'ekstrakurikuler_id' => $c->first()->ekstrakurikuler_id,
+                'total' => $c->sum(fn ($b) => (int) $b->total),
+                'per_bulan' => $c->mapWithKeys(fn ($b) => [substr((string) $b->bulan_tagihan, 0, 10) => (int) $b->total])->all(),
+            ])
+            ->values();
 
         $ekskul = Ekstrakurikuler::whereIn('id', $baris->pluck('ekstrakurikuler_id')->filter())
-            ->with(['induk.kelasParalel', 'induk.pengajar', 'induk.pendamping', 'kelasParalel', 'pengajar', 'pendamping'])
+            ->with(['induk.kelasParalel.riwayatPengajar', 'induk.riwayatPengajar', 'induk.pendamping', 'induk.jadwal', 'kelasParalel.riwayatPengajar', 'riwayatPengajar', 'pendamping', 'jadwal'])
             ->get()
             ->keyBy('id');
 
@@ -330,24 +394,116 @@ class HonorService
             }
             // Per kelas: unit = kelas siswa; digabung: unit = kegiatan induk (FR-16b, #33)
             $u = $induk->honor_per_kelas_paralel && $induk->kelasParalel->isNotEmpty() ? $kegiatan : $induk;
-            $total = (int) $b->total;
+            $total = $b->total;
             // Bagian non-honor (mis. uang kolam) sebanding dengan pembayaran: biaya_non_honor / biaya
             $nonHonor = $induk->biaya > 0 ? intdiv($total * (int) $induk->biaya_non_honor, (int) $induk->biaya) : 0;
 
-            $unit[$u->id] ??= ['unit' => $u, 'induk' => $induk, 'total' => 0, 'non_honor' => 0];
+            $unit[$u->id] ??= ['unit' => $u, 'induk' => $induk, 'total' => 0, 'non_honor' => 0, 'per_bulan' => []];
             $unit[$u->id]['total'] += $total;
             $unit[$u->id]['non_honor'] += $nonHonor;
+            foreach ($b->per_bulan as $bulan => $nominal) {
+                $unit[$u->id]['per_bulan'][$bulan] = ($unit[$u->id]['per_bulan'][$bulan] ?? 0) + $nominal;
+            }
         }
+
+        $les = $baris->whereNotNull('les_tambahan_id');
 
         return [
             'ekskul' => collect($unit)->map(fn (array $u) => (object) $u)->values(),
-            'les' => $baris->whereNotNull('les_tambahan_id')->mapWithKeys(fn ($b) => [$b->les_tambahan_id => (int) $b->total]),
+            'les' => $les->mapWithKeys(fn ($b) => [$b->les_tambahan_id => $b->total]),
+            'les_bulan' => $les->mapWithKeys(fn ($b) => [$b->les_tambahan_id => $b->per_bulan]),
         ];
+    }
+
+    // Pembagian porsi pengajar sebuah unit ekskul per bulan tagihan (#50). Baris tempat pengajar dicatat sama dengan
+    // pengajarUnit(); pertemuan = hari jadwal kegiatan induk. Hasil: pengajar (keyed id), bobot [bulan => [id => bobot]],
+    // hadir [bulan => [id => pertemuan]] + jumlah pertemuan, dan masalah yang menahan perhitungan
+    private function pembagianEkskul(object $u): array
+    {
+        $unit = $u->unit;
+        $baris = $unit->adalahKelasParalel() || $unit->kelasParalel->isEmpty() || $unit->honor_per_kelas_paralel
+            ? collect([$unit])
+            : $unit->kelasParalel->concat([$unit]);
+
+        $riwayat = $baris->flatMap(fn (Ekstrakurikuler $e) => $e->riwayatPengajar);
+        $penugasan = $riwayat->map(fn ($p) => [
+            'kunci' => $p->id,
+            'mulai' => $p->pivot->tanggal_mulai ? substr((string) $p->pivot->tanggal_mulai, 0, 10) : null,
+            'selesai' => $p->pivot->tanggal_selesai ? substr((string) $p->pivot->tanggal_selesai, 0, 10) : null,
+        ]);
+        $hari = $u->induk->jadwal->concat($unit->jadwal)->pluck('hari')->all();
+
+        $hasil = ['pengajar' => $riwayat->unique('id')->keyBy('id'), 'bobot' => [], 'hadir' => [], 'masalah' => []];
+        foreach (array_keys($u->per_bulan) as $bulan) {
+            $b = $this->pertemuan->bobot($penugasan, $this->pertemuan->tanggalPertemuan(CarbonImmutable::parse($bulan), $hari));
+            if ($b['bobot'] === []) {
+                $hasil['masalah'][] = "{$unit->nama}: tidak ada pengajar yang tercatat mengajar pada ".CarbonImmutable::parse($bulan)->locale('id')->translatedFormat('F Y').'.';
+
+                continue;
+            }
+            $hasil['bobot'][$bulan] = $b['bobot'];
+            $hasil['hadir'][$bulan] = $b['hadir'] + ['jumlah' => $b['jumlah']];
+        }
+
+        // Hanya pengajar yang benar-benar mendapat bagian di periode ini yang menentukan skema internal/eksternal
+        $dipakai = collect($hasil['bobot'])->flatMap(fn (array $b) => array_keys($b))->unique();
+        $hasil['pengajar'] = $hasil['pengajar']->only($dipakai->all());
+        if ($hasil['pengajar']->pluck('jenis')->unique()->count() > 1) {
+            $hasil['masalah'][] = "{$unit->nama}: pengajar internal dan eksternal tercampur di periode ini (pergantian pengajar beda jenis); honor belum bisa dihitung.";
+        }
+
+        return $hasil;
+    }
+
+    // Wali kelas sebuah kelas les per bulan tagihan (#50): riwayat_wali_kelas bila pernah berganti, selain itu wali sekarang.
+    // Pertemuan les = hari sekolah Senin–Jumat. Hasil: wali (guru keyed id), bobot, hadir, masalah
+    private function pembagianLes(LesTambahan $les, array $bulanList): array
+    {
+        $riwayat = RiwayatWaliKelas::where('kelas_id', $les->kelas_id)->with('guru.user')->get();
+        $penugasan = $riwayat->isNotEmpty()
+            ? $riwayat->map(fn (RiwayatWaliKelas $r) => ['kunci' => $r->guru_id, 'mulai' => $r->tanggal_mulai?->toDateString(), 'selesai' => $r->tanggal_selesai?->toDateString()])
+            : collect($les->kelas->wali_kelas_id ? [['kunci' => $les->kelas->wali_kelas_id, 'mulai' => null, 'selesai' => null]] : []);
+        $guru = $riwayat->isNotEmpty() ? $riwayat->pluck('guru')->unique('id')->keyBy('id') : collect($les->kelas->waliKelas ? [$les->kelas->waliKelas->id => $les->kelas->waliKelas] : []);
+
+        $hasil = ['wali' => $guru, 'bobot' => [], 'hadir' => [], 'masalah' => []];
+        foreach ($bulanList as $bulan) {
+            $b = $this->pertemuan->bobot($penugasan, $this->pertemuan->hariSekolah(CarbonImmutable::parse($bulan)));
+            if ($b['bobot'] === []) {
+                $hasil['masalah'][] = "Kelas {$les->kelas->nama_lengkap}: tidak ada wali kelas yang tercatat pada ".CarbonImmutable::parse($bulan)->locale('id')->translatedFormat('F Y').'.';
+
+                continue;
+            }
+            $hasil['bobot'][$bulan] = $b['bobot'];
+            $hasil['hadir'][$bulan] = $b['hadir'] + ['jumlah' => $b['jumlah']];
+        }
+
+        foreach ($guru->only(collect($hasil['bobot'])->flatMap(fn (array $b) => array_keys($b))->unique()->all()) as $g) {
+            if (! $g->user) {
+                $hasil['masalah'][] = "Kelas {$les->kelas->nama_lengkap}: wali kelas tanpa akun pengguna.";
+            }
+        }
+
+        return $hasil;
+    }
+
+    // Pendapatan les satu jenjang per bulan tagihan: dasar penimbang pembagian pool pengajar les ke wali per kelas
+    private function pendapatanJenjangPerBulan(Collection $kelasLes, Collection $lesBulan): array
+    {
+        $hasil = [];
+        foreach ($kelasLes as $les) {
+            foreach ($lesBulan[$les->id] ?? [] as $bulan => $nominal) {
+                $hasil[$bulan] = ($hasil[$bulan] ?? 0) + $nominal;
+            }
+        }
+        ksort($hasil);
+
+        return $hasil;
     }
 
     private function hitungEkskul(PeriodeLaporan $periode, object $u, Collection $pengelola): void
     {
-        $pengajar = $this->pengajar->pengajarUnit($u->unit);
+        $pembagian = $this->pembagianEkskul($u);
+        $pengajar = $pembagian['pengajar'];
         $jenis = $pengajar->first()->jenis;
         $skema = $this->skema(TipeKegiatan::Ekstrakurikuler, $jenis, $periode);
         $dasar = $u->total - $u->non_honor;
@@ -360,14 +516,15 @@ class HonorService
             'snapshot_persen' => $skema->snapshot(),
         ]);
 
-        // Porsi pengajar dibagi rata ke pengajar unik; internal lewat akunnya, eksternal lewat data pengajar (FR-16b)
-        $perOrang = intdiv($this->porsi($dasar, $skema->persen_pengajar), $pengajar->count());
+        // Porsi pengajar dibagi rata ke pengajar unik (FR-16b); bila pengajar berganti, per pertemuan bulan tagihannya (#50).
+        // Internal lewat akunnya, eksternal lewat data pengajar
+        $bagian = $this->pertemuan->bagi($this->porsi($dasar, $skema->persen_pengajar), $pembagian['bobot'], $u->per_bulan);
         $rincian = $pengajar->map(fn ($p) => [
             PeranHonor::Pengajar,
             $p->jenis === JenisPengajar::Internal ? $p->user_id : null,
             $p->jenis === JenisPengajar::Eksternal ? $p->id : null,
-            $perOrang,
-        ])->all();
+            $bagian[$p->id] ?? 0,
+        ])->values()->all();
 
         // Setiap pendamping menerima porsi pendamping penuh; pendamping kedua dst. diambil dari kas (FR-16d).
         // Skema internal tidak punya porsi pendamping (sudah termasuk porsi pengajar, #33)
@@ -381,8 +538,9 @@ class HonorService
     }
 
     // Les satu jenjang: honor_kegiatan per kelas, porsi pengajar seluruh kelas dijumlah lalu dibagi rata ke wali kelasnya (FR-16c)
-    private function hitungLesJenjang(PeriodeLaporan $periode, Collection $kelasLes, Collection $pendapatan, Collection $pengelola): void
+    private function hitungLesJenjang(PeriodeLaporan $periode, Collection $kelasLes, Collection $pendapatan, Collection $lesBulan, Collection $pengelola): void
     {
+        $perBulan = $this->pendapatanJenjangPerBulan($kelasLes, $lesBulan);
         $skema = $this->skema(TipeKegiatan::LesTambahan, null, $periode);
         $kegiatan = $kelasLes->mapWithKeys(fn (LesTambahan $les) => [$les->id => HonorKegiatan::create([
             'periode_laporan_id' => $periode->id,
@@ -394,17 +552,21 @@ class HonorService
 
         $poolPengajar = $kegiatan->sum(fn (HonorKegiatan $k) => $this->porsi($k->dasar_honor, $skema->persen_pengajar));
         $perWali = intdiv($poolPengajar, $kelasLes->count());
+        $sisa = $poolPengajar - $perWali * $kelasLes->count();
 
         foreach ($kelasLes as $les) {
             $k = $kegiatan[$les->id];
-            $rincian = [[PeranHonor::Pengajar, $les->kelas->waliKelas->user->id, null, $perWali]];
+            // Bagian kelas ini untuk wali kelasnya; bila wali berganti, dibagi per hari sekolah bulan tagihannya (#50)
+            $pembagian = $this->pembagianLes($les, array_keys($perBulan));
+            $bagian = $this->pertemuan->bagi($perWali, $pembagian['bobot'], $perBulan);
+            $rincian = collect($bagian)->map(fn (int $nominal, int $guruId) => [PeranHonor::Pengajar, $pembagian['wali'][$guruId]->user->id, null, $nominal])->values()->all();
+            $sisa += $perWali - array_sum($bagian);
 
             // Porsi pengajar kelas ini sudah masuk pool; selisih pool vs porsi kelas diserap kas kelas pertama
             $this->simpanRincian($k, $rincian, $skema, $k->dasar_honor, $pengelola, $this->porsi($k->dasar_honor, $skema->persen_pengajar));
         }
 
         // Sisa pembagian pool (beberapa rupiah) masuk kas kelas pertama supaya total jenjang = jumlah dasar honor
-        $sisa = $poolPengajar - $perWali * $kelasLes->count();
         if ($sisa > 0) {
             HonorDetail::where('honor_kegiatan_id', $kegiatan->first()->id)->where('peran', PeranHonor::KasSekolah)->increment('nominal', $sisa);
         }

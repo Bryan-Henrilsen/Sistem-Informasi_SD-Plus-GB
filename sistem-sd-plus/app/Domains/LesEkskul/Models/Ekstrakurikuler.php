@@ -92,9 +92,18 @@ class Ekstrakurikuler extends Model
         return $this->parent_ekstrakurikuler_id !== null;
     }
 
+    // Pengajar yang masih mengajar (penugasan belum selesai)
     public function pengajar(): BelongsToMany
     {
-        return $this->belongsToMany(PengajarEkskul::class, 'ekskul_pengajar')->withTimestamps();
+        return $this->riwayatPengajar()->wherePivotNull('tanggal_selesai');
+    }
+
+    // Seluruh penugasan termasuk yang sudah selesai, dasar pembagian honor per pertemuan (#50)
+    public function riwayatPengajar(): BelongsToMany
+    {
+        return $this->belongsToMany(PengajarEkskul::class, 'ekskul_pengajar')
+            ->withPivot(['id', 'tanggal_mulai', 'tanggal_selesai'])
+            ->withTimestamps();
     }
 
     public function pendaftaran(): HasMany

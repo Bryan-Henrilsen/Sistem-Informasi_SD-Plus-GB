@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { rupiah } from '@/lib/format';
+import { rupiah, tanggal } from '@/lib/format';
 import { index } from '@/routes/les-ekskul/kelas';
 
 type Kelas = {
@@ -26,7 +26,9 @@ type Kelas = {
     les: { biaya: number; peserta: number; bisa_dihapus: boolean } | null;
     jenjang_terkunci: boolean;
     bisa_dihapus: boolean;
+    riwayat_wali: Riwayat[]; // kosong bila wali belum pernah berganti di tengah tahun (#50)
 };
+type Riwayat = { id: number; nama: string; mulai: string | null; selesai: string | null };
 type Guru = { id: number; nama: string; wali_di: string | null };
 type Props = {
     tahunAjaran: { id: number; nama: string };
@@ -44,6 +46,7 @@ const kelasPilihan = 'h-9 rounded-md border border-input bg-transparent px-2 tex
 export default function KelasLes({ tahunAjaran, daftarTahun, kelas, guru, sumberSalinan, bisaUbah }: Props) {
     const [dibuka, setDibuka] = useState<Kelas | 'baru' | null>(null);
     const [samakan, setSamakan] = useState<number | null>(null); // jenjang yang biaya lesnya akan disamakan
+    const [ganti, setGanti] = useState<Kelas | null>(null); // kelas yang wali kelasnya diganti di tengah tahun
     const perJenjang = kelas.reduce<Record<number, Kelas[]>>((acc, k) => {
         (acc[k.jenjang] ??= []).push(k);
 
@@ -139,6 +142,7 @@ export default function KelasLes({ tahunAjaran, daftarTahun, kelas, guru, sumber
                                             <td className="p-3 font-medium whitespace-nowrap">{k.nama_lengkap}</td>
                                             <td className="p-3">
                                                 {k.wali_kelas ?? <span className="text-amber-700 dark:text-amber-400">Belum diisi</span>}
+                                                <DaftarRiwayat riwayat={k.riwayat_wali} />
                                             </td>
                                             <td className="p-3 text-right tabular-nums">{k.jumlah_siswa}</td>
                                             <td className="p-3 text-right tabular-nums">
@@ -157,6 +161,11 @@ export default function KelasLes({ tahunAjaran, daftarTahun, kelas, guru, sumber
                                                         <Button size="sm" variant="outline" onClick={() => setDibuka(k)}>
                                                             Ubah
                                                         </Button>
+                                                        {k.wali_kelas_id && (
+                                                            <Button size="sm" variant="ghost" onClick={() => setGanti(k)}>
+                                                                Ganti wali
+                                                            </Button>
+                                                        )}
                                                         {k.bisa_dihapus && (
                                                             <Button size="icon" variant="ghost" className="size-8" title={`Hapus kelas ${k.nama_lengkap}`} onClick={() => hapus(k)}>
                                                                 <Trash2 className="size-4" />
@@ -194,6 +203,10 @@ export default function KelasLes({ tahunAjaran, daftarTahun, kelas, guru, sumber
                     )}
                 </SheetContent>
             </Sheet>
+
+            <Dialog open={ganti !== null} onOpenChange={(buka) => !buka && setGanti(null)}>
+                <DialogContent>{ganti && <FormGantiWali kelas={ganti} guru={guru} onSelesai={() => setGanti(null)} />}</DialogContent>
+            </Dialog>
 
             <Dialog open={samakan !== null} onOpenChange={(buka) => !buka && setSamakan(null)}>
                 <DialogContent>
@@ -237,6 +250,82 @@ export default function KelasLes({ tahunAjaran, daftarTahun, kelas, guru, sumber
                 </DialogContent>
             </Dialog>
         </>
+    );
+}
+
+// Riwayat wali kelas di bawah nama wali sekarang: "Bu A s.d. 12 Sep 2026 → Pak B mulai 15 Sep 2026"
+function DaftarRiwayat({ riwayat }: { riwayat: Riwayat[] }) {
+    if (riwayat.length === 0) {
+        return null;
+    }
+
+    return (
+        <ul className="mt-1 text-xs text-muted-foreground">
+            {riwayat.map((r) => (
+                <li key={r.id}>
+                    {r.nama}
+                    {r.mulai && ` mulai ${tanggal(r.mulai)}`}
+                    {r.selesai ? ` s.d. ${tanggal(r.selesai)}` : ' (sekarang)'}
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+// Pergantian wali kelas di tengah tahun (#50): honor les bulan pergantian dibagi per hari sekolah Senin–Jumat.
+// Berbeda dengan Ubah kelas, yang dipakai untuk membetulkan salah input
+function FormGantiWali({ kelas, guru, onSelesai }: { kelas: Kelas; guru: Guru[]; onSelesai: () => void }) {
+    return (
+        <Form {...KelasLesController.gantiWali.form(kelas.id)} options={{ preserveScroll: true }} onSuccess={onSelesai} className="flex flex-col gap-4">
+            {({ processing, errors }) => (
+                <>
+                    <DialogHeader>
+                        <DialogTitle>Ganti wali kelas {kelas.nama_lengkap}</DialogTitle>
+                        <DialogDescription>
+                            Untuk pergantian di tengah tahun ajaran. Honor les bulan pergantian dibagi menurut hari sekolah (Senin–Jumat) tiap wali kelas.
+                            Untuk membetulkan salah input, pakai tombol Ubah.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="tanggal_terakhir">Tanggal terakhir {kelas.wali_kelas} bertugas</Label>
+                        <Input id="tanggal_terakhir" name="tanggal_terakhir" type="date" />
+                        <InputError message={errors.tanggal_terakhir} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="guru_id">Wali kelas baru</Label>
+                        <select id="guru_id" name="guru_id" defaultValue="" className={kelasPilihan}>
+                            <option value="">Pilih guru</option>
+                            {guru
+                                .filter((g) => g.id !== kelas.wali_kelas_id)
+                                .map((g) => (
+                                    <option key={g.id} value={g.id} disabled={g.wali_di !== null}>
+                                        {g.nama}
+                                        {g.wali_di ? ` (wali ${g.wali_di})` : ''}
+                                    </option>
+                                ))}
+                        </select>
+                        <InputError message={errors.guru_id} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="tanggal_mulai">Tanggal mulai wali kelas baru</Label>
+                        <Input id="tanggal_mulai" name="tanggal_mulai" type="date" />
+                        <InputError message={errors.tanggal_mulai} />
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="button" variant="ghost" onClick={onSelesai}>
+                            Batal
+                        </Button>
+                        <Button type="submit" disabled={processing}>
+                            Simpan pergantian
+                        </Button>
+                    </DialogFooter>
+                </>
+            )}
+        </Form>
     );
 }
 
@@ -321,7 +410,7 @@ function FormKelas({ kelas, guru, tahunAjaranId, onSelesai }: { kelas: Kelas | n
                         </option>
                     ))}
                 </select>
-                <p className="text-xs text-muted-foreground">Satu guru hanya menjadi wali satu kelas. Wali kelas juga pengajar les kelas ini.</p>
+                <p className="text-xs text-muted-foreground">Satu guru hanya menjadi wali satu kelas. Wali kelas juga pengajar les kelas ini. Untuk pergantian di tengah tahun, pakai tombol Ganti wali.</p>
                 <InputError message={errors.wali_kelas_id} />
             </div>
 

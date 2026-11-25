@@ -56,6 +56,7 @@ Route::middleware(['auth'])
             Route::put('honor/pengajar/{pengajarEkskul}', [PengajarEkskulController::class, 'update'])->name('honor.pengajar.update');
             Route::post('honor/kegiatan/{ekstrakurikuler}/mode', [PengajarEkskulController::class, 'aturMode'])->name('honor.kegiatan.mode');
             Route::post('honor/kegiatan/{ekstrakurikuler}/pengajar', [PengajarEkskulController::class, 'aturPengajar'])->name('honor.kegiatan.pengajar');
+            Route::post('honor/kegiatan/{ekstrakurikuler}/ganti-pengajar', [PengajarEkskulController::class, 'gantiPengajar'])->name('honor.kegiatan.ganti-pengajar'); // #50
             Route::post('honor/penerima-tanpa-akun', [SkemaHonorController::class, 'tambahTanpaAkun'])->name('honor.tanpa-akun');
         });
 
@@ -142,6 +143,7 @@ Route::middleware(['auth'])
             Route::post('tahun-ajaran/{tahunAjaran}/kelas/salin', [KelasLesController::class, 'salin'])->name('kelas.salin');
             Route::post('tahun-ajaran/{tahunAjaran}/kelas/samakan-biaya', [KelasLesController::class, 'samakanBiaya'])->name('kelas.samakan-biaya');
             Route::put('kelas/{kelas}', [KelasLesController::class, 'update'])->name('kelas.update');
+            Route::post('kelas/{kelas}/ganti-wali', [KelasLesController::class, 'gantiWali'])->name('kelas.ganti-wali'); // #50
             Route::delete('kelas/{kelas}', [KelasLesController::class, 'destroy'])->name('kelas.destroy');
 
             // Data master Siswa (#44)

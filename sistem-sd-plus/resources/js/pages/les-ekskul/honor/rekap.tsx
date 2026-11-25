@@ -29,6 +29,7 @@ type Kegiatan = {
     non_honor: number;
     dasar: number;
     rincian: Rincian[];
+    catatan: string[]; // pembagian per pertemuan bila pengajar/wali berganti (#50)
 };
 type Orang = {
     kunci: string;
@@ -287,6 +288,13 @@ function PerKegiatan({ kegiatan }: { kegiatan: Kegiatan[] }) {
                             Pendapatan {rupiah(k.total)}
                             {k.non_honor > 0 && ` − non-honor ${rupiah(k.non_honor)} = dasar ${rupiah(k.dasar)}`}
                         </p>
+                        {k.catatan.length > 0 && (
+                            <ul className="text-xs text-sky-800 dark:text-sky-300">
+                                {k.catatan.map((c) => (
+                                    <li key={c}>Pergantian pengajar — {c}</li>
+                                ))}
+                            </ul>
+                        )}
                     </CardHeader>
                     <CardContent className="px-4">
                         <table className="w-full text-sm">

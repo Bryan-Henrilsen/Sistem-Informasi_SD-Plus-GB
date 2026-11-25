@@ -10,6 +10,7 @@ use App\Domains\LesEkskul\Models\Pendaftaran;
 use App\Domains\LesEkskul\Models\PengajarEkskul;
 use App\Models\TahunAjaran;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -68,6 +69,60 @@ class PengajarEkskulService
     public function aturPengajar(Ekstrakurikuler $kegiatan, array $pengajarIds): void
     {
         DB::transaction(fn () => $kegiatan->pengajar()->sync(array_map('intval', $pengajarIds)));
+    }
+
+    // Pergantian pengajar di tengah tahun (#50): penugasan pengajar lama ditutup pada tanggal terakhir ia mengajar,
+    // pengajar baru mulai pada tanggalnya. Honor bulan pergantian dibagi per pertemuan (HonorService).
+    // Atur pengajar biasa (centang) tetap untuk membetulkan salah input
+    public function gantiPengajar(Ekstrakurikuler $kegiatan, int $lamaId, string $tanggalTerakhir, int $baruId, string $tanggalMulai): void
+    {
+        DB::transaction(function () use ($kegiatan, $lamaId, $tanggalTerakhir, $baruId, $tanggalMulai) {
+            if (! $kegiatan->adalahKelasParalel() && $kegiatan->kelasParalel()->exists()) {
+                throw $this->gagal('kegiatan', 'Pengajar kegiatan ini dicatat per kelas paralel; ganti pengajar di kelasnya.');
+            }
+
+            $terakhir = CarbonImmutable::parse($tanggalTerakhir);
+            $mulai = CarbonImmutable::parse($tanggalMulai);
+            $lama = $kegiatan->pengajar()->whereKey($lamaId)->first()
+                ?? throw $this->gagal('pengajar_lama_id', 'Pilih pengajar yang sedang mengajar kegiatan ini.');
+            $baru = PengajarEkskul::find($baruId);
+            $mulaiLama = $lama->pivot->tanggal_mulai ? CarbonImmutable::parse($lama->pivot->tanggal_mulai) : null;
+
+            if ($baruId === $lamaId) {
+                throw $this->gagal('pengajar_baru_id', 'Pengajar baru harus berbeda dengan pengajar lama.');
+            }
+            if (! $baru?->status_aktif) {
+                throw $this->gagal('pengajar_baru_id', 'Pilih pengajar baru yang masih aktif.');
+            }
+            if ($kegiatan->pengajar()->whereKey($baruId)->exists()) {
+                throw $this->gagal('pengajar_baru_id', "{$baru->nama} sudah mengajar kegiatan ini.");
+            }
+            if ($mulaiLama && $terakhir->lt($mulaiLama)) {
+                throw $this->gagal('tanggal_terakhir', "{$lama->nama} baru mulai mengajar {$mulaiLama->locale('id')->translatedFormat('j F Y')}.");
+            }
+            if ($mulai->lte($terakhir)) {
+                throw $this->gagal('tanggal_mulai', 'Tanggal mulai pengajar baru harus sesudah tanggal terakhir pengajar lama.');
+            }
+
+            DB::table('ekskul_pengajar')->where('id', $lama->pivot->id)
+                ->update(['tanggal_selesai' => $terakhir->toDateString(), 'updated_at' => now()]);
+            $kegiatan->riwayatPengajar()->attach($baruId, ['tanggal_mulai' => $mulai->toDateString()]);
+        });
+    }
+
+    // Riwayat penugasan sebuah baris kegiatan (terlama dulu), ditampilkan bila ada pergantian (#50)
+    public function riwayat(Ekstrakurikuler $kegiatan): Collection
+    {
+        return $kegiatan->riwayatPengajar
+            ->sortBy(fn (PengajarEkskul $p) => ($p->pivot->tanggal_mulai ?? '0000-00-00').'#'.str_pad((string) $p->pivot->id, 10, '0', STR_PAD_LEFT))
+            ->values()
+            ->map(fn (PengajarEkskul $p) => [
+                'id' => $p->pivot->id,
+                'nama' => $p->nama,
+                'jenis' => $p->jenis,
+                'mulai' => $p->pivot->tanggal_mulai ? CarbonImmutable::parse($p->pivot->tanggal_mulai)->toDateString() : null,
+                'selesai' => $p->pivot->tanggal_selesai ? CarbonImmutable::parse($p->pivot->tanggal_selesai)->toDateString() : null,
+            ]);
     }
 
     // Pendamping dicatat di unit honornya: induk bila digabung, kelas paralel bila per kelas (FR-16d, FR-18)

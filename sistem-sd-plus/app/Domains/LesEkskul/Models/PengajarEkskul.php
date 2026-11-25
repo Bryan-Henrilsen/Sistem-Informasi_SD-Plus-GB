@@ -17,7 +17,7 @@ class PengajarEkskul extends Model
         'nama',
         'jenis',
         'no_hp',
-        'status_aktif'
+        'status_aktif',
     ];
 
     protected $attributes = [
@@ -40,6 +40,7 @@ class PengajarEkskul extends Model
 
     public function ekstrakurikuler(): BelongsToMany
     {
-        return $this->belongsToMany(Ekstrakurikuler::class, 'ekskul_pengajar')->withTimestamps();
+        // Kegiatan yang masih diajar; penugasan yang sudah selesai (#50) tidak dihitung
+        return $this->belongsToMany(Ekstrakurikuler::class, 'ekskul_pengajar')->wherePivotNull('tanggal_selesai')->withTimestamps();
     }
 }
