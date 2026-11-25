@@ -21,6 +21,8 @@ import {
     School,
     GraduationCap,
     CalendarDays,
+    CalendarClock,
+    MessagesSquare,
     UserCog,
     Undo2,
     Users,
@@ -55,6 +57,8 @@ import tahunAjaran from '@/routes/les-ekskul/tahun-ajaran';
 import akunStaf from '@/routes/les-ekskul/akun-staf';
 import mataPelajaran from '@/routes/les-ekskul/mata-pelajaran';
 import transaksi from '@/routes/les-ekskul/transaksi';
+import jurnalGuru from '@/routes/jurnal-guru';
+import forum from '@/routes/jurnal-guru/forum';
 import type { Auth, NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -111,7 +115,7 @@ const footerNavItems: NavItem[] = [
 type Badge = { transaksi: number; laporan_harian: number; refund: number } | null;
 
 export function AppSidebar() {
-    const { auth, badge } = usePage<{ auth: Auth; badge: Badge }>().props;
+    const { auth, badge, badgeForum } = usePage<{ auth: Auth; badge: Badge; badgeForum: number | null }>().props;
     const bisaLihatKeuangan = auth.roles.some((role) =>
         roleKeuangan.includes(role),
     );
@@ -132,6 +136,13 @@ export function AppSidebar() {
     }
     // Guru/staf yang juga orang tua membuka halaman orang tua dari sini (#36)
     const menuOrangTua: NavItem[] = auth.roles.includes('orang_tua') ? [{ title: 'Anak Saya', href: ortu.beranda(), icon: Users }] : [];
+    // Jurnal Guru (#51): guru melihat jadwalnya dan forumnya; Kepala Sekolah melihat semua forum guru
+    const menuJurnalGuru: NavItem[] = [
+        ...(auth.roles.includes('guru') ? [{ title: 'Jadwal Saya', href: jurnalGuru.jadwalSaya(), icon: CalendarClock }] : []),
+        ...(auth.roles.includes('guru') || auth.roles.includes('kepala_sekolah')
+            ? [{ title: 'Forum Guru', href: forum.index(), icon: MessagesSquare, badge: badgeForum ?? undefined }]
+            : []),
+    ];
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -149,6 +160,7 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                {menuJurnalGuru.length > 0 && <NavMain items={menuJurnalGuru} label="Jurnal Guru" />}
                 {bisaLihatKeuangan && (
                     <NavMain items={menuLesEkskul} label="Les & Ekskul" />
                 )}
