@@ -8,10 +8,12 @@ use App\Domains\LesEkskul\Enums\StatusPeriodeLaporan;
 use App\Domains\LesEkskul\Enums\StatusTransaksi;
 use App\Domains\LesEkskul\Models\LaporanHarian;
 use App\Domains\LesEkskul\Models\PeriodeLaporan;
+use App\Domains\LesEkskul\Models\Tagihan;
 use App\Domains\LesEkskul\Models\Transaksi;
 use App\Domains\LesEkskul\Services\LaporanService;
 use App\Domains\LesEkskul\Services\RingkasanTugasService;
 use App\Http\Controllers\Controller;
+use App\Models\SiswaKelas;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -45,6 +47,52 @@ class LaporanController extends Controller
             'tindakan' => $tindakan,
             'menunggu' => LaporanHarian::where('status', StatusLaporanHarian::Diajukan)->count(),
             'bisaAjukanSemua' => $request->user()->hasRole('tu') ? $this->ringkasan->laporanBelumDiajukan()->count() : 0,
+        ]);
+    }
+
+    // Lembar cetak transaksi cash satu hari, diserahkan TU ke Bendahara bersama uangnya sebagai arsip fisik (#49).
+    // Transfer tidak ikut karena sudah tercatat di aplikasi; transaksi yang ditolak juga tidak ikut.
+    public function cetakCash(LaporanHarian $laporanHarian): Response
+    {
+        $tanggal = $laporanHarian->tanggal;
+
+        $transaksi = $laporanHarian->transaksi()
+            ->where('metode', MetodeTransaksi::Cash)
+            ->where('status', '!=', StatusTransaksi::Ditolak)
+            ->with([
+                'tagihan.pendaftaran.lesTambahan.kelas',
+                'tagihan.pendaftaran.ekstrakurikuler',
+                // Kelas pada tahun ajaran tanggal laporan, supaya cetak ulang laporan lama tetap benar
+                'siswa.riwayatKelas' => fn ($q) => $q->with('kelas')->whereHas('tahunAjaran', fn (Builder $t) => $t
+                    ->whereDate('tanggal_mulai', '<=', $tanggal)
+                    ->whereDate('tanggal_selesai', '>=', $tanggal)),
+            ])
+            ->orderBy('id')
+            ->get();
+
+        return Inertia::render('les-ekskul/laporan-harian/cetak-cash', [
+            'laporan' => [
+                'id' => $laporanHarian->id,
+                'tanggal' => $tanggal->toDateString(),
+                'status' => $laporanHarian->status,
+            ],
+            'transaksi' => $transaksi->map(fn (Transaksi $t) => [
+                'id' => $t->id,
+                'siswa' => $t->siswa->nama,
+                'kelas' => $t->siswa->riwayatKelas->first(fn (SiswaKelas $sk) => $sk->kelas !== null)?->kelas->nama_lengkap,
+                'tanggal' => $t->tanggal->toDateString(),
+                'terlambat' => $t->tanggal->lt($tanggal),
+                'nominal' => $t->nominal,
+                // Satu baris per kegiatan, bulannya digabung: "Karate — Agustus, September"
+                'alokasi' => $t->tagihan->sortBy('bulan_tagihan')
+                    ->groupBy(fn (Tagihan $tg) => $tg->pendaftaran->nama_kegiatan)
+                    ->map(fn (Collection $daftar, string $kegiatan) => [
+                        'kegiatan' => $kegiatan,
+                        'bulan' => $daftar->map(fn (Tagihan $tg) => $tg->bulan_tagihan->format('Y-m'))->values(),
+                    ])
+                    ->values(),
+            ])->values(),
+            'total' => (int) $transaksi->sum('nominal'),
         ]);
     }
 
