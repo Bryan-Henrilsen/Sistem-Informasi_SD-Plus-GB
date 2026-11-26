@@ -1,5 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import React, { useMemo, useState } from 'react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { toast } from 'sonner';
+import kisiKisiRoute from '@/routes/jadwal-guru/kisi-kisi';
 
 type JenisTugasKode = 'utama' | 'damping' | 'piket';
 
@@ -79,11 +81,6 @@ interface KisiKisiTugasProps {
     };
 }
 
-interface PageProps {
-    flash?: { success?: string; error?: string };
-    [key: string]: unknown;
-}
-
 interface AllocationForm {
     guru_id: string;
     jenis_tugas: JenisTugasKode;
@@ -107,9 +104,9 @@ const jenisTugasLabel: Record<JenisTugasKode, string> = {
 };
 
 const jenisTugasStyle: Record<JenisTugasKode, string> = {
-    utama: 'border-blue-200 bg-blue-50 text-blue-800',
-    damping: 'border-orange-200 bg-orange-50 text-orange-800',
-    piket: 'border-purple-200 bg-purple-50 text-purple-800',
+    utama: 'border-blue-500/30 bg-blue-500/10 text-blue-800 dark:text-blue-300',
+    damping: 'border-orange-500/30 bg-orange-500/10 text-orange-800 dark:text-orange-300',
+    piket: 'border-purple-500/30 bg-purple-500/10 text-purple-800 dark:text-purple-300',
 };
 
 export default function KisiKisiTugas({
@@ -120,7 +117,6 @@ export default function KisiKisiTugas({
     kisiKisiTugas,
     summary,
 }: KisiKisiTugasProps) {
-    const { flash } = usePage<PageProps>().props;
     const form = useForm<AllocationForm>(initialForm);
     const formErrors = form.errors as Record<string, string>;
 
@@ -142,29 +138,7 @@ export default function KisiKisiTugas({
     });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<KisiKisiItem | null>(null);
-    const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
-        show: false,
-        message: '',
-        type: 'success',
-    });
-
-    useEffect(() => {
-        if (flash?.success) {
-            setToast({ show: true, message: flash.success, type: 'success' });
-            const timer = window.setTimeout(() => {
-                setToast({ show: false, message: '', type: 'success' });
-            }, 3500);
-            return () => window.clearTimeout(timer);
-        }
-
-        if (flash?.error) {
-            setToast({ show: true, message: flash.error, type: 'error' });
-            const timer = window.setTimeout(() => {
-                setToast({ show: false, message: '', type: 'error' });
-            }, 4500);
-            return () => window.clearTimeout(timer);
-        }
-    }, [flash]);
+    // Pesan berhasil dikirim server lewat Inertia::flash('toast') dan ditampilkan Toaster global; pesan gagal memakai toast.error
 
     const mainAllocations = useMemo(
         () => kisiKisiTugas.filter((item) => item.jenis_tugas.kode === 'utama'),
@@ -259,7 +233,7 @@ export default function KisiKisiTugas({
             preserveScroll: true,
             onError: (errors) => {
                 const message = errors.allocation || Object.values(errors)[0] || 'Alokasi gagal dihapus.';
-                setToast({ show: true, message, type: 'error' });
+                toast.error(message);
             },
         });
     };
@@ -276,11 +250,11 @@ export default function KisiKisiTugas({
         if (!filterType[type]) return null;
 
         return (
-            <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
+            <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
                     <div>
-                        <h3 className="font-bold text-[#3A322C]">Alokasi {jenisTugasLabel[type]} Tanpa Kelas</h3>
-                        <p className="mt-0.5 text-xs text-gray-500">
+                        <h3 className="font-bold text-foreground">Alokasi {jenisTugasLabel[type]} Tanpa Kelas</h3>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
                             {type === 'damping'
                                 ? 'Penugasan pendamping per guru. Kelas dan pasangan ditentukan saat pembagian jadwal.'
                                 : 'Jumlah jam piket per guru. Penempatan dilakukan langsung pada slot waktu.'}
@@ -292,30 +266,30 @@ export default function KisiKisiTugas({
                 </div>
                 <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
                     {items.map((item) => (
-                        <div key={item.id} className="rounded-lg border border-gray-200 p-3 transition hover:border-[#A9784F]/50 hover:shadow-sm">
+                        <div key={item.id} className="rounded-lg border border-border p-3 transition hover:border-ring hover:shadow-sm">
                             <div className="flex items-start justify-between gap-2">
                                 <div>
-                                    <div className="font-semibold text-sm text-[#3A322C]">{item.guru.nama}</div>
-                                    <div className="text-[11px] text-gray-500">{item.guru.kode_guru}</div>
+                                    <div className="font-semibold text-sm text-foreground">{item.guru.nama}</div>
+                                    <div className="text-[11px] text-muted-foreground">{item.guru.kode_guru}</div>
                                 </div>
                                 <span className={`rounded px-2 py-1 text-[10px] font-bold uppercase ${jenisTugasStyle[type]}`}>
                                     {jenisTugasLabel[type]}
                                 </span>
                             </div>
-                            <div className="mt-3 flex items-end justify-between border-t border-gray-100 pt-2">
+                            <div className="mt-3 flex items-end justify-between border-t border-border pt-2">
                                 <div>
-                                    <div className="text-[11px] text-gray-500">Alokasi per minggu</div>
-                                    <div className="text-lg font-bold text-[#A9784F]">{item.jumlah_jam} jam</div>
+                                    <div className="text-[11px] text-muted-foreground">Alokasi per minggu</div>
+                                    <div className="text-lg font-bold text-foreground">{item.jumlah_jam} jam</div>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button type="button" onClick={() => openEditModal(item)} className="text-xs font-semibold text-[#7A5738] hover:underline">Edit</button>
-                                    <button type="button" onClick={() => deleteAllocation(item)} className="text-xs font-semibold text-red-600 hover:underline">Hapus</button>
+                                    <button type="button" onClick={() => openEditModal(item)} className="text-xs font-semibold text-foreground hover:underline">Edit</button>
+                                    <button type="button" onClick={() => deleteAllocation(item)} className="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline">Hapus</button>
                                 </div>
                             </div>
                         </div>
                     ))}
                     {items.length === 0 && (
-                        <p className="col-span-full rounded-lg border border-dashed border-gray-200 p-5 text-center text-sm text-gray-400">
+                        <p className="col-span-full rounded-lg border border-dashed border-border p-5 text-center text-sm text-muted-foreground">
                             Belum ada alokasi {jenisTugasLabel[type].toLowerCase()}.
                         </p>
                     )}
@@ -328,86 +302,63 @@ export default function KisiKisiTugas({
         <>
             <Head title="Kisi-Kisi Tugas" />
 
-            {toast.show && (
-                <div className={`fixed left-1/2 top-5 z-[70] -translate-x-1/2 rounded-lg border px-5 py-3 text-sm font-medium shadow-lg ${
-                    toast.type === 'error'
-                        ? 'border-red-200 bg-red-50 text-red-800'
-                        : 'border-green-200 bg-green-50 text-green-800'
-                }`}>
-                    {toast.message}
-                </div>
-            )}
-
-            <div className="flex min-h-screen bg-[#FAF7F2] font-sans text-[#3A322C]">
-                <aside className="z-20 flex w-64 shrink-0 flex-col border-r border-gray-200 bg-white shadow-sm">
-                    <div className="border-b border-gray-200 p-6">
-                        <h1 className="text-xl font-bold leading-tight text-[#7A5738]">SD Plus<br />Gembala Baik</h1>
-                        <p className="mt-1 text-xs text-gray-500">Manajemen Akademik</p>
-                    </div>
-                    <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-                        <div className="mb-2 mt-6 text-xs font-bold uppercase tracking-wider text-gray-400">Modul Jadwal Guru</div>
-                        <a href="/jadwal-guru/waktu-pelajaran" className="block rounded-md border-l-4 border-transparent px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50">Waktu Pelajaran</a>
-                        <a href="/jadwal-guru/kisi-kisi" className="block rounded-md border-l-4 border-[#A9784F] bg-[#A9784F]/10 px-3 py-2 text-sm font-medium text-[#7A5738]">Kisi-Kisi Tugas</a>
-                        <a href="/jadwal-guru/pembagian" className="block rounded-md border-l-4 border-transparent px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50">Pembagian Jadwal</a>
-                        <a href="/jadwal-guru/hasil" className="block rounded-md border-l-4 border-transparent px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50">Hasil Jadwal</a>
-                    </nav>
-                </aside>
+            <div className="flex text-foreground">
 
                 <main className="flex min-w-0 flex-1 flex-col">
-                    <header className="shrink-0 border-b border-gray-200 bg-white px-6 py-5 shadow-sm lg:px-8">
+                    <header className="shrink-0 border-b border-border bg-card px-6 py-5 shadow-sm lg:px-8">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div>
-                                <h2 className="text-2xl font-bold text-[#7A5738]">Matriks Penugasan Guru</h2>
-                                <p className="mt-1 text-sm text-gray-500">Tahun Ajaran: {tahunAjaran.nama}</p>
+                                <h2 className="text-2xl font-bold text-foreground">Matriks Penugasan Guru</h2>
+                                <p className="mt-1 text-sm text-muted-foreground">Tahun Ajaran: {tahunAjaran.nama}</p>
                             </div>
                             <button
                                 type="button"
                                 onClick={openCreateModal}
-                                className="rounded-md bg-[#A9784F] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#7A5738]"
+                                className="rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
                             >
                                 + Tambah Manual
                             </button>
                         </div>
                         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                <div className="text-xs text-gray-500">Total alokasi</div>
+                            <div className="rounded-lg border border-border bg-muted/50 p-3">
+                                <div className="text-xs text-muted-foreground">Total alokasi</div>
                                 <div className="mt-1 text-2xl font-bold">{summary.jumlah_alokasi}</div>
-                                <div className="text-[11px] text-gray-400">Baris kisi-kisi</div>
+                                <div className="text-[11px] text-muted-foreground">Baris kisi-kisi</div>
                             </div>
-                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                <div className="text-xs text-gray-500">Total beban tugas</div>
+                            <div className="rounded-lg border border-border bg-muted/50 p-3">
+                                <div className="text-xs text-muted-foreground">Total beban tugas</div>
                                 <div className="mt-1 text-2xl font-bold">{summary.total_jam.toLocaleString('id-ID')}</div>
-                                <div className="text-[11px] text-gray-400">Jam per minggu</div>
+                                <div className="text-[11px] text-muted-foreground">Jam per minggu</div>
                             </div>
-                            <div className="rounded-lg border border-blue-100 bg-blue-50/70 p-3">
-                                <div className="text-xs text-blue-700">Tugas utama</div>
-                                <div className="mt-1 text-2xl font-bold text-blue-900">{summary.per_jenis.utama?.jumlah_jam ?? 0}</div>
-                                <div className="text-[11px] text-blue-600">{summary.per_jenis.utama?.jumlah_alokasi ?? 0} alokasi</div>
+                            <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-3">
+                                <div className="text-xs text-blue-800 dark:text-blue-300">Tugas utama</div>
+                                <div className="mt-1 text-2xl font-bold text-blue-800 dark:text-blue-300">{summary.per_jenis.utama?.jumlah_jam ?? 0}</div>
+                                <div className="text-[11px] text-blue-600 dark:text-blue-400">{summary.per_jenis.utama?.jumlah_alokasi ?? 0} alokasi</div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
-                                <div className="rounded-lg border border-orange-100 bg-orange-50/70 p-3">
-                                    <div className="text-xs text-orange-700">Damping</div>
-                                    <div className="mt-1 text-xl font-bold text-orange-900">{summary.per_jenis.damping?.jumlah_jam ?? 0}</div>
-                                    <div className="text-[11px] text-orange-600">jam</div>
+                                <div className="rounded-lg border border-orange-500/20 bg-orange-500/10 p-3">
+                                    <div className="text-xs text-orange-800 dark:text-orange-300">Damping</div>
+                                    <div className="mt-1 text-xl font-bold text-orange-800 dark:text-orange-300">{summary.per_jenis.damping?.jumlah_jam ?? 0}</div>
+                                    <div className="text-[11px] text-orange-600 dark:text-orange-400">jam</div>
                                 </div>
-                                <div className="rounded-lg border border-purple-100 bg-purple-50/70 p-3">
-                                    <div className="text-xs text-purple-700">Piket</div>
-                                    <div className="mt-1 text-xl font-bold text-purple-900">{summary.per_jenis.piket?.jumlah_jam ?? 0}</div>
-                                    <div className="text-[11px] text-purple-600">jam</div>
+                                <div className="rounded-lg border border-purple-500/20 bg-purple-500/10 p-3">
+                                    <div className="text-xs text-purple-800 dark:text-purple-300">Piket</div>
+                                    <div className="mt-1 text-xl font-bold text-purple-800 dark:text-purple-300">{summary.per_jenis.piket?.jumlah_jam ?? 0}</div>
+                                    <div className="text-[11px] text-purple-600 dark:text-purple-400">jam</div>
                                 </div>
                             </div>
                         </div>
                     </header>
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-white px-6 py-3 lg:px-8">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-6 py-3 lg:px-8">
                         <div className="flex flex-wrap items-center gap-2 text-xs">
                             {(['utama', 'damping', 'piket'] as JenisTugasKode[]).map((type) => (
-                                <label key={type} className="flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-gray-600 hover:bg-gray-50">
+                                <label key={type} className="flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-muted-foreground hover:bg-muted/50">
                                     <input
                                         type="checkbox"
                                         checked={filterType[type]}
                                         onChange={() => setFilterType((current) => ({ ...current, [type]: !current[type] }))}
-                                        className="rounded border-gray-300 text-[#A9784F] focus:ring-[#A9784F]"
+                                        className="rounded border-input text-foreground focus:ring-ring/50"
                                     />
                                     {jenisTugasLabel[type]}
                                 </label>
@@ -419,35 +370,35 @@ export default function KisiKisiTugas({
                                 value={searchGuru}
                                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSearchGuru(event.target.value)}
                                 placeholder="Cari nama, kode guru, atau mapel..."
-                                className="w-72 max-w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-[#A9784F] focus:ring-2 focus:ring-[#A9784F]/10"
+                                className="w-72 max-w-full rounded-md border border-input px-3 py-2 text-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/50"
                             />
                         </div>
                     </div>
 
                     <div className="flex-1 space-y-6 overflow-auto p-4 lg:p-6">
                         {filterType.utama && (
-                            <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-5 py-4">
+                            <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-4">
                                     <div>
-                                        <h3 className="font-bold text-[#3A322C]">Matriks Guru × Kelas</h3>
-                                        <p className="mt-0.5 text-xs text-gray-500">Beban mengajar utama per mata pelajaran dan kelas.</p>
+                                        <h3 className="font-bold text-foreground">Matriks Guru × Kelas</h3>
+                                        <p className="mt-0.5 text-xs text-muted-foreground">Beban mengajar utama per mata pelajaran dan kelas.</p>
                                     </div>
-                                    <span className="text-xs text-gray-500">Geser tabel ke kanan untuk melihat kelas lainnya</span>
+                                    <span className="text-xs text-muted-foreground">Geser tabel ke kanan untuk melihat kelas lainnya</span>
                                 </div>
                                 <div className="max-h-[68vh] overflow-auto">
                                     <table className="w-max min-w-full border-separate border-spacing-0 text-sm">
                                         <thead>
                                             <tr>
-                                                <th className="sticky left-0 top-0 z-40 min-w-[180px] border-b border-r border-gray-200 bg-gray-100 px-4 py-3 text-left font-bold text-gray-700">Nama Guru</th>
-                                                <th className="sticky top-0 z-30 min-w-[80px] border-b border-r border-gray-200 bg-gray-100 px-3 py-3 text-center font-bold text-gray-700">Kode</th>
-                                                <th className="sticky top-0 z-30 min-w-[90px] border-b border-r border-gray-200 bg-gray-100 px-3 py-3 text-center font-bold text-gray-700">Total Jam</th>
+                                                <th className="sticky left-0 top-0 z-40 min-w-[180px] border-b border-r border-border bg-muted px-4 py-3 text-left font-bold text-foreground">Nama Guru</th>
+                                                <th className="sticky top-0 z-30 min-w-[80px] border-b border-r border-border bg-muted px-3 py-3 text-center font-bold text-foreground">Kode</th>
+                                                <th className="sticky top-0 z-30 min-w-[90px] border-b border-r border-border bg-muted px-3 py-3 text-center font-bold text-foreground">Total Jam</th>
                                                 {kelasList.map((kelas) => {
                                                     const penuh = kelas.teralokasi_jam >= kelas.kuota_jam;
                                                     return (
-                                                        <th key={kelas.id} className="sticky top-0 z-30 min-w-[150px] border-b border-r border-gray-200 bg-white px-3 py-3 text-center">
-                                                            <div className="font-bold text-[#3A322C]">{kelas.nama_kelas}</div>
-                                                            <div className="mt-0.5 text-[10px] text-gray-400">Jenjang {kelas.jenjang}</div>
-                                                            <div className={`mt-1 text-xs font-semibold ${penuh ? 'text-green-700' : 'text-[#A9784F]'}`}>
+                                                        <th key={kelas.id} className="sticky top-0 z-30 min-w-[150px] border-b border-r border-border bg-card px-3 py-3 text-center">
+                                                            <div className="font-bold text-foreground">{kelas.nama_kelas}</div>
+                                                            <div className="mt-0.5 text-[10px] text-muted-foreground">Jenjang {kelas.jenjang}</div>
+                                                            <div className={`mt-1 text-xs font-semibold ${penuh ? 'text-green-800 dark:text-green-300' : 'text-foreground'}`}>
                                                                 {kelas.teralokasi_jam}/{kelas.kuota_jam} jam
                                                             </div>
                                                         </th>
@@ -462,35 +413,35 @@ export default function KisiKisiTugas({
                                                 if (mainItems.length === 0) return null;
 
                                                 return (
-                                                    <tr key={guru.id} className="group hover:bg-gray-50/70">
-                                                        <td className="sticky left-0 z-20 border-b border-r border-gray-200 bg-white px-4 py-3 align-top group-hover:bg-gray-50">
-                                                            <div className="font-semibold text-[#3A322C]">{guru.nama}</div>
-                                                            <div className="mt-0.5 text-[10px] text-gray-400">Guru</div>
+                                                    <tr key={guru.id} className="group hover:bg-muted/50">
+                                                        <td className="sticky left-0 z-20 border-b border-r border-border bg-card px-4 py-3 align-top group-hover:bg-muted">
+                                                            <div className="font-semibold text-foreground">{guru.nama}</div>
+                                                            <div className="mt-0.5 text-[10px] text-muted-foreground">Guru</div>
                                                         </td>
-                                                        <td className="border-b border-r border-gray-200 px-3 py-3 text-center align-top text-gray-500">{guru.kode_guru}</td>
-                                                        <td className="border-b border-r border-gray-200 px-3 py-3 text-center align-top">
-                                                            <span className="font-bold text-[#A9784F]">{totalJamGuru(guru.id)}</span>
+                                                        <td className="border-b border-r border-border px-3 py-3 text-center align-top text-muted-foreground">{guru.kode_guru}</td>
+                                                        <td className="border-b border-r border-border px-3 py-3 text-center align-top">
+                                                            <span className="font-bold text-foreground">{totalJamGuru(guru.id)}</span>
                                                         </td>
                                                         {kelasList.map((kelas) => {
                                                             const items = allocationsForCell(guru.id, kelas.id);
                                                             return (
-                                                                <td key={kelas.id} className="min-w-[150px] border-b border-r border-gray-100 p-2 align-top">
+                                                                <td key={kelas.id} className="min-w-[150px] border-b border-r border-border p-2 align-top">
                                                                     <div className="space-y-1.5">
                                                                         {items.map((item) => (
                                                                             <button
                                                                                 key={item.id}
                                                                                 type="button"
                                                                                 onClick={() => openEditModal(item)}
-                                                                                className="flex w-full items-center justify-between gap-2 rounded border border-blue-100 bg-blue-50 px-2 py-1.5 text-left transition hover:border-blue-300 hover:bg-blue-100"
+                                                                                className="flex w-full items-center justify-between gap-2 rounded border border-blue-500/20 bg-blue-500/10 px-2 py-1.5 text-left transition hover:border-blue-500/60 hover:bg-blue-500/15"
                                                                                 title="Klik untuk mengubah alokasi"
                                                                             >
-                                                                                <span className="min-w-0 truncate text-xs font-medium text-blue-900">
+                                                                                <span className="min-w-0 truncate text-xs font-medium text-blue-800 dark:text-blue-300">
                                                                                     {item.mata_pelajaran?.kode ?? item.mata_pelajaran?.nama ?? 'Mapel'}
                                                                                 </span>
-                                                                                <span className="shrink-0 text-xs font-bold text-blue-700">{item.jumlah_jam}</span>
+                                                                                <span className="shrink-0 text-xs font-bold text-blue-800 dark:text-blue-300">{item.jumlah_jam}</span>
                                                                             </button>
                                                                         ))}
-                                                                        {items.length === 0 && <span className="text-xs text-gray-300">—</span>}
+                                                                        {items.length === 0 && <span className="text-xs text-muted-foreground/50">—</span>}
                                                                     </div>
                                                                 </td>
                                                             );
@@ -500,7 +451,7 @@ export default function KisiKisiTugas({
                                             })}
                                             {visibleTeachers.every((guru) => !mainAllocations.some((item) => item.guru_id === guru.id)) && (
                                                 <tr>
-                                                    <td colSpan={kelasList.length + 3} className="px-6 py-10 text-center text-sm text-gray-400">
+                                                    <td colSpan={kelasList.length + 3} className="px-6 py-10 text-center text-sm text-muted-foreground">
                                                         Tidak ada alokasi utama yang cocok dengan pencarian atau filter.
                                                     </td>
                                                 </tr>
@@ -531,32 +482,32 @@ export default function KisiKisiTugas({
 
             {isModalOpen && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-[2px]">
-                    <div className="my-8 w-full max-w-xl overflow-hidden rounded-xl bg-white text-gray-900 shadow-2xl">
-                        <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
+                    <div className="my-8 w-full max-w-xl overflow-hidden rounded-xl bg-card text-foreground shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-border bg-muted/50 px-6 py-4">
                             <div>
-                                <h3 className="font-bold text-[#3A322C]">{editingItem ? 'Ubah Alokasi Tugas' : 'Tambah Alokasi Tugas'}</h3>
-                                <p className="mt-0.5 text-xs text-gray-500">Tahun Ajaran {tahunAjaran.nama}</p>
+                                <h3 className="font-bold text-foreground">{editingItem ? 'Ubah Alokasi Tugas' : 'Tambah Alokasi Tugas'}</h3>
+                                <p className="mt-0.5 text-xs text-muted-foreground">Tahun Ajaran {tahunAjaran.nama}</p>
                             </div>
-                            <button type="button" onClick={closeModal} className="text-2xl leading-none text-gray-400 hover:text-gray-700">&times;</button>
+                            <button type="button" onClick={closeModal} className="text-2xl leading-none text-muted-foreground hover:text-foreground">&times;</button>
                         </div>
 
                         <form onSubmit={submitForm} className="space-y-4 p-6">
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">Guru</label>
+                                <label className="mb-1 block text-sm font-medium text-foreground">Guru</label>
                                 <select
                                     value={form.data.guru_id}
                                     onChange={(event: React.ChangeEvent<HTMLSelectElement>) => form.setData('guru_id', event.target.value)}
                                     disabled={Boolean(editingItem?.jadwal_terpasang)}
-                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[#A9784F] disabled:bg-gray-100"
+                                    className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-ring disabled:bg-muted"
                                 >
                                     <option value="">Pilih guru</option>
                                     {guruList.map((guru) => <option key={guru.id} value={guru.id}>{guru.nama} ({guru.kode_guru})</option>)}
                                 </select>
-                                {form.errors.guru_id && <p className="mt-1 text-xs text-red-600">{form.errors.guru_id}</p>}
+                                {form.errors.guru_id && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{form.errors.guru_id}</p>}
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">Jenis Tugas</label>
+                                <label className="mb-1 block text-sm font-medium text-foreground">Jenis Tugas</label>
                                 <select
                                     value={form.data.jenis_tugas}
                                     onChange={(event: React.ChangeEvent<HTMLSelectElement>) => form.setData({
@@ -566,24 +517,24 @@ export default function KisiKisiTugas({
                                         mapel_id: '',
                                     })}
                                     disabled={Boolean(editingItem?.jadwal_terpasang)}
-                                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[#A9784F] disabled:bg-gray-100"
+                                    className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-ring disabled:bg-muted"
                                 >
                                     <option value="utama">Mengajar Utama</option>
                                     <option value="damping">Guru Damping</option>
                                     <option value="piket">Tugas Piket</option>
                                 </select>
-                                {form.errors.jenis_tugas && <p className="mt-1 text-xs text-red-600">{form.errors.jenis_tugas}</p>}
+                                {form.errors.jenis_tugas && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{form.errors.jenis_tugas}</p>}
                             </div>
 
                             {form.data.jenis_tugas === 'utama' ? (
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div>
-                                        <label className="mb-1 block text-sm font-medium text-gray-700">Kelas</label>
+                                        <label className="mb-1 block text-sm font-medium text-foreground">Kelas</label>
                                         <select
                                             value={form.data.kelas_id}
                                             onChange={(event: React.ChangeEvent<HTMLSelectElement>) => form.setData('kelas_id', event.target.value)}
                                             disabled={Boolean(editingItem?.jadwal_terpasang)}
-                                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[#A9784F] disabled:bg-gray-100"
+                                            className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-ring disabled:bg-muted"
                                         >
                                             <option value="">Pilih kelas</option>
                                             {kelasList.map((kelas) => (
@@ -592,49 +543,49 @@ export default function KisiKisiTugas({
                                                 </option>
                                             ))}
                                         </select>
-                                        {form.errors.kelas_id && <p className="mt-1 text-xs text-red-600">{form.errors.kelas_id}</p>}
+                                        {form.errors.kelas_id && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{form.errors.kelas_id}</p>}
                                     </div>
                                     <div>
-                                        <label className="mb-1 block text-sm font-medium text-gray-700">Mata Pelajaran</label>
+                                        <label className="mb-1 block text-sm font-medium text-foreground">Mata Pelajaran</label>
                                         <select
                                             value={form.data.mapel_id}
                                             onChange={(event: React.ChangeEvent<HTMLSelectElement>) => form.setData('mapel_id', event.target.value)}
                                             disabled={Boolean(editingItem?.jadwal_terpasang)}
-                                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[#A9784F] disabled:bg-gray-100"
+                                            className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-ring disabled:bg-muted"
                                         >
                                             <option value="">Pilih mata pelajaran</option>
                                             {mapelGuru.map((mapel) => <option key={mapel.id} value={mapel.id}>{mapel.nama} ({mapel.kode})</option>)}
                                         </select>
                                         {mapelGuru.length === mapelList.length && form.data.guru_id && (
-                                            <p className="mt-1 text-xs text-gray-500">Guru ini belum punya data mapel yang diampu; semua mapel ditampilkan.</p>
+                                            <p className="mt-1 text-xs text-muted-foreground">Guru ini belum punya data mapel yang diampu; semua mapel ditampilkan.</p>
                                         )}
-                                        {form.errors.mapel_id && <p className="mt-1 text-xs text-red-600">{form.errors.mapel_id}</p>}
+                                        {form.errors.mapel_id && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{form.errors.mapel_id}</p>}
                                     </div>
                                 </div>
                             ) : (
-                                <div className="rounded-md border border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-xs leading-relaxed text-gray-600">
+                                <div className="rounded-md border border-dashed border-input bg-muted/50 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
                                     Alokasi {jenisTugasLabel[form.data.jenis_tugas].toLowerCase()} tidak terikat pada kelas maupun mata pelajaran. Pasangan guru damping ditentukan saat pembagian jadwal, bukan di halaman ini.
                                 </div>
                             )}
 
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-gray-700">Jumlah Jam per Minggu</label>
+                                <label className="mb-1 block text-sm font-medium text-foreground">Jumlah Jam per Minggu</label>
                                 <input
                                     type="number"
                                     min={1}
                                     max={53}
                                     value={form.data.jumlah_jam}
                                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => form.setData('jumlah_jam', Number(event.target.value))}
-                                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#A9784F]"
+                                    className="w-full rounded-md border border-input px-3 py-2 text-sm outline-none focus:border-ring"
                                 />
-                                {form.errors.jumlah_jam && <p className="mt-1 text-xs text-red-600">{form.errors.jumlah_jam}</p>}
+                                {form.errors.jumlah_jam && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{form.errors.jumlah_jam}</p>}
                             </div>
 
-                            {formErrors.allocation && <p className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{formErrors.allocation}</p>}
+                            {formErrors.allocation && <p className="rounded-md bg-red-500/10 px-3 py-2 text-xs text-red-800 dark:text-red-300">{formErrors.allocation}</p>}
 
-                            <div className="flex justify-end gap-2 border-t border-gray-100 pt-4">
-                                <button type="button" onClick={closeModal} className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
-                                <button type="submit" disabled={form.processing} className="rounded-md bg-[#A9784F] px-5 py-2 text-sm font-semibold text-white hover:bg-[#7A5738] disabled:cursor-not-allowed disabled:opacity-60">
+                            <div className="flex justify-end gap-2 border-t border-border pt-4">
+                                <button type="button" onClick={closeModal} className="rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/50">Batal</button>
+                                <button type="submit" disabled={form.processing} className="rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60">
                                     {form.processing ? 'Menyimpan...' : editingItem ? 'Simpan Perubahan' : 'Simpan Alokasi'}
                                 </button>
                             </div>
@@ -645,3 +596,8 @@ export default function KisiKisiTugas({
         </>
     );
 }
+
+// Breadcrumb di header layout aplikasi (Ringkasan v1.11 #52)
+KisiKisiTugas.layout = {
+    breadcrumbs: [{ title: 'Kisi-Kisi Tugas', href: kisiKisiRoute.index() }],
+};

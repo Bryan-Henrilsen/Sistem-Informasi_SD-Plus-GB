@@ -158,9 +158,10 @@ class KisiKisiTugasController extends Controller
 
         $this->kisiKisiTugasService->store($tahunAjaran->id, $validated);
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Alokasi tugas berhasil ditambahkan.']);
+
         return redirect()
-            ->route('jadwal-guru.kisi-kisi.index')
-            ->with('success', 'Alokasi tugas berhasil ditambahkan.');
+            ->route('jadwal-guru.kisi-kisi.index');
     }
 
     public function update(Request $request, int $id): RedirectResponse
@@ -173,9 +174,10 @@ class KisiKisiTugasController extends Controller
 
         $this->kisiKisiTugasService->update($kisiKisi, $tahunAjaran->id, $validated);
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Alokasi tugas berhasil diperbarui.']);
+
         return redirect()
-            ->route('jadwal-guru.kisi-kisi.index')
-            ->with('success', 'Alokasi tugas berhasil diperbarui.');
+            ->route('jadwal-guru.kisi-kisi.index');
     }
 
     public function destroy(int $id): RedirectResponse
@@ -187,9 +189,10 @@ class KisiKisiTugasController extends Controller
 
         $this->kisiKisiTugasService->delete($kisiKisi, $tahunAjaran->id);
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Alokasi tugas berhasil dihapus.']);
+
         return redirect()
-            ->route('jadwal-guru.kisi-kisi.index')
-            ->with('success', 'Alokasi tugas berhasil dihapus.');
+            ->route('jadwal-guru.kisi-kisi.index');
     }
 
     private function validateAllocation(Request $request): array

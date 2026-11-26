@@ -23,6 +23,10 @@ import {
     CalendarDays,
     CalendarClock,
     MessagesSquare,
+    Clock,
+    Grid3x3,
+    CalendarCheck,
+    Table2,
     UserCog,
     Undo2,
     Users,
@@ -59,7 +63,19 @@ import mataPelajaran from '@/routes/les-ekskul/mata-pelajaran';
 import transaksi from '@/routes/les-ekskul/transaksi';
 import jurnalGuru from '@/routes/jurnal-guru';
 import forum from '@/routes/jurnal-guru/forum';
+import hasilJadwal from '@/routes/jadwal-guru/hasil';
+import kisiKisi from '@/routes/jadwal-guru/kisi-kisi';
+import pembagianJadwal from '@/routes/jadwal-guru/pembagian';
+import waktuPelajaran from '@/routes/jadwal-guru/waktu-pelajaran';
 import type { Auth, NavItem } from '@/types';
+
+// Modul Jadwal Guru (Pengembang 2) untuk Waka Kurikulum & Kepala Sekolah (Ringkasan v1.11 #52)
+const jadwalGuruNavItems: NavItem[] = [
+    { title: 'Waktu Pelajaran', href: waktuPelajaran.index(), icon: Clock },
+    { title: 'Kisi-Kisi Tugas', href: kisiKisi.index(), icon: Grid3x3 },
+    { title: 'Pembagian Jadwal', href: pembagianJadwal.index(), icon: CalendarCheck },
+    { title: 'Hasil Jadwal', href: hasilJadwal.index(), icon: Table2 },
+];
 
 const mainNavItems: NavItem[] = [
     {
@@ -161,6 +177,9 @@ export function AppSidebar() {
             <SidebarContent>
                 <NavMain items={mainNavItems} />
                 {menuJurnalGuru.length > 0 && <NavMain items={menuJurnalGuru} label="Jurnal Guru" />}
+                {(auth.roles.includes('waka_kurikulum') || auth.roles.includes('kepala_sekolah')) && (
+                    <NavMain items={jadwalGuruNavItems} label="Jadwal Guru" />
+                )}
                 {bisaLihatKeuangan && (
                     <NavMain items={menuLesEkskul} label="Les & Ekskul" />
                 )}

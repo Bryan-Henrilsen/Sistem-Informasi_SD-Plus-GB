@@ -70,9 +70,10 @@ class WaktuPelajaranController extends Controller
 
         $this->waktuPelajaranService->store($tahunAjaran->id, $data);
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Waktu pelajaran berhasil ditambahkan.']);
+
         return redirect()
-            ->route('jadwal-guru.waktu-pelajaran.index')
-            ->with('success', 'Waktu pelajaran berhasil ditambahkan.');
+            ->route('jadwal-guru.waktu-pelajaran.index');
     }
 
     public function update(Request $request, int $id): RedirectResponse
@@ -85,9 +86,10 @@ class WaktuPelajaranController extends Controller
         $data = $this->validateSlot($request, $tahunAjaran->id, $slot->id);
         $this->waktuPelajaranService->update($slot, $data);
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Waktu pelajaran berhasil diperbarui.']);
+
         return redirect()
-            ->route('jadwal-guru.waktu-pelajaran.index')
-            ->with('success', 'Waktu pelajaran berhasil diperbarui.');
+            ->route('jadwal-guru.waktu-pelajaran.index');
     }
 
     public function destroy(int $id): RedirectResponse
@@ -99,9 +101,10 @@ class WaktuPelajaranController extends Controller
 
         $this->waktuPelajaranService->delete($slot);
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Slot waktu pelajaran berhasil dihapus.']);
+
         return redirect()
-            ->route('jadwal-guru.waktu-pelajaran.index')
-            ->with('success', 'Slot waktu pelajaran berhasil dihapus.');
+            ->route('jadwal-guru.waktu-pelajaran.index');
     }
 
     private function validateSlot(Request $request, int $tahunAjaranId, ?int $ignoreId = null): array

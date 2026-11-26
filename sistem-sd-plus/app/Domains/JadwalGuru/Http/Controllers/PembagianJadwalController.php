@@ -124,7 +124,9 @@ class PembagianJadwalController extends Controller
                     : null
             );
 
-            return redirect()->back()->with('success', 'Jadwal berhasil ditempatkan.');
+            Inertia::flash('toast', ['type' => 'success', 'message' => 'Jadwal berhasil ditempatkan.']);
+
+            return redirect()->back();
 
         } catch (RuntimeException $exception) {
             return redirect()->back()->withErrors([
@@ -145,7 +147,9 @@ class PembagianJadwalController extends Controller
         try {
             $this->jadwalService->removeJadwal($id);
 
-            return redirect()->back()->with('success', 'Jadwal berhasil ditarik kembali.');
+            Inertia::flash('toast', ['type' => 'success', 'message' => 'Jadwal berhasil ditarik kembali.']);
+
+            return redirect()->back();
 
         } catch (RuntimeException $exception) {
             return redirect()->back()->withErrors([
