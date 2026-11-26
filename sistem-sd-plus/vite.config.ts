@@ -13,8 +13,9 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
             refresh: true,
             fonts: [
-                bunny('Instrument Sans', {
-                    weights: [400, 500, 600],
+                // Font acuan desain sekolah (docs/komponen-referensi.html)
+                bunny('Fira Sans', {
+                    weights: [400, 500, 600, 700],
                 }),
             ],
         }),

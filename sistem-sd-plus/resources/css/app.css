@@ -8,10 +8,33 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
+    /* Font acuan desain sekolah (docs/komponen-referensi.html) */
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Fira Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
+
+    /* Palet sekolah (krem & cokelat) dari docs/komponen-referensi.html, plus versi gelapnya (lihat :root & .dark).
+       Dipakai lewat kelas mis. bg-sekolah-latar, text-sekolah-utama; nanti token tema aplikasi diarahkan ke sini */
+    --color-sekolah-latar: var(--sekolah-latar);
+    --color-sekolah-kartu: var(--sekolah-kartu);
+    --color-sekolah-teks: var(--sekolah-teks);
+    --color-sekolah-redup: var(--sekolah-redup);
+    --color-sekolah-garis: var(--sekolah-garis);
+    --color-sekolah-utama: var(--sekolah-utama);
+    --color-sekolah-utama-tua: var(--sekolah-utama-tua);
+    --color-sekolah-di-utama: var(--sekolah-di-utama);
+    --color-sekolah-sukses: var(--sekolah-sukses);
+    --color-sekolah-tertunda: var(--sekolah-tertunda);
+    --color-sekolah-bahaya: var(--sekolah-bahaya);
+    --color-sekolah-info: var(--sekolah-info);
+    --color-sekolah-netral: var(--sekolah-netral);
+    /* Warna peran (badge role) — sama di mode terang & gelap */
+    --color-peran-kepsek: #7a5738;
+    --color-peran-tu: #5b7a99;
+    --color-peran-bendahara: #c08a3e;
+    --color-peran-guru: #4b7b5d;
+    --color-peran-ortu: #c97b63;
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -62,6 +85,21 @@
 }
 
 :root {
+    /* Palet sekolah — terang (sesuai referensi desain) */
+    --sekolah-latar: #faf7f2;
+    --sekolah-kartu: #ffffff;
+    --sekolah-teks: #3a322c;
+    --sekolah-redup: #6b6058;
+    --sekolah-garis: #e5ded4;
+    --sekolah-utama: #a9784f;
+    --sekolah-utama-tua: #7a5738;
+    --sekolah-di-utama: #ffffff;
+    --sekolah-sukses: #4b7b5d;
+    --sekolah-tertunda: #c08a3e;
+    --sekolah-bahaya: #b0483a;
+    --sekolah-info: #5b7a99;
+    --sekolah-netral: #8c8279;
+
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -98,6 +136,21 @@
 }
 
 .dark {
+    /* Palet sekolah — gelap: cokelat tua hangat, aksen dibuat lebih terang supaya tetap kontras */
+    --sekolah-latar: #1c1714;
+    --sekolah-kartu: #26201b;
+    --sekolah-teks: #efe7dd;
+    --sekolah-redup: #b5a99c;
+    --sekolah-garis: #3a312a;
+    --sekolah-utama: #c9966a;
+    --sekolah-utama-tua: #e0b48c;
+    --sekolah-di-utama: #1c1714;
+    --sekolah-sukses: #6fa884;
+    --sekolah-tertunda: #d9a55a;
+    --sekolah-bahaya: #d46e5f;
+    --sekolah-info: #84a3c2;
+    --sekolah-netral: #8f857b;
+
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.145 0 0);
@@ -140,6 +193,24 @@
     body {
         @apply bg-background text-foreground;
     }
+}
+
+/* Tema sekolah untuk komponen bawaan (Button, Input, Checkbox, …): token warna diarahkan ke palet sekolah.
+   Sekarang dipasang di halaman auth; pada tahap penyeragaman desain cukup dipasang di seluruh aplikasi */
+.tema-sekolah {
+    --color-background: var(--sekolah-latar);
+    --color-foreground: var(--sekolah-teks);
+    --color-card: var(--sekolah-kartu);
+    --color-card-foreground: var(--sekolah-teks);
+    --color-popover: var(--sekolah-kartu);
+    --color-popover-foreground: var(--sekolah-teks);
+    --color-primary: var(--sekolah-utama);
+    --color-primary-foreground: var(--sekolah-di-utama);
+    --color-muted-foreground: var(--sekolah-redup);
+    --color-border: var(--sekolah-garis);
+    --color-input: var(--sekolah-garis);
+    --color-ring: var(--sekolah-utama);
+    --color-destructive: var(--sekolah-bahaya);
 }
 
 /* Cetak (mis. Rekap Honor): hanya isi halaman, tanpa sidebar dan header aplikasi */

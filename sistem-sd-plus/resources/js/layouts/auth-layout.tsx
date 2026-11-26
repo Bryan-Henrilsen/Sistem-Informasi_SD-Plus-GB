@@ -1,4 +1,5 @@
-import AuthLayoutTemplate from '@/layouts/auth/auth-simple-layout';
+// Desain sekolah (krem & cokelat) untuk semua halaman auth
+import AuthLayoutTemplate from '@/layouts/auth/auth-sekolah-layout';
 
 export default function AuthLayout({
     title = '',

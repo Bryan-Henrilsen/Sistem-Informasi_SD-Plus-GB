@@ -26,7 +26,7 @@ export default function OrangTuaLayout({ children }: { children: React.ReactNode
         <div className="flex min-h-svh flex-col bg-muted/30">
             <header className="sticky top-0 z-10 border-b bg-background">
                 <div className="mx-auto flex h-14 max-w-2xl items-center gap-3 px-4">
-                    <AppLogoIcon className="size-7 fill-current" />
+                    <AppLogoIcon className="h-8" alt="" />
                     <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold">SD Plus Gembala Baik</p>
                         <p className="truncate text-xs text-muted-foreground">{auth.user?.name}</p>
