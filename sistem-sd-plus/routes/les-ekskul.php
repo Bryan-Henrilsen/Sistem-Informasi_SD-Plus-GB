@@ -4,6 +4,7 @@ use App\Domains\LesEkskul\Http\Controllers\AkunOrangTuaController;
 use App\Domains\LesEkskul\Http\Controllers\AkunStafController;
 use App\Domains\LesEkskul\Http\Controllers\DataSiswaController;
 use App\Domains\LesEkskul\Http\Controllers\EkstrakurikulerController;
+use App\Domains\LesEkskul\Http\Controllers\ImporSiswaController;
 use App\Domains\LesEkskul\Http\Controllers\KegiatanAnakController;
 use App\Domains\LesEkskul\Http\Controllers\KegiatanLiburController;
 use App\Domains\LesEkskul\Http\Controllers\KelasLesController;
@@ -152,6 +153,13 @@ Route::middleware(['auth'])
             Route::post('data-siswa/{siswa}/keluar', [DataSiswaController::class, 'keluar'])->name('data-siswa.keluar');
             Route::post('data-siswa/{siswa}/aktifkan', [DataSiswaController::class, 'aktifkan'])->name('data-siswa.aktifkan');
             Route::delete('data-siswa/{siswa}', [DataSiswaController::class, 'destroy'])->name('data-siswa.destroy');
+
+            // Impor siswa dari Excel: unggah → pratinjau → simpan; file tidak disimpan (FR-28, #53)
+            Route::get('impor-siswa', [ImporSiswaController::class, 'index'])->name('impor-siswa.index');
+            Route::get('impor-siswa/template', [ImporSiswaController::class, 'template'])->name('impor-siswa.template');
+            Route::post('impor-siswa/unggah', [ImporSiswaController::class, 'unggah'])->name('impor-siswa.unggah');
+            Route::post('impor-siswa/simpan', [ImporSiswaController::class, 'simpan'])->name('impor-siswa.simpan');
+            Route::delete('impor-siswa', [ImporSiswaController::class, 'batal'])->name('impor-siswa.batal');
         });
 
         // Tahun ajaran & semester — Kepala Sekolah; kenaikan kelas massal — TU & Kepala Sekolah (#45)

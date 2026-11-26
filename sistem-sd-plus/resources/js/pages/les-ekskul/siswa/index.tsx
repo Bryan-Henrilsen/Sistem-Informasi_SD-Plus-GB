@@ -1,5 +1,5 @@
-import { Form, Head, router, useForm } from '@inertiajs/react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Form, Head, Link, router, useForm } from '@inertiajs/react';
+import { FileSpreadsheet, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import DataSiswaController from '@/actions/App/Domains/LesEkskul/Http/Controllers/DataSiswaController';
 import Heading from '@/components/heading';
@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { tanggal } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { index } from '@/routes/les-ekskul/data-siswa';
+import imporSiswa from '@/routes/les-ekskul/impor-siswa';
 import type { Paginasi as PaginasiData } from '@/types/les-ekskul';
 
 type Status = 'aktif' | 'pindah_sekolah' | 'lulus';
@@ -82,6 +83,14 @@ export default function DataSiswa({ tahunAjaran, daftarTahun, siswa, kelas, guru
                                 </option>
                             ))}
                         </select>
+                        {bisaUbah && (
+                            // Impor dari Excel: template Juli atau ekspor Dapodik (FR-28, #53)
+                            <Button variant="outline" asChild>
+                                <Link href={imporSiswa.index()}>
+                                    <FileSpreadsheet /> Impor dari Excel
+                                </Link>
+                            </Button>
+                        )}
                         {bisaUbah && kelas.length > 0 && (
                             <Button onClick={() => setDibuka('baru')}>
                                 <Plus /> Tambah siswa
