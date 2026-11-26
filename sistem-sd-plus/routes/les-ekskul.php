@@ -34,6 +34,7 @@ Route::middleware(['auth'])
         Route::middleware('role:tu|bendahara|kepala_sekolah')->group(function () {
             Route::get('periode', [PeriodeLaporanController::class, 'index'])->name('periode.index');
             Route::get('tagihan', [TagihanController::class, 'index'])->name('tagihan.index');
+            Route::get('tagihan/excel', [TagihanController::class, 'excel'])->name('tagihan.excel'); // unduh Rekap Iuran Excel (#54)
             Route::get('transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');
             Route::get('pendaftaran', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
             Route::get('refund', [RefundController::class, 'index'])->name('refund.index');

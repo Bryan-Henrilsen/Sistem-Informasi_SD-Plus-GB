@@ -3,6 +3,7 @@
 namespace App\Domains\LesEkskul\Http\Controllers;
 
 use App\Domains\LesEkskul\Models\Pendaftaran;
+use App\Domains\LesEkskul\Services\EksporRekapIuran;
 use App\Domains\LesEkskul\Services\RekapIuranService;
 use App\Domains\LesEkskul\Services\TagihanService;
 use App\Http\Controllers\Controller;
@@ -15,9 +16,27 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TagihanController extends Controller
 {
+    // Unduh Rekap Iuran sebagai Excel: nominal sebagai angka, warna status, satu sheet per buku (#54).
+    // Mengikuti tahun ajaran & buku yang sedang dipilih; filter kelas/status/nama tidak dipakai supaya buku tetap utuh
+    public function excel(Request $request, EksporRekapIuran $ekspor): StreamedResponse
+    {
+        $tahunAjaran = $request->integer('tahun')
+            ? TahunAjaran::findOrFail($request->integer('tahun'))
+            : TahunAjaran::aktif()->firstOrFail();
+        $excel = $ekspor->buat($tahunAjaran, $request->string('buku')->toString() ?: null);
+
+        return response()->streamDownload(
+            fn () => (new Xlsx($excel))->save('php://output'),
+            'Rekap_Iuran_'.str_replace('/', '-', $tahunAjaran->nama).'.xlsx',
+            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+        );
+    }
+
     // Rekap Iuran: pengganti buku rekap TU, per buku kegiatan, urut kelas lalu abjad (FR-13b, Ringkasan v1.11 #40)
     public function index(Request $request, RekapIuranService $rekap): Response
     {
