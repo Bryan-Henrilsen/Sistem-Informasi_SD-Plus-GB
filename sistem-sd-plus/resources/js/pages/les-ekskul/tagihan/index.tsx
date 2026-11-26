@@ -1,5 +1,5 @@
 import { Form, Head, Link, router, usePage } from '@inertiajs/react';
-import { Printer } from 'lucide-react';
+import { FileSpreadsheet, Printer } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import TagihanController from '@/actions/App/Domains/LesEkskul/Http/Controllers/TagihanController';
 import Heading from '@/components/heading';
@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { rupiah } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { index } from '@/routes/les-ekskul/tagihan';
+import { excel, index } from '@/routes/les-ekskul/tagihan';
 
 type Filter = { buku?: string; kelas?: string; status?: string; nama?: string };
 
@@ -201,6 +201,12 @@ export default function RekapIuran({ tahunAjaran, daftarTahun, bulan, buku, bari
                                             </button>
                                         ))}
                                     </div>
+                                    {/* Excel: nominal sebagai angka & warna status, satu sheet per buku (#54); ikut buku yang dipilih */}
+                                    <Button variant="outline" asChild>
+                                        <a href={excel({ query: { tahun: tahunAjaran.id, buku: filter.buku || undefined } }).url}>
+                                            <FileSpreadsheet /> Unduh Excel
+                                        </a>
+                                    </Button>
                                     <Button variant="outline" onClick={() => window.print()}>
                                         <Printer /> Cetak
                                     </Button>
