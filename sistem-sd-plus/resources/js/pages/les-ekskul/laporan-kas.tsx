@@ -395,9 +395,9 @@ function BarisRingkas({ label, nilai }: { label: string; nilai: number }) {
 }
 
 const WARNA = {
-    kuning: 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200',
-    biru: 'border-sky-300 bg-sky-50 text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200',
-    hijau: 'border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200',
+    kuning: 'border-sekolah-tertunda/40 bg-sekolah-tertunda/10 text-sekolah-tertunda',
+    biru: 'border-sekolah-info/40 bg-sekolah-info/10 text-sekolah-info',
+    hijau: 'border-sekolah-sukses/40 bg-sekolah-sukses/10 text-sekolah-sukses',
 };
 
 function Pesan({ warna, children }: { warna: keyof typeof WARNA; children: React.ReactNode }) {

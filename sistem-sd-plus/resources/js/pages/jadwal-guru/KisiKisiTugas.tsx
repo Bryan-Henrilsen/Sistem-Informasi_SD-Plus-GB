@@ -104,9 +104,9 @@ const jenisTugasLabel: Record<JenisTugasKode, string> = {
 };
 
 const jenisTugasStyle: Record<JenisTugasKode, string> = {
-    utama: 'border-blue-500/30 bg-blue-500/10 text-blue-800 dark:text-blue-300',
-    damping: 'border-orange-500/30 bg-orange-500/10 text-orange-800 dark:text-orange-300',
-    piket: 'border-purple-500/30 bg-purple-500/10 text-purple-800 dark:text-purple-300',
+    utama: 'border-sekolah-info/30 bg-sekolah-info/10 text-sekolah-info',
+    damping: 'border-sekolah-tertunda/30 bg-sekolah-tertunda/10 text-sekolah-tertunda',
+    piket: 'border-peran-ortu/30 bg-peran-ortu/10 text-peran-ortu',
 };
 
 export default function KisiKisiTugas({
@@ -283,7 +283,7 @@ export default function KisiKisiTugas({
                                 </div>
                                 <div className="flex gap-2">
                                     <button type="button" onClick={() => openEditModal(item)} className="text-xs font-semibold text-foreground hover:underline">Edit</button>
-                                    <button type="button" onClick={() => deleteAllocation(item)} className="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline">Hapus</button>
+                                    <button type="button" onClick={() => deleteAllocation(item)} className="text-xs font-semibold text-sekolah-bahaya hover:underline">Hapus</button>
                                 </div>
                             </div>
                         </div>
@@ -330,21 +330,21 @@ export default function KisiKisiTugas({
                                 <div className="mt-1 text-2xl font-bold">{summary.total_jam.toLocaleString('id-ID')}</div>
                                 <div className="text-[11px] text-muted-foreground">Jam per minggu</div>
                             </div>
-                            <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-3">
-                                <div className="text-xs text-blue-800 dark:text-blue-300">Tugas utama</div>
-                                <div className="mt-1 text-2xl font-bold text-blue-800 dark:text-blue-300">{summary.per_jenis.utama?.jumlah_jam ?? 0}</div>
-                                <div className="text-[11px] text-blue-600 dark:text-blue-400">{summary.per_jenis.utama?.jumlah_alokasi ?? 0} alokasi</div>
+                            <div className="rounded-lg border border-sekolah-info/20 bg-sekolah-info/10 p-3">
+                                <div className="text-xs text-sekolah-info">Tugas utama</div>
+                                <div className="mt-1 text-2xl font-bold text-sekolah-info">{summary.per_jenis.utama?.jumlah_jam ?? 0}</div>
+                                <div className="text-[11px] text-sekolah-info">{summary.per_jenis.utama?.jumlah_alokasi ?? 0} alokasi</div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
-                                <div className="rounded-lg border border-orange-500/20 bg-orange-500/10 p-3">
-                                    <div className="text-xs text-orange-800 dark:text-orange-300">Damping</div>
-                                    <div className="mt-1 text-xl font-bold text-orange-800 dark:text-orange-300">{summary.per_jenis.damping?.jumlah_jam ?? 0}</div>
-                                    <div className="text-[11px] text-orange-600 dark:text-orange-400">jam</div>
+                                <div className="rounded-lg border border-sekolah-tertunda/20 bg-sekolah-tertunda/10 p-3">
+                                    <div className="text-xs text-sekolah-tertunda">Damping</div>
+                                    <div className="mt-1 text-xl font-bold text-sekolah-tertunda">{summary.per_jenis.damping?.jumlah_jam ?? 0}</div>
+                                    <div className="text-[11px] text-sekolah-tertunda">jam</div>
                                 </div>
-                                <div className="rounded-lg border border-purple-500/20 bg-purple-500/10 p-3">
-                                    <div className="text-xs text-purple-800 dark:text-purple-300">Piket</div>
-                                    <div className="mt-1 text-xl font-bold text-purple-800 dark:text-purple-300">{summary.per_jenis.piket?.jumlah_jam ?? 0}</div>
-                                    <div className="text-[11px] text-purple-600 dark:text-purple-400">jam</div>
+                                <div className="rounded-lg border border-peran-ortu/20 bg-peran-ortu/10 p-3">
+                                    <div className="text-xs text-peran-ortu">Piket</div>
+                                    <div className="mt-1 text-xl font-bold text-peran-ortu">{summary.per_jenis.piket?.jumlah_jam ?? 0}</div>
+                                    <div className="text-[11px] text-peran-ortu">jam</div>
                                 </div>
                             </div>
                         </div>
@@ -398,7 +398,7 @@ export default function KisiKisiTugas({
                                                         <th key={kelas.id} className="sticky top-0 z-30 min-w-[150px] border-b border-r border-border bg-card px-3 py-3 text-center">
                                                             <div className="font-bold text-foreground">{kelas.nama_kelas}</div>
                                                             <div className="mt-0.5 text-[10px] text-muted-foreground">Jenjang {kelas.jenjang}</div>
-                                                            <div className={`mt-1 text-xs font-semibold ${penuh ? 'text-green-800 dark:text-green-300' : 'text-foreground'}`}>
+                                                            <div className={`mt-1 text-xs font-semibold ${penuh ? 'text-sekolah-sukses' : 'text-foreground'}`}>
                                                                 {kelas.teralokasi_jam}/{kelas.kuota_jam} jam
                                                             </div>
                                                         </th>
@@ -432,13 +432,13 @@ export default function KisiKisiTugas({
                                                                                 key={item.id}
                                                                                 type="button"
                                                                                 onClick={() => openEditModal(item)}
-                                                                                className="flex w-full items-center justify-between gap-2 rounded border border-blue-500/20 bg-blue-500/10 px-2 py-1.5 text-left transition hover:border-blue-500/60 hover:bg-blue-500/15"
+                                                                                className="flex w-full items-center justify-between gap-2 rounded border border-sekolah-info/20 bg-sekolah-info/10 px-2 py-1.5 text-left transition hover:border-sekolah-info/60 hover:bg-sekolah-info/15"
                                                                                 title="Klik untuk mengubah alokasi"
                                                                             >
-                                                                                <span className="min-w-0 truncate text-xs font-medium text-blue-800 dark:text-blue-300">
+                                                                                <span className="min-w-0 truncate text-xs font-medium text-sekolah-info">
                                                                                     {item.mata_pelajaran?.kode ?? item.mata_pelajaran?.nama ?? 'Mapel'}
                                                                                 </span>
-                                                                                <span className="shrink-0 text-xs font-bold text-blue-800 dark:text-blue-300">{item.jumlah_jam}</span>
+                                                                                <span className="shrink-0 text-xs font-bold text-sekolah-info">{item.jumlah_jam}</span>
                                                                             </button>
                                                                         ))}
                                                                         {items.length === 0 && <span className="text-xs text-muted-foreground/50">—</span>}
@@ -503,7 +503,7 @@ export default function KisiKisiTugas({
                                     <option value="">Pilih guru</option>
                                     {guruList.map((guru) => <option key={guru.id} value={guru.id}>{guru.nama} ({guru.kode_guru})</option>)}
                                 </select>
-                                {form.errors.guru_id && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{form.errors.guru_id}</p>}
+                                {form.errors.guru_id && <p className="mt-1 text-xs text-sekolah-bahaya">{form.errors.guru_id}</p>}
                             </div>
 
                             <div>
@@ -523,7 +523,7 @@ export default function KisiKisiTugas({
                                     <option value="damping">Guru Damping</option>
                                     <option value="piket">Tugas Piket</option>
                                 </select>
-                                {form.errors.jenis_tugas && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{form.errors.jenis_tugas}</p>}
+                                {form.errors.jenis_tugas && <p className="mt-1 text-xs text-sekolah-bahaya">{form.errors.jenis_tugas}</p>}
                             </div>
 
                             {form.data.jenis_tugas === 'utama' ? (
@@ -543,7 +543,7 @@ export default function KisiKisiTugas({
                                                 </option>
                                             ))}
                                         </select>
-                                        {form.errors.kelas_id && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{form.errors.kelas_id}</p>}
+                                        {form.errors.kelas_id && <p className="mt-1 text-xs text-sekolah-bahaya">{form.errors.kelas_id}</p>}
                                     </div>
                                     <div>
                                         <label className="mb-1 block text-sm font-medium text-foreground">Mata Pelajaran</label>
@@ -559,7 +559,7 @@ export default function KisiKisiTugas({
                                         {mapelGuru.length === mapelList.length && form.data.guru_id && (
                                             <p className="mt-1 text-xs text-muted-foreground">Guru ini belum punya data mapel yang diampu; semua mapel ditampilkan.</p>
                                         )}
-                                        {form.errors.mapel_id && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{form.errors.mapel_id}</p>}
+                                        {form.errors.mapel_id && <p className="mt-1 text-xs text-sekolah-bahaya">{form.errors.mapel_id}</p>}
                                     </div>
                                 </div>
                             ) : (
@@ -578,10 +578,10 @@ export default function KisiKisiTugas({
                                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => form.setData('jumlah_jam', Number(event.target.value))}
                                     className="w-full rounded-md border border-input px-3 py-2 text-sm outline-none focus:border-ring"
                                 />
-                                {form.errors.jumlah_jam && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{form.errors.jumlah_jam}</p>}
+                                {form.errors.jumlah_jam && <p className="mt-1 text-xs text-sekolah-bahaya">{form.errors.jumlah_jam}</p>}
                             </div>
 
-                            {formErrors.allocation && <p className="rounded-md bg-red-500/10 px-3 py-2 text-xs text-red-800 dark:text-red-300">{formErrors.allocation}</p>}
+                            {formErrors.allocation && <p className="rounded-md bg-sekolah-bahaya/10 px-3 py-2 text-xs text-sekolah-bahaya">{formErrors.allocation}</p>}
 
                             <div className="flex justify-end gap-2 border-t border-border pt-4">
                                 <button type="button" onClick={closeModal} className="rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/50">Batal</button>

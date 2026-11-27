@@ -34,7 +34,7 @@ export function PanelPeriodePendaftaran({ periode, bisaUbah }: { periode: Period
                             <span
                                 className={cn(
                                     'rounded-full px-2 py-0.5 text-xs',
-                                    p.status === 'buka' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-muted text-muted-foreground',
+                                    p.status === 'buka' ? 'bg-sekolah-sukses/15 text-sekolah-sukses' : 'bg-muted text-muted-foreground',
                                 )}
                             >
                                 {LABEL[p.status]}

@@ -44,12 +44,12 @@ const JENIS: Record<Jenis, { label: string; keterangan: string; kelas: string }>
     honor_flat: {
         label: 'Honor flat',
         keterangan: 'Tanpa biaya, tetap mendaftar & berkuota (mis. Olimpiade)',
-        kelas: 'bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-300',
+        kelas: 'bg-peran-ortu/15 text-peran-ortu',
     },
     wajib: {
         label: 'Wajib otomatis',
         keterangan: 'Tanpa biaya & pendaftaran, semua siswa di jenjangnya (Bina Karakter, Pramuka)',
-        kelas: 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300',
+        kelas: 'bg-sekolah-info/15 text-sekolah-info',
     },
 };
 const kelasPilihan = 'h-9 rounded-md border border-input bg-transparent px-2 text-sm shadow-xs';
@@ -100,7 +100,7 @@ export default function KegiatanEkstrakurikuler({ tahunAjaran, daftarTahun, kegi
                 </div>
 
                 {sumberSalinan && (
-                    <Card className="border-sky-300 py-4 dark:border-sky-800">
+                    <Card className="border-sekolah-info/40 py-4">
                         <CardContent className="flex flex-wrap items-center justify-between gap-3 px-4 text-sm">
                             <p>
                                 Tahun ajaran {tahunAjaran.nama} belum punya kegiatan. Salin semua kegiatan dari {sumberSalinan.nama} beserta jadwal, kelas paralel,
@@ -304,7 +304,7 @@ function FormKegiatan({ kegiatan, tahunAjaranId, onSelesai }: { kegiatan: Kegiat
                         <InputError message={errors.biaya_non_honor} />
                     </div>
                     {biayaBerubah && (
-                        <p className="rounded-md bg-amber-50 p-2 text-xs text-amber-900 sm:col-span-2 dark:bg-amber-950/40 dark:text-amber-200">
+                        <p className="rounded-md bg-sekolah-tertunda/10 p-2 text-xs text-sekolah-tertunda sm:col-span-2">
                             Biaya baru hanya berlaku untuk tagihan yang dibuat sesudah disimpan. Tagihan yang sudah ada tetap memakai biaya lama.
                         </p>
                     )}

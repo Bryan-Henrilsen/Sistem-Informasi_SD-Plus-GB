@@ -70,7 +70,7 @@ export default function HalamanTahunAjaran({ tahunAjaran, usulan, berikutnya, bi
                 </div>
 
                 {berikutnya && (
-                    <Card className="gap-3 border-sky-300 py-4 dark:border-sky-800">
+                    <Card className="gap-3 border-sekolah-info/40 py-4">
                         <CardHeader className="px-4">
                             <CardTitle className="text-base">Persiapan tahun ajaran {berikutnya.nama}</CardTitle>
                             <p className="text-sm text-muted-foreground">
@@ -102,7 +102,7 @@ export default function HalamanTahunAjaran({ tahunAjaran, usulan, berikutnya, bi
                             </Langkah>
                             <Langkah selesai={false} judul="4. Aktifkan tahun ajaran (Kepala Sekolah)">
                                 {berikutnya.hambatan.length > 0 ? (
-                                    <span className="text-amber-700 dark:text-amber-400">{berikutnya.hambatan.join(' ')}</span>
+                                    <span className="text-sekolah-tertunda">{berikutnya.hambatan.join(' ')}</span>
                                 ) : (
                                     'Siap diaktifkan.'
                                 )}
@@ -135,7 +135,7 @@ export default function HalamanTahunAjaran({ tahunAjaran, usulan, berikutnya, bi
                                         <p className="font-medium">
                                             {t.nama}{' '}
                                             {t.aktif && (
-                                                <span className="ml-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                                <span className="ml-1 rounded-full bg-sekolah-sukses/15 px-2 py-0.5 text-xs text-sekolah-sukses">
                                                     Aktif
                                                 </span>
                                             )}
@@ -197,7 +197,7 @@ function Langkah({ selesai, judul, children }: { selesai: boolean; judul: string
 
     return (
         <div className="flex gap-2">
-            <Ikon className={selesai ? 'mt-0.5 size-4 shrink-0 text-emerald-600' : 'mt-0.5 size-4 shrink-0 text-muted-foreground'} />
+            <Ikon className={selesai ? 'mt-0.5 size-4 shrink-0 text-sekolah-sukses' : 'mt-0.5 size-4 shrink-0 text-muted-foreground'} />
             <div className="flex flex-col">
                 <p className="font-medium">{judul}</p>
                 <div className="text-muted-foreground">{children}</div>

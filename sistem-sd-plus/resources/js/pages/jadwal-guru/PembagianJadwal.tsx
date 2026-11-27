@@ -209,14 +209,14 @@ return (
         {deleteModal.isOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                 <div className="bg-card rounded-xl shadow-xl w-[400px] p-6 text-center transform scale-100 transition-all">
-                    <div className="w-16 h-16 bg-red-500/15 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-sekolah-bahaya/15 rounded-full flex items-center justify-center mx-auto mb-4">
                         <span className="text-2xl">🗑️</span>
                     </div>
                     <h3 className="text-lg font-bold text-foreground mb-2">Tarik Kembali Jadwal?</h3>
                     <p className="text-sm text-muted-foreground mb-6">Jadwal ini akan dicabut dari kalender dan alokasi jamnya akan dikembalikan ke daftar penugasan guru.</p>
                     <div className="flex gap-3 justify-center">
                         <button onClick={() => setDeleteModal({ isOpen: false, jadwalId: null })} className="px-5 py-2.5 rounded-lg text-sm font-medium text-foreground bg-muted hover:bg-muted transition-colors">Batal</button>
-                        <button onClick={executeDelete} className="px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">Ya, Tarik Jadwal</button>
+                        <button onClick={executeDelete} className="px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-sekolah-bahaya hover:bg-sekolah-bahaya/90 transition-colors shadow-sm">Ya, Tarik Jadwal</button>
                     </div>
                 </div>
             </div>
@@ -277,16 +277,16 @@ return (
                                                 </>
                                             ) : (
                                                 <div className="flex flex-col h-full justify-center">
-                                                    <div className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase">{waktu.nama}</div>
-                                                    <div className="text-[11px] font-medium text-orange-600 dark:text-orange-400 mt-1">{waktu.jam_mulai?.substring(0,5)}<br/>{waktu.jam_selesai?.substring(0,5)}</div>
+                                                    <div className="text-xs font-bold text-sekolah-tertunda uppercase">{waktu.nama}</div>
+                                                    <div className="text-[11px] font-medium text-sekolah-tertunda mt-1">{waktu.jam_mulai?.substring(0,5)}<br/>{waktu.jam_selesai?.substring(0,5)}</div>
                                                 </div>
                                             )}
                                             {getPiketDiSlot(waktu.id).length > 0 && (
                                                 <div className="mt-2 space-y-1 text-left">
                                                     {getPiketDiSlot(waktu.id).map((piket) => (
-                                                        <div key={piket.id} className="group relative rounded bg-purple-500/15 px-1.5 py-1 text-[10px] font-semibold text-purple-800 dark:text-purple-300">
+                                                        <div key={piket.id} className="group relative rounded bg-peran-ortu/15 px-1.5 py-1 text-[10px] font-semibold text-peran-ortu">
                                                             <span className="block truncate pr-4">{getGuruName(piket.guru)}</span>
-                                                            <button type="button" onClick={() => confirmDelete(piket.id)} title="Tarik jadwal piket" className="absolute right-1 top-1 text-purple-800 dark:text-purple-300 hover:text-red-600">×</button>
+                                                            <button type="button" onClick={() => confirmDelete(piket.id)} title="Tarik jadwal piket" className="absolute right-1 top-1 text-peran-ortu hover:text-sekolah-bahaya">×</button>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -294,7 +294,7 @@ return (
                                             <div
                                                 onDragOver={handleDragOver}
                                                 onDrop={(event) => handleDrop(event, waktu.id, 'piket')}
-                                                className={`mt-2 rounded border border-dashed px-1 py-1 text-[10px] font-bold transition-colors ${draggedItem?.jenis_tugas.kode === 'piket' ? 'border-purple-500/60 bg-purple-500/10 text-purple-800 dark:text-purple-300' : 'border-transparent text-purple-600 dark:text-purple-400 hover:border-purple-500/30 hover:bg-purple-500/10'}`}
+                                                className={`mt-2 rounded border border-dashed px-1 py-1 text-[10px] font-bold transition-colors ${draggedItem?.jenis_tugas.kode === 'piket' ? 'border-peran-ortu/60 bg-peran-ortu/10 text-peran-ortu' : 'border-transparent text-peran-ortu hover:border-peran-ortu/30 hover:bg-peran-ortu/10'}`}
                                                 title="Tempatkan tugas piket pada slot waktu ini"
                                             >
                                                 + Piket
@@ -313,16 +313,16 @@ return (
                                                             <div className="space-y-1.5 h-full">
                                                                 {/* Dropzone UTAMA */}
                                                                 {jadwalUtama ? (
-                                                                    <div className="w-full p-2.5 bg-blue-500/10 border border-blue-500/30 rounded-lg relative group shadow-sm hover:shadow-md transition-shadow">
-                                                                        <button onClick={() => confirmDelete(jadwalUtama.id)} className="absolute -top-2 -right-2 bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-600 hover:text-white pb-0.5">×</button>
-                                                                        <div className="font-bold text-blue-800 dark:text-blue-300 text-sm">{getGuruName(jadwalUtama.guru)}</div>
-                                                                        <div className="text-xs text-blue-800 dark:text-blue-300 font-medium mt-1 bg-blue-500/10 inline-block px-1.5 py-0.5 rounded">{jadwalUtama.kisi_kisi_tugas?.mata_pelajaran?.nama || jadwalUtama.kisi_kisi_tugas?.keterangan || 'Mengajar'}</div>
+                                                                    <div className="w-full p-2.5 bg-sekolah-info/10 border border-sekolah-info/30 rounded-lg relative group shadow-sm hover:shadow-md transition-shadow">
+                                                                        <button onClick={() => confirmDelete(jadwalUtama.id)} className="absolute -top-2 -right-2 bg-sekolah-bahaya/15 text-sekolah-bahaya border border-sekolah-bahaya/30 rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-sekolah-bahaya/90 hover:text-white pb-0.5">×</button>
+                                                                        <div className="font-bold text-sekolah-info text-sm">{getGuruName(jadwalUtama.guru)}</div>
+                                                                        <div className="text-xs text-sekolah-info font-medium mt-1 bg-sekolah-info/10 inline-block px-1.5 py-0.5 rounded">{jadwalUtama.kisi_kisi_tugas?.mata_pelajaran?.nama || jadwalUtama.kisi_kisi_tugas?.keterangan || 'Mengajar'}</div>
                                                                     </div>
                                                                 ) : (
                                                                     <div 
                                                                         onDragOver={handleDragOver}
                                                                         onDrop={(e) => handleDrop(e, waktu.id, 'utama')}
-                                                                        className={`border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all min-h-[64px] ${draggedItem?.jenis_tugas?.kode === 'utama' ? 'border-blue-500/60 bg-blue-500/10 text-blue-600 dark:text-blue-400 scale-[1.02]' : 'border-border text-muted-foreground hover:bg-muted/50 hover:border-blue-500/60'}`}
+                                                                        className={`border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all min-h-[64px] ${draggedItem?.jenis_tugas?.kode === 'utama' ? 'border-sekolah-info/60 bg-sekolah-info/10 text-sekolah-info scale-[1.02]' : 'border-border text-muted-foreground hover:bg-muted/50 hover:border-sekolah-info/60'}`}
                                                                     >
                                                                         <span className="text-xs font-bold uppercase tracking-wider">+ Utama</span>
                                                                     </div>
@@ -331,18 +331,18 @@ return (
                                                                 {/* Dropzone DAMPING (Aturan PRD: Hanya untuk Kelas 1 dan 2) */}
                                                                 {kelas.jenjang <= 2 && jadwalUtama && (
                                                                     jadwalDamping ? (
-                                                                        <div className="w-full p-2 bg-orange-500/10 border border-orange-500/30 rounded-lg relative group shadow-sm hover:shadow-md transition-shadow">
-                                                                            <button type="button" onClick={() => confirmDelete(jadwalDamping.id)} className="absolute -top-2 -right-2 bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-600 hover:text-white pb-0.5">×</button>
+                                                                        <div className="w-full p-2 bg-sekolah-tertunda/10 border border-sekolah-tertunda/30 rounded-lg relative group shadow-sm hover:shadow-md transition-shadow">
+                                                                            <button type="button" onClick={() => confirmDelete(jadwalDamping.id)} className="absolute -top-2 -right-2 bg-sekolah-bahaya/15 text-sekolah-bahaya border border-sekolah-bahaya/30 rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-sekolah-bahaya/90 hover:text-white pb-0.5">×</button>
                                                                             <div className="flex justify-between items-center">
-                                                                                <div className="font-bold text-orange-800 dark:text-orange-300 text-[13px]">{getGuruName(jadwalDamping.guru)}</div>
-                                                                                <div className="text-[10px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 bg-orange-500/15 px-1.5 py-0.5 rounded">Damping</div>
+                                                                                <div className="font-bold text-sekolah-tertunda text-[13px]">{getGuruName(jadwalDamping.guru)}</div>
+                                                                                <div className="text-[10px] font-bold uppercase tracking-wider text-sekolah-tertunda bg-sekolah-tertunda/15 px-1.5 py-0.5 rounded">Damping</div>
                                                                             </div>
                                                                         </div>
                                                                     ) : (
                                                                         <div
                                                                             onDragOver={handleDragOver}
                                                                             onDrop={(event) => handleDrop(event, waktu.id, 'damping', jadwalUtama.id)}
-                                                                            className={`border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-all min-h-[36px] ${draggedItem?.jenis_tugas?.kode === 'damping' ? 'border-orange-500/60 bg-orange-500/10 text-orange-600 dark:text-orange-400 scale-[1.02]' : 'border-border text-muted-foreground/50 hover:bg-muted/50 hover:border-orange-500/60 hover:text-orange-400'}`}
+                                                                            className={`border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-all min-h-[36px] ${draggedItem?.jenis_tugas?.kode === 'damping' ? 'border-sekolah-tertunda/60 bg-sekolah-tertunda/10 text-sekolah-tertunda scale-[1.02]' : 'border-border text-muted-foreground/50 hover:bg-muted/50 hover:border-sekolah-tertunda/60 hover:text-sekolah-tertunda'}`}
                                                                         >
                                                                             <span className="text-[10px] font-bold uppercase tracking-wider">+ Damping</span>
                                                                         </div>
@@ -355,8 +355,8 @@ return (
                                                             </div>
                                                         )
                                                     ) : (
-                                                        <div className="flex items-center justify-center h-full min-h-[40px] bg-orange-500/5 rounded-lg">
-                                                            <span className="text-[10px] text-orange-600 dark:text-orange-400 font-bold uppercase tracking-widest">{waktu.jenis_kegiatan}</span>
+                                                        <div className="flex items-center justify-center h-full min-h-[40px] bg-sekolah-tertunda/5 rounded-lg">
+                                                            <span className="text-[10px] text-sekolah-tertunda font-bold uppercase tracking-widest">{waktu.jenis_kegiatan}</span>
                                                         </div>
                                                     )}
                                                 </td>
@@ -395,7 +395,7 @@ return (
                                         type="checkbox" 
                                         checked={filterType[type]} 
                                         onChange={() => setFilterType({...filterType, [type]: !filterType[type]})}
-                                        className={`w-3.5 h-3.5 rounded border-input focus:ring-0 ${type === 'utama' ? 'text-blue-600 dark:text-blue-400' : type === 'damping' ? 'text-orange-600 dark:text-orange-400' : 'text-purple-600 dark:text-purple-400'}`}
+                                        className={`w-3.5 h-3.5 rounded border-input focus:ring-0 ${type === 'utama' ? 'text-sekolah-info' : type === 'damping' ? 'text-sekolah-tertunda' : 'text-peran-ortu'}`}
                                     /> {type}
                                 </label>
                             ))}
@@ -412,21 +412,21 @@ return (
                                     onDragEnd={() => setDraggedItem(null)}
                                     className={`bg-card border-2 rounded-xl p-4 shadow-sm hover:shadow-lg transition-all cursor-move ${
                                         draggedItem?.id === kisi.id ? 'opacity-50 scale-95 border-input' : 
-                                        kisi.jenis_tugas.kode === 'utama' ? 'border-blue-500/20 hover:border-blue-500/60' :
-                                        kisi.jenis_tugas.kode === 'damping' ? 'border-orange-500/20 hover:border-orange-500/60' :
-                                        'border-purple-500/20 hover:border-purple-500/60'
+                                        kisi.jenis_tugas.kode === 'utama' ? 'border-sekolah-info/20 hover:border-sekolah-info/60' :
+                                        kisi.jenis_tugas.kode === 'damping' ? 'border-sekolah-tertunda/20 hover:border-sekolah-tertunda/60' :
+                                        'border-peran-ortu/20 hover:border-peran-ortu/60'
                                     }`}
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <span className={`font-black text-[15px] ${
-                                            kisi.jenis_tugas.kode === 'utama' ? 'text-blue-800 dark:text-blue-300' :
-                                            kisi.jenis_tugas.kode === 'damping' ? 'text-orange-800 dark:text-orange-300' : 'text-purple-800 dark:text-purple-300'
+                                            kisi.jenis_tugas.kode === 'utama' ? 'text-sekolah-info' :
+                                            kisi.jenis_tugas.kode === 'damping' ? 'text-sekolah-tertunda' : 'text-peran-ortu'
                                         }`}>
                                             {getGuruName(kisi.guru)}
                                         </span>
                                         <span className={`text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-wider ${
-                                            kisi.jenis_tugas.kode === 'utama' ? 'bg-blue-500/15 text-blue-800 dark:text-blue-300' :
-                                            kisi.jenis_tugas.kode === 'damping' ? 'bg-orange-500/15 text-orange-800 dark:text-orange-300' : 'bg-purple-500/15 text-purple-800 dark:text-purple-300'
+                                            kisi.jenis_tugas.kode === 'utama' ? 'bg-sekolah-info/15 text-sekolah-info' :
+                                            kisi.jenis_tugas.kode === 'damping' ? 'bg-sekolah-tertunda/15 text-sekolah-tertunda' : 'bg-peran-ortu/15 text-peran-ortu'
                                         }`}>
                                             {kisi.jenis_tugas.kode}
                                         </span>

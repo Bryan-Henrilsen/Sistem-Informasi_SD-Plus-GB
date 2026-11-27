@@ -1,22 +1,23 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-// Label berwarna untuk status hijau = selesai, kuning = menunggu, merah = bermasalah
+// Badge pil status sesuai referensi desain sekolah (PRD #56): hijau = selesai, biru = info, kuning = menunggu, merah = bermasalah;
+// status lain (draft, ditutup, …) memakai warna netral
 
 const warna: Record<string, string> = {
-    lunas: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
-    terverifikasi: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
-    disetujui: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
-    aktif: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
-    pindah: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300',
-    terbuka: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300',
-    diajukan: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-    pending: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-    belum_dicek: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-    sebagian: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-    belum: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
-    ditolak: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
-    berhenti: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
+    lunas: 'border-sekolah-sukses/25 bg-sekolah-sukses/10 text-sekolah-sukses',
+    terverifikasi: 'border-sekolah-sukses/25 bg-sekolah-sukses/10 text-sekolah-sukses',
+    disetujui: 'border-sekolah-sukses/25 bg-sekolah-sukses/10 text-sekolah-sukses',
+    aktif: 'border-sekolah-sukses/25 bg-sekolah-sukses/10 text-sekolah-sukses',
+    pindah: 'border-sekolah-info/25 bg-sekolah-info/10 text-sekolah-info',
+    terbuka: 'border-sekolah-info/25 bg-sekolah-info/10 text-sekolah-info',
+    diajukan: 'border-sekolah-tertunda/25 bg-sekolah-tertunda/10 text-sekolah-tertunda',
+    pending: 'border-sekolah-tertunda/25 bg-sekolah-tertunda/10 text-sekolah-tertunda',
+    belum_dicek: 'border-sekolah-tertunda/25 bg-sekolah-tertunda/10 text-sekolah-tertunda',
+    sebagian: 'border-sekolah-tertunda/25 bg-sekolah-tertunda/10 text-sekolah-tertunda',
+    belum: 'border-sekolah-bahaya/25 bg-sekolah-bahaya/10 text-sekolah-bahaya',
+    ditolak: 'border-sekolah-bahaya/25 bg-sekolah-bahaya/10 text-sekolah-bahaya',
+    berhenti: 'border-sekolah-bahaya/25 bg-sekolah-bahaya/10 text-sekolah-bahaya',
 };
 
 const teks: Record<string, string> = {
@@ -26,6 +27,6 @@ const teks: Record<string, string> = {
 
 export function LabelStatus({ status }: { status: string }) {
     return (
-        <Badge variant="secondary" className={cn('capitalize', warna[status])}>{teks[status] ?? status}</Badge>
+        <Badge variant="outline" className={cn('rounded-full capitalize', warna[status] ?? 'border-sekolah-netral/25 bg-sekolah-netral/10 text-sekolah-netral')}>{teks[status] ?? status}</Badge>
     )
 }

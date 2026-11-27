@@ -128,7 +128,7 @@ function FormPendaftaran({ siswa, terdaftar, pilihan, hariIni }: Omit<Props, 'ca
                         <InputError message={errors.kegiatan ?? errors.kegiatan_id ?? errors.jenis} />
 
                         {dipilih?.peringatan && (
-                            <div className="flex flex-col gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                            <div className="flex flex-col gap-2 rounded-md border border-sekolah-tertunda/40 bg-sekolah-tertunda/10 p-3 text-sm text-sekolah-tertunda">
                                 <span>{dipilih.peringatan}</span>
                                 <label className="flex items-center gap-2">
                                     <Checkbox
@@ -222,8 +222,8 @@ function DaftarPilihan({
                                             .filter(Boolean)
                                             .join(' · ')}
                                     </span>
-                                    {p.error && <span className="text-xs text-rose-600">{p.error}</span>}
-                                    {!p.error && p.peringatan && <span className="text-xs text-amber-600">{p.peringatan}</span>}
+                                    {p.error && <span className="text-xs text-sekolah-bahaya">{p.error}</span>}
+                                    {!p.error && p.peringatan && <span className="text-xs text-sekolah-tertunda">{p.peringatan}</span>}
                                 </span>
                                 {p.kuota !== null && (
                                     <span className="text-xs whitespace-nowrap text-muted-foreground">

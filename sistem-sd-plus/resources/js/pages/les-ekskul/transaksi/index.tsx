@@ -117,7 +117,7 @@ export default function TransaksiIndex({ transaksi, filter, jumlah, konfirmasi }
                                             {t.refund > 0 && ` · refund ${rupiah(t.refund)}`}
                                         </div>
                                         {t.alasan_ditolak && (
-                                            <div className="text-xs text-rose-600">Ditolak: {t.alasan_ditolak}</div>
+                                            <div className="text-xs text-sekolah-bahaya">Ditolak: {t.alasan_ditolak}</div>
                                         )}
                                     </td>
                                     <td className="p-3 capitalize">

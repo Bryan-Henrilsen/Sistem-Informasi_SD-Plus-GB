@@ -46,10 +46,10 @@ type Anak = {
 type Rekening = { bank: string | null; nomor: string; atas_nama: string | null };
 
 const LABEL: Record<StatusTagihan, { teks: string; kelas: string }> = {
-    lunas: { teks: 'Lunas', kelas: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' },
-    menunggu_verifikasi: { teks: 'Menunggu verifikasi TU', kelas: 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300' },
-    menunggu_online: { teks: 'Menunggu pembayaran online', kelas: 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300' },
-    sebagian: { teks: 'Dibayar sebagian', kelas: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' },
+    lunas: { teks: 'Lunas', kelas: 'bg-sekolah-sukses/15 text-sekolah-sukses' },
+    menunggu_verifikasi: { teks: 'Menunggu verifikasi TU', kelas: 'bg-sekolah-info/15 text-sekolah-info' },
+    menunggu_online: { teks: 'Menunggu pembayaran online', kelas: 'bg-sekolah-info/15 text-sekolah-info' },
+    sebagian: { teks: 'Dibayar sebagian', kelas: 'bg-sekolah-tertunda/15 text-sekolah-tertunda' },
     belum: { teks: 'Belum dibayar', kelas: 'bg-muted text-muted-foreground' },
 };
 
@@ -66,7 +66,7 @@ export default function TagihanOrangTua({ anak, rekening }: { anak: Anak[]; reke
                 <h1 className="text-lg font-semibold">Tagihan</h1>
 
                 {(errors.tagihan || errors.siswa) && (
-                    <p className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+                    <p className="rounded-md border border-sekolah-bahaya/40 bg-sekolah-bahaya/10 p-3 text-sm text-sekolah-bahaya">
                         {errors.tagihan ?? errors.siswa}
                     </p>
                 )}
@@ -115,7 +115,7 @@ function TagihanAnak({ anak }: { anak: Anak }) {
                 ))}
 
                 {anak.ditolak.length > 0 && (
-                    <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+                    <div className="rounded-md border border-sekolah-bahaya/40 bg-sekolah-bahaya/10 p-3 text-sm text-sekolah-bahaya">
                         <p className="font-medium">Transfer yang ditolak</p>
                         <ul className="mt-1 flex flex-col gap-1">
                             {anak.ditolak.map((d) => (
@@ -130,7 +130,7 @@ function TagihanAnak({ anak }: { anak: Anak }) {
                 )}
 
                 {anak.libur.length > 0 && (
-                    <div className="rounded-md border border-sky-300 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200">
+                    <div className="rounded-md border border-sekolah-info/40 bg-sekolah-info/10 p-3 text-sm text-sekolah-info">
                         <p className="font-medium">Kegiatan tidak berlangsung</p>
                         <ul className="mt-1 flex flex-col gap-1">
                             {anak.libur.map((l) => (
@@ -164,12 +164,12 @@ function TagihanAnak({ anak }: { anak: Anak }) {
                                 <div className="min-w-0 flex-1">
                                     <p className="text-sm">{t.kegiatan}</p>
                                     <span className={cn('mt-1 inline-block rounded-full px-2 py-0.5 text-xs', LABEL[t.status].kelas)}>{LABEL[t.status].teks}</span>
-                                    {t.tunggakan && <span className="ml-1 text-xs text-red-600 dark:text-red-400">Tunggakan</span>}
+                                    {t.tunggakan && <span className="ml-1 text-xs text-sekolah-bahaya">Tunggakan</span>}
                                 </div>
                                 <div className="shrink-0 text-right text-sm tabular-nums">
                                     <p>{rupiah(t.harus_dibayar)}</p>
                                     {t.diskon > 0 && <p className="text-xs text-muted-foreground line-through">{rupiah(t.nominal)}</p>}
-                                    {t.status === 'sebagian' && <p className="text-xs text-amber-700 dark:text-amber-400">sisa {rupiah(t.sisa)}</p>}
+                                    {t.status === 'sebagian' && <p className="text-xs text-sekolah-tertunda">sisa {rupiah(t.sisa)}</p>}
                                 </div>
                             </label>
                         ))}
@@ -195,7 +195,7 @@ function TagihanAnak({ anak }: { anak: Anak }) {
 function KartuKonfirmasi({ konfirmasi: k }: { konfirmasi: Konfirmasi }) {
     if (k.status === 'ditolak') {
         return (
-            <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+            <div className="rounded-md border border-sekolah-bahaya/40 bg-sekolah-bahaya/10 p-3 text-sm text-sekolah-bahaya">
                 <p className="font-medium">Konfirmasi transfer ditolak TU</p>
                 <p>
                     {tanggal(k.tanggal_transfer)} · {rupiah(k.nominal)} · {k.berita}
@@ -207,7 +207,7 @@ function KartuKonfirmasi({ konfirmasi: k }: { konfirmasi: Konfirmasi }) {
     }
 
     return (
-        <div className="flex flex-col gap-2 rounded-md border border-sky-300 bg-sky-50 p-3 text-sm text-sky-950 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-100">
+        <div className="flex flex-col gap-2 rounded-md border border-sekolah-info/40 bg-sekolah-info/10 p-3 text-sm text-sekolah-info">
             <p className="font-medium">Menunggu verifikasi TU</p>
             <p>
                 Transfer {rupiah(k.nominal)} tanggal {tanggal(k.tanggal_transfer)} untuk {k.berita}.
@@ -262,7 +262,7 @@ function Angka({ label, nilai, merah }: { label: string; nilai: number; merah?: 
     return (
         <div className="rounded-md border p-2.5">
             <p className="text-xs text-muted-foreground">{label}</p>
-            <p className={cn('font-semibold tabular-nums', merah && 'text-red-600 dark:text-red-400')}>{rupiah(nilai)}</p>
+            <p className={cn('font-semibold tabular-nums', merah && 'text-sekolah-bahaya')}>{rupiah(nilai)}</p>
         </div>
     );
 }

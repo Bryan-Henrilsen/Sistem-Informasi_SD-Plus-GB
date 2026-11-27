@@ -302,7 +302,7 @@ function HasilPratinjau({ p }: { p: Pratinjau }) {
                 </div>
             )}
 
-            {p.refund > 0 && <p className="text-xs text-amber-700 dark:text-amber-400">Refund akan muncul di halaman Refund untuk dikembalikan ke orang tua.</p>}
+            {p.refund > 0 && <p className="text-xs text-sekolah-tertunda">Refund akan muncul di halaman Refund untuk dikembalikan ke orang tua.</p>}
         </div>
     );
 }

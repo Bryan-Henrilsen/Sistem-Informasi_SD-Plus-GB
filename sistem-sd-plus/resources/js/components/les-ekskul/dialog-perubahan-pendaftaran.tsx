@@ -241,7 +241,7 @@ function KotakKonfirmasi({ pesan, name, label }: { pesan?: string; name: string;
     }
 
     return (
-        <div className="flex flex-col gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+        <div className="flex flex-col gap-2 rounded-md border border-sekolah-tertunda/40 bg-sekolah-tertunda/10 p-3 text-sm text-sekolah-tertunda">
             <span>{terakhir}</span>
             <label className="flex items-center gap-2">
                 <input type="checkbox" name={name} value="1" className="size-4 accent-primary" />

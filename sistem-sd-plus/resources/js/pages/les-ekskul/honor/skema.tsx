@@ -152,7 +152,7 @@ function KartuSkema({ skema, bisaUbah }: { skema: Skema; bisaUbah: boolean }) {
                         </div>
                     </div>
                 ))}
-                <p className={cn('mt-1 text-right text-sm font-medium', total === 100 ? 'text-emerald-600' : 'text-rose-600')}>
+                <p className={cn('mt-1 text-right text-sm font-medium', total === 100 ? 'text-sekolah-sukses' : 'text-sekolah-bahaya')}>
                     Total {total}%
                 </p>
                 <InputError message={errors.persen} />

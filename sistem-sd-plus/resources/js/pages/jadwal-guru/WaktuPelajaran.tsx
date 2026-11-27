@@ -64,9 +64,9 @@ const activityLabels: Record<JenisKegiatan, string> = {
 };
 
 const activityStyles: Record<JenisKegiatan, string> = {
-    kbm: 'border-blue-500/30 bg-blue-500/10 text-blue-800 dark:text-blue-300',
-    istirahat: 'border-orange-500/30 bg-orange-500/10 text-orange-800 dark:text-orange-300',
-    upacara: 'border-purple-500/30 bg-purple-500/10 text-purple-800 dark:text-purple-300',
+    kbm: 'border-sekolah-info/30 bg-sekolah-info/10 text-sekolah-info',
+    istirahat: 'border-sekolah-tertunda/30 bg-sekolah-tertunda/10 text-sekolah-tertunda',
+    upacara: 'border-peran-ortu/30 bg-peran-ortu/10 text-peran-ortu',
 };
 
 const emptyForm: WaktuFormData = {
@@ -207,7 +207,7 @@ export default function WaktuPelajaran({ tahunAjaran, slots, summary }: WaktuPel
     };
 
     const fieldError = (name: keyof WaktuFormData) => errors[name] ? (
-        <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors[name]}</p>
+        <p className="mt-1 text-xs text-sekolah-bahaya">{errors[name]}</p>
     ) : null;
 
     return (
@@ -235,7 +235,7 @@ export default function WaktuPelajaran({ tahunAjaran, slots, summary }: WaktuPel
 
                     <div className="flex-1 space-y-5 overflow-auto p-4 lg:p-8">
                         <div className="mx-auto max-w-7xl space-y-5">
-                            <div className="flex items-start gap-3 rounded-lg border border-blue-500/30 bg-blue-500/10 p-4 text-sm text-blue-800 dark:text-blue-300">
+                            <div className="flex items-start gap-3 rounded-lg border border-sekolah-info/30 bg-sekolah-info/10 p-4 text-sm text-sekolah-info">
                                 <span className="mt-0.5 font-bold">i</span>
                                 <p>
                                     Waktu pelajaran menjadi kerangka baris pada grid Pembagian Jadwal. Atur hari berlaku dan rentang jenjang agar slot hanya muncul pada kelas yang sesuai.
@@ -248,20 +248,20 @@ export default function WaktuPelajaran({ tahunAjaran, slots, summary }: WaktuPel
                                     <p className="mt-1 text-2xl font-bold text-foreground">{summary.total_slot}</p>
                                     <p className="text-[11px] text-muted-foreground">Slot waktu tahun ajaran aktif</p>
                                 </div>
-                                <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-4">
-                                    <p className="text-xs text-blue-800 dark:text-blue-300">KBM</p>
-                                    <p className="mt-1 text-2xl font-bold text-blue-800 dark:text-blue-300">{summary.total_kbm}</p>
-                                    <p className="text-[11px] text-blue-600 dark:text-blue-400">Slot kegiatan belajar</p>
+                                <div className="rounded-lg border border-sekolah-info/20 bg-sekolah-info/10 p-4">
+                                    <p className="text-xs text-sekolah-info">KBM</p>
+                                    <p className="mt-1 text-2xl font-bold text-sekolah-info">{summary.total_kbm}</p>
+                                    <p className="text-[11px] text-sekolah-info">Slot kegiatan belajar</p>
                                 </div>
-                                <div className="rounded-lg border border-orange-500/20 bg-orange-500/10 p-4">
-                                    <p className="text-xs text-orange-800 dark:text-orange-300">Istirahat</p>
-                                    <p className="mt-1 text-2xl font-bold text-orange-800 dark:text-orange-300">{summary.total_istirahat}</p>
-                                    <p className="text-[11px] text-orange-600 dark:text-orange-400">Slot waktu istirahat</p>
+                                <div className="rounded-lg border border-sekolah-tertunda/20 bg-sekolah-tertunda/10 p-4">
+                                    <p className="text-xs text-sekolah-tertunda">Istirahat</p>
+                                    <p className="mt-1 text-2xl font-bold text-sekolah-tertunda">{summary.total_istirahat}</p>
+                                    <p className="text-[11px] text-sekolah-tertunda">Slot waktu istirahat</p>
                                 </div>
-                                <div className="rounded-lg border border-purple-500/20 bg-purple-500/10 p-4">
-                                    <p className="text-xs text-purple-800 dark:text-purple-300">Upacara / apel</p>
-                                    <p className="mt-1 text-2xl font-bold text-purple-800 dark:text-purple-300">{summary.total_upacara}</p>
-                                    <p className="text-[11px] text-purple-600 dark:text-purple-400">Slot kegiatan khusus</p>
+                                <div className="rounded-lg border border-peran-ortu/20 bg-peran-ortu/10 p-4">
+                                    <p className="text-xs text-peran-ortu">Upacara / apel</p>
+                                    <p className="mt-1 text-2xl font-bold text-peran-ortu">{summary.total_upacara}</p>
+                                    <p className="text-[11px] text-peran-ortu">Slot kegiatan khusus</p>
                                 </div>
                             </div>
 
@@ -308,15 +308,15 @@ export default function WaktuPelajaran({ tahunAjaran, slots, summary }: WaktuPel
                                         </thead>
                                         <tbody className="divide-y divide-border bg-card">
                                             {visibleSlots.map((slot) => (
-                                                <tr key={slot.id} className={`transition hover:bg-muted/50 ${slot.jenis_kegiatan === 'istirahat' ? 'bg-orange-500/5' : ''}`}>
+                                                <tr key={slot.id} className={`transition hover:bg-muted/50 ${slot.jenis_kegiatan === 'istirahat' ? 'bg-sekolah-tertunda/5' : ''}`}>
                                                     <td className="px-4 py-4 text-center font-medium text-muted-foreground">{slot.urutan}</td>
                                                     <td className="px-4 py-4">
-                                                        <div className={`font-semibold ${slot.jenis_kegiatan === 'istirahat' ? 'text-orange-800 dark:text-orange-300' : 'text-foreground'}`}>
+                                                        <div className={`font-semibold ${slot.jenis_kegiatan === 'istirahat' ? 'text-sekolah-tertunda' : 'text-foreground'}`}>
                                                             {slot.jam_ke ? `Jam ${slot.jam_ke}` : slot.nama}
                                                         </div>
                                                         {slot.jam_ke && <div className="mt-0.5 text-xs text-muted-foreground">{slot.nama}</div>}
                                                         {slot.is_used && (
-                                                            <div className="mt-1 text-[10px] font-medium text-amber-800 dark:text-amber-300">
+                                                            <div className="mt-1 text-[10px] font-medium text-sekolah-tertunda">
                                                                 Digunakan pada {slot.jadwal_terpasang} jadwal
                                                             </div>
                                                         )}
@@ -350,12 +350,12 @@ export default function WaktuPelajaran({ tahunAjaran, slots, summary }: WaktuPel
                                                                 onClick={() => deleteSlot(slot)}
                                                                 disabled={slot.is_used}
                                                                 title={slot.is_used ? 'Slot terpakai tidak dapat dihapus' : 'Hapus slot'}
-                                                                className={`text-xs font-semibold ${slot.is_used ? 'cursor-not-allowed text-muted-foreground/50' : 'text-red-600 dark:text-red-400 hover:underline'}`}
+                                                                className={`text-xs font-semibold ${slot.is_used ? 'cursor-not-allowed text-muted-foreground/50' : 'text-sekolah-bahaya hover:underline'}`}
                                                             >
                                                                 Hapus
                                                             </button>
                                                         </div>
-                                                        {slot.is_used && <p className="mt-1 text-[10px] text-amber-800 dark:text-amber-300">Tidak dapat dihapus</p>}
+                                                        {slot.is_used && <p className="mt-1 text-[10px] text-sekolah-tertunda">Tidak dapat dihapus</p>}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -390,7 +390,7 @@ export default function WaktuPelajaran({ tahunAjaran, slots, summary }: WaktuPel
 
                         <form onSubmit={submitForm} className="space-y-5 p-6">
                             {isUsedSlot && (
-                                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-300">
+                                <div className="rounded-lg border border-sekolah-tertunda/30 bg-sekolah-tertunda/10 p-3 text-sm text-sekolah-tertunda">
                                     <p className="font-semibold">Slot ini sudah digunakan pada {editingSlot?.jadwal_terpasang} jadwal aktual.</p>
                                     <p className="mt-1 text-xs">Sesuai PRD, hanya waktu mulai dan waktu selesai yang dapat diubah. Slot tidak dapat dihapus, dan informasi lainnya dikunci agar jadwal yang sudah tersusun tidak berubah.</p>
                                 </div>
@@ -483,7 +483,7 @@ export default function WaktuPelajaran({ tahunAjaran, slots, summary }: WaktuPel
                                     })}
                                 </div>
                                 {fieldError('hari')}
-                                {errors['hari.0'] && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors['hari.0']}</p>}
+                                {errors['hari.0'] && <p className="mt-1 text-xs text-sekolah-bahaya">{errors['hari.0']}</p>}
                             </div>
 
                             <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">

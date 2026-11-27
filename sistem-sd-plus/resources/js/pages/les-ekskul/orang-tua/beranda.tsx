@@ -33,7 +33,7 @@ export default function BerandaOrangTua({ anak, periodeBuka }: { anak: AnakRingk
                 </div>
 
                 {periodeBuka && (
-                    <div className="flex gap-2 rounded-md border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+                    <div className="flex gap-2 rounded-md border border-sekolah-sukses/40 bg-sekolah-sukses/10 p-3 text-sm text-sekolah-sukses">
                         <CalendarClock className="mt-0.5 size-4 shrink-0" />
                         <span>Pendaftaran les & ekstrakurikuler dibuka sampai {tanggal(periodeBuka.tanggal_selesai)}. Pilih anak untuk mendaftarkannya.</span>
                     </div>
@@ -88,10 +88,10 @@ export function KartuAnak({ anak, aksi }: { anak: AnakRingkas; aksi?: React.Reac
                 ) : (
                     <p className="text-xs text-muted-foreground">Belum mengikuti les atau ekstrakurikuler.</p>
                 )}
-                {(anak.tunggakan ?? 0) > 0 && <p className="text-sm font-medium text-red-600 dark:text-red-400">Tunggakan {rupiah(anak.tunggakan ?? 0)}</p>}
+                {(anak.tunggakan ?? 0) > 0 && <p className="text-sm font-medium text-sekolah-bahaya">Tunggakan {rupiah(anak.tunggakan ?? 0)}</p>}
                 {(anak.bulan_ini ?? 0) > 0 && <p className="text-sm text-muted-foreground">Belum dibayar bulan ini {rupiah(anak.bulan_ini ?? 0)}</p>}
                 {(anak.menunggu_verifikasi ?? 0) > 0 && (
-                    <p className="text-xs text-sky-700 dark:text-sky-400">{anak.menunggu_verifikasi} pembayaran menunggu verifikasi TU</p>
+                    <p className="text-xs text-sekolah-info">{anak.menunggu_verifikasi} pembayaran menunggu verifikasi TU</p>
                 )}
             </CardContent>
         </Card>
