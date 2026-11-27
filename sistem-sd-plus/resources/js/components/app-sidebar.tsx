@@ -5,14 +5,13 @@ import RekapHonorController from '@/actions/App/Domains/LesEkskul/Http/Controlle
 import SkemaHonorController from '@/actions/App/Domains/LesEkskul/Http/Controllers/SkemaHonorController';
 import {
     BookMarked,
-    BookOpen,
     CalendarOff,
     CalendarRange,
     ClipboardList,
     Coins,
     Contact,
     FileCheck2,
-    FolderGit2,
+    Globe,
     Landmark,
     LayoutGrid,
     Percent,
@@ -115,16 +114,12 @@ const dataSekolahNavItems: (NavItem & { roles: string[] })[] = [
     { title: 'Mata Pelajaran', href: mataPelajaran.index(), icon: BookMarked, roles: ['waka_kurikulum', 'kepala_sekolah'] },
 ];
 
+// Tautan bawah sidebar: situs sekolah (menggantikan tautan Repository/Documentation bawaan starter kit Laravel)
 const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
+        title: 'Website Sekolah',
+        href: 'https://sdplusgembalabaik.sch.id/',
+        icon: Globe,
     },
 ];
 

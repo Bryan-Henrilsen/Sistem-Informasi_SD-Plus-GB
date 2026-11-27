@@ -10,7 +10,9 @@ export type UseAppearanceReturn = {
 };
 
 const listeners = new Set<() => void>();
-let currentAppearance: Appearance = 'system';
+// Bawaan mode terang sesuai desain sekolah (PRD #56); Gelap/Sistem tetap bisa dipilih di Pengaturan > Tampilan
+const BAWAAN: Appearance = 'light';
+let currentAppearance: Appearance = BAWAAN;
 
 const prefersDark = (): boolean => {
     if (typeof window === 'undefined') {
@@ -31,10 +33,10 @@ const setCookie = (name: string, value: string, days = 365): void => {
 
 const getStoredAppearance = (): Appearance => {
     if (typeof window === 'undefined') {
-        return 'system';
+        return BAWAAN;
     }
 
-    return (localStorage.getItem('appearance') as Appearance) || 'system';
+    return (localStorage.getItem('appearance') as Appearance) || BAWAAN;
 };
 
 const isDarkMode = (appearance: Appearance): boolean => {
@@ -75,9 +77,11 @@ export function initializeTheme(): void {
         return;
     }
 
-    if (!localStorage.getItem('appearance')) {
-        localStorage.setItem('appearance', 'system');
-        setCookie('appearance', 'system');
+    // Sekali saja: bawaan lama "system" (sebelum desain sekolah) diganti menjadi terang
+    if (!localStorage.getItem('appearance') || !localStorage.getItem('tampilan_bawaan_terang')) {
+        localStorage.setItem('appearance', BAWAAN);
+        localStorage.setItem('tampilan_bawaan_terang', '1');
+        setCookie('appearance', BAWAAN);
     }
 
     currentAppearance = getStoredAppearance();
@@ -91,7 +95,7 @@ export function useAppearance(): UseAppearanceReturn {
     const appearance: Appearance = useSyncExternalStore(
         subscribe,
         () => currentAppearance,
-        () => 'system',
+        () => BAWAAN,
     );
 
     const resolvedAppearance: ResolvedAppearance = isDarkMode(appearance)

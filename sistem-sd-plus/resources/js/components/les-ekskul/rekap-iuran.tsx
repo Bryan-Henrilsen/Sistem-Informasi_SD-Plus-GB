@@ -64,13 +64,13 @@ const kodeMetode: Record<MetodeTransaksi, string> = { cash: 'C', transfer: 'T', 
 const namaMetode: Record<MetodeTransaksi, string> = { cash: 'Cash', transfer: 'Transfer', online: 'Online' };
 
 const warna: Record<StatusKotak, string> = {
-    lunas: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
-    menunggu: 'bg-emerald-100 text-emerald-800 outline-dashed outline-1 -outline-offset-2 outline-amber-500 dark:bg-emerald-900/40 dark:text-emerald-300',
-    sebagian: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-    tunggakan: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
+    lunas: 'bg-sekolah-sukses/15 text-sekolah-sukses',
+    menunggu: 'bg-sekolah-sukses/15 text-sekolah-sukses outline-dashed outline-1 -outline-offset-2 outline-sekolah-tertunda/70',
+    sebagian: 'bg-sekolah-tertunda/15 text-sekolah-tertunda',
+    tunggakan: 'bg-sekolah-bahaya/15 text-sekolah-bahaya',
     belum: 'bg-muted text-muted-foreground',
     batal: 'text-muted-foreground line-through',
-    libur: 'bg-sky-50 text-sky-700 italic dark:bg-sky-950/40 dark:text-sky-300',
+    libur: 'bg-sekolah-info/10 text-sekolah-info italic',
 };
 
 export const keterangan: { status: StatusKotak; label: string }[] = [
@@ -131,7 +131,7 @@ function SelKotak({
             className={cn(
                 'w-full rounded-md px-0.5 py-1 text-[11px] leading-tight whitespace-nowrap transition hover:ring-2 hover:ring-ring/40 print:rounded-none print:bg-transparent print:text-black print:outline-none',
                 warna[kotak.status],
-                disorot && 'animate-pulse ring-2 ring-sky-500',
+                disorot && 'animate-pulse ring-2 ring-sekolah-info/40',
             )}
         >
             {sudahBayar && terakhir && (

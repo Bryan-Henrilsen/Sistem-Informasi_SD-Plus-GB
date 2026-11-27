@@ -95,7 +95,7 @@ export default function PeriodeShow({ periode, laporan, ringkasan, hambatanAjuka
                     </CardHeader>
                     <CardContent className="flex flex-col gap-3 text-sm">
                         {periode.status === 'terbuka' && periode.alasan_dikembalikan && (
-                            <p className="rounded-md border border-rose-300 bg-rose-50 p-3 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+                            <p className="rounded-md border border-sekolah-bahaya/40 bg-sekolah-bahaya/10 p-3 text-sekolah-bahaya">
                                 Dikembalikan {periode.dikembalikan_oleh}: {periode.alasan_dikembalikan}
                             </p>
                         )}

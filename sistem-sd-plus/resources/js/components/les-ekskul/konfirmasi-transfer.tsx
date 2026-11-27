@@ -30,7 +30,7 @@ export function DaftarKonfirmasi({ data }: { data: KonfirmasiMenunggu[] }) {
     }
 
     return (
-        <Card className="gap-3 border-sky-300 py-4 dark:border-sky-800">
+        <Card className="gap-3 border-sekolah-info/40 py-4">
             <CardHeader className="px-4">
                 <CardTitle className="text-base">Konfirmasi transfer dari orang tua ({data.length})</CardTitle>
                 <p className="text-sm text-muted-foreground">

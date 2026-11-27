@@ -75,7 +75,7 @@ export function DaftarLaporanHarian({
                             </span>
                         )}
                         {l.alasan_ditolak && (
-                            <span className="w-full text-xs text-rose-600">
+                            <span className="w-full text-xs text-sekolah-bahaya">
                                 Ditolak {l.ditolak_oleh}: {l.alasan_ditolak}
                             </span>
                         )}
@@ -99,7 +99,7 @@ export function DaftarLaporanHarian({
                                         <td className="p-2 pl-3">
                                             {t.siswa}
                                             {t.terlambat && (
-                                                <div className="text-xs text-amber-600">
+                                                <div className="text-xs text-sekolah-tertunda">
                                                     Dicatat terlambat · uang masuk {tanggal(t.tanggal)}
                                                 </div>
                                             )}

@@ -46,9 +46,9 @@ type Props = {
 };
 
 const STATUS: Record<Status, { teks: string; kelas: string }> = {
-    aktif: { teks: 'Aktif', kelas: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' },
+    aktif: { teks: 'Aktif', kelas: 'bg-sekolah-sukses/15 text-sekolah-sukses' },
     pindah_sekolah: { teks: 'Keluar sekolah', kelas: 'bg-muted text-muted-foreground' },
-    lulus: { teks: 'Lulus', kelas: 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300' },
+    lulus: { teks: 'Lulus', kelas: 'bg-sekolah-info/15 text-sekolah-info' },
 };
 const kelasPilihan = 'h-9 rounded-md border border-input bg-transparent px-2 text-sm shadow-xs';
 
@@ -355,7 +355,7 @@ function FormSiswa({
                     <p className="text-xs text-muted-foreground">Pindah kelas: les tambahan siswa ikut pindah ke les kelas tujuan.</p>
                 )}
                 {pindahJenjang && (
-                    <p className="text-xs text-amber-700 dark:text-amber-400">
+                    <p className="text-xs text-sekolah-tertunda">
                         Pindah ke jenjang lain hanya bisa bila siswa tidak ikut kegiatan apa pun{siswa && siswa.kegiatan_aktif > 0 ? ` (sekarang ${siswa.kegiatan_aktif} kegiatan aktif)` : ''}.
                     </p>
                 )}

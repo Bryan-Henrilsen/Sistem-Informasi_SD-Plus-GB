@@ -84,7 +84,7 @@ export default function PengajarEkskulIndex({ pengajar, kegiatan, masalahLes, or
                 />
 
                 {semuaMasalah.length > 0 ? (
-                    <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                    <div className="rounded-md border border-sekolah-tertunda/40 bg-sekolah-tertunda/10 p-3 text-sm text-sekolah-tertunda">
                         <p className="mb-1 font-medium">Data yang perlu dilengkapi sebelum honor bisa dihitung:</p>
                         <ul className="list-disc pl-5">
                             {semuaMasalah.map((m) => (
@@ -93,7 +93,7 @@ export default function PengajarEkskulIndex({ pengajar, kegiatan, masalahLes, or
                         </ul>
                     </div>
                 ) : (
-                    <p className="rounded-md border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+                    <p className="rounded-md border border-sekolah-sukses/40 bg-sekolah-sukses/10 p-3 text-sm text-sekolah-sukses">
                         Data pengajar dan pendamping sudah lengkap untuk perhitungan honor.
                     </p>
                 )}
@@ -215,7 +215,7 @@ export default function PengajarEkskulIndex({ pengajar, kegiatan, masalahLes, or
                                 ))}
 
                                 {k.masalah.length > 0 && (
-                                    <ul className="list-disc pl-5 text-xs text-rose-600">
+                                    <ul className="list-disc pl-5 text-xs text-sekolah-bahaya">
                                         {k.masalah.map((m) => (
                                             <li key={m}>{m}</li>
                                         ))}

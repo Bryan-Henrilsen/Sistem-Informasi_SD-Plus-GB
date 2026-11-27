@@ -88,20 +88,20 @@ function KartuTugasItem({ kartu }: { kartu: KartuTugas }) {
             href={kartu.href}
             className={cn(
                 'flex flex-col gap-2 rounded-xl border p-4 transition-colors hover:bg-muted/50',
-                !beres && kartu.nada === 'tugas' && 'border-amber-300 bg-amber-50/60 dark:border-amber-800 dark:bg-amber-950/30',
+                !beres && kartu.nada === 'tugas' && 'border-sekolah-tertunda/40 bg-sekolah-tertunda/10',
             )}
         >
             <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium">{kartu.judul}</span>
                 {beres ? (
-                    <span className="flex items-center gap-1 text-xs text-emerald-600">
+                    <span className="flex items-center gap-1 text-xs text-sekolah-sukses">
                         <CheckCircle2 className="size-4" /> Beres
                     </span>
                 ) : (
                     <span
                         className={cn(
                             'text-2xl font-semibold',
-                            kartu.nada === 'tugas' ? 'text-amber-700 dark:text-amber-300' : 'text-muted-foreground',
+                            kartu.nada === 'tugas' ? 'text-sekolah-tertunda' : 'text-muted-foreground',
                         )}
                     >
                         {kartu.jumlah}

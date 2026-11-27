@@ -127,7 +127,7 @@ function FormPembayaran({ siswa, tagihan, pendaftaran, hariIni, hanyaTransfer, t
     return (
         <form onSubmit={simpan} className="flex flex-col gap-6">
             {konfirmasi && (
-                <p className="rounded-md border border-sky-300 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200">
+                <p className="rounded-md border border-sekolah-info/40 bg-sekolah-info/10 p-3 text-sm text-sekolah-info">
                     Diisi dari konfirmasi "Saya sudah bayar" orang tua (transfer {rupiah(konfirmasi.nominal)}). Pastikan transfernya sudah ada di
                     mutasi BCA sebelum disimpan.
                 </p>

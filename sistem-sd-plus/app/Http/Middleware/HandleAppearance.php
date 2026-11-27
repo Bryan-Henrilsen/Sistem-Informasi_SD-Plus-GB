@@ -16,7 +16,8 @@ class HandleAppearance
      */
     public function handle(Request $request, Closure $next): Response
     {
-        View::share('appearance', $request->cookie('appearance') ?? 'system');
+        // Bawaan mode terang (PRD #56); pengguna tetap bisa memilih Gelap/Sistem di Pengaturan > Tampilan
+        View::share('appearance', $request->cookie('appearance') ?? 'light');
 
         return $next($request);
     }

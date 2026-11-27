@@ -59,13 +59,13 @@ const labelStatus: Record<Status, string> = {
 };
 
 const warnaStatus: Record<Status, string> = {
-    pilih: 'border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300',
-    baru: 'border-sky-500/40 bg-sky-500/10 text-sky-800 dark:text-sky-300',
-    pindah: 'border-violet-500/40 bg-violet-500/10 text-violet-800 dark:text-violet-300',
-    lama: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300',
-    lengkapi: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300',
+    pilih: 'border-sekolah-tertunda/40 bg-sekolah-tertunda/10 text-sekolah-tertunda',
+    baru: 'border-sekolah-info/40 bg-sekolah-info/10 text-sekolah-info',
+    pindah: 'border-peran-ortu/40 bg-peran-ortu/10 text-peran-ortu',
+    lama: 'border-sekolah-sukses/40 bg-sekolah-sukses/10 text-sekolah-sukses',
+    lengkapi: 'border-sekolah-sukses/40 bg-sekolah-sukses/10 text-sekolah-sukses',
     tetap: 'text-muted-foreground',
-    error: 'border-rose-500/40 bg-rose-500/10 text-rose-800 dark:text-rose-300',
+    error: 'border-sekolah-bahaya/40 bg-sekolah-bahaya/10 text-sekolah-bahaya',
 };
 
 // Impor data siswa dari Excel (FR-28, Ringkasan v1.11 #53), khusus TU: unggah → pratinjau & keputusan → simpan.
@@ -254,7 +254,7 @@ function TinjauImpor({ pratinjau }: { pratinjau: Pratinjau }) {
                                     <Badge variant="outline" className={cn('whitespace-nowrap', warnaStatus[b.status])}>
                                         {labelStatus[b.status]}
                                     </Badge>
-                                    {b.pesan && <p className={cn('mt-1 text-xs', b.status === 'error' ? 'text-rose-700 dark:text-rose-300' : 'text-muted-foreground')}>{b.pesan}</p>}
+                                    {b.pesan && <p className={cn('mt-1 text-xs', b.status === 'error' ? 'text-sekolah-bahaya' : 'text-muted-foreground')}>{b.pesan}</p>}
                                     {b.perubahan.map((p) => (
                                         <p key={p.kolom} className="mt-1 text-xs text-muted-foreground">
                                             {p.kolom}: {p.lama ? tampilNilai(p.kolom, p.lama) : '–'} → <span className="text-foreground">{tampilNilai(p.kolom, p.baru)}</span>
@@ -308,7 +308,7 @@ function IsiKeputusan({ baris, keputusan, onUbah }: { baris: Baris; keputusan: K
                     const v = e.target.value;
                     onUbah(v.startsWith('s') ? { aksi: 'cocok', siswa_id: Number(v.slice(1)) } : { aksi: (v || null) as Aksi | null, siswa_id: null });
                 }}
-                className={cn(kelasPilihan, 'max-w-sm', keputusan.aksi === null && 'border-amber-500')}
+                className={cn(kelasPilihan, 'max-w-sm', keputusan.aksi === null && 'border-sekolah-tertunda/70')}
             >
                 {keputusan.aksi === null && <option value="">— pilih —</option>}
                 {pilihan.map((s) => (

@@ -126,7 +126,7 @@ function KartuFlat({ periodeId, jenis, orang, bisaUbah }: { periodeId: number; j
                 ) : (
                     <>
                         {jenis.nominal_per_orang === 0 && (
-                            <p className="text-sm text-amber-700 dark:text-amber-400">Nominal belum diatur di halaman Skema Honor.</p>
+                            <p className="text-sm text-sekolah-tertunda">Nominal belum diatur di halaman Skema Honor.</p>
                         )}
                         <ul className="divide-y rounded-md border text-sm empty:hidden">
                             {penerima.map((p) => (

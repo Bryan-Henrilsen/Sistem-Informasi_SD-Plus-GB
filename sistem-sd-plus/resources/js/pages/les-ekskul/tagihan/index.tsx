@@ -68,7 +68,7 @@ export default function RekapIuran({ tahunAjaran, daftarTahun, bulan, buku, bari
 
     useEffect(() => {
         if (disorot.length) {
-            document.querySelector('.ring-sky-500')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            document.querySelector('.ring-sekolah-info/40')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
         }
     }, [disorot]);
 

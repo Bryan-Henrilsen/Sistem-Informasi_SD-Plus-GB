@@ -69,7 +69,7 @@ export default function MataPelajaran({ mapel, jenisTugas }: { mapel: Mapel[]; j
                                         <span
                                             className={cn(
                                                 'rounded-full px-2 py-0.5 text-xs',
-                                                m.aktif ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-muted text-muted-foreground',
+                                                m.aktif ? 'bg-sekolah-sukses/15 text-sekolah-sukses' : 'bg-muted text-muted-foreground',
                                             )}
                                         >
                                             {m.aktif ? 'Aktif' : 'Nonaktif'}

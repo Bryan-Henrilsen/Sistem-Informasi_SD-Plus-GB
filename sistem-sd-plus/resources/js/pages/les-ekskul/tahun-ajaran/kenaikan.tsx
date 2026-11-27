@@ -78,7 +78,7 @@ export default function KenaikanKelas({ tujuan, asal, kelasAsal, kelasTujuan }: 
                 />
 
                 {kelasTujuan.length === 0 && (
-                    <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                    <p className="rounded-md border border-sekolah-tertunda/40 bg-sekolah-tertunda/10 p-3 text-sm text-sekolah-tertunda">
                         Tahun ajaran {tujuan.nama} belum punya kelas. Salin kelas dulu di halaman Kelas & Les.
                     </p>
                 )}
@@ -110,13 +110,13 @@ export default function KenaikanKelas({ tujuan, asal, kelasAsal, kelasTujuan }: 
                                             </td>
                                             <td className="p-3">
                                                 {k.jenjang === 6 ? (
-                                                    <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs text-sky-800 dark:bg-sky-950 dark:text-sky-300">Lulus</span>
+                                                    <span className="rounded-full bg-sekolah-info/15 px-2 py-0.5 text-xs text-sekolah-info">Lulus</span>
                                                 ) : (
                                                     <select
                                                         aria-label={`Kelas tujuan ${k.nama}`}
                                                         value={tujuanPerKelas[k.id]}
                                                         onChange={(e) => setTujuanPerKelas({ ...tujuanPerKelas, [k.id]: e.target.value === '' ? '' : Number(e.target.value) })}
-                                                        className={cn(kelasPilihan, belumDiKelas.length > 0 && !tujuanPerKelas[k.id] && 'border-amber-500')}
+                                                        className={cn(kelasPilihan, belumDiKelas.length > 0 && !tujuanPerKelas[k.id] && 'border-sekolah-tertunda/70')}
                                                     >
                                                         <option value="">Pilih kelas jenjang {k.jenjang + 1}</option>
                                                         {pilihan.map((t) => (
@@ -126,7 +126,7 @@ export default function KenaikanKelas({ tujuan, asal, kelasAsal, kelasTujuan }: 
                                                         ))}
                                                     </select>
                                                 )}
-                                                {errors[`tujuan.${k.id}`] && <p className="mt-1 text-xs text-red-600">{errors[`tujuan.${k.id}`]}</p>}
+                                                {errors[`tujuan.${k.id}`] && <p className="mt-1 text-xs text-sekolah-bahaya">{errors[`tujuan.${k.id}`]}</p>}
                                             </td>
                                             <td className="p-3 text-right">
                                                 {k.siswa.length > 0 && (
@@ -165,7 +165,7 @@ export default function KenaikanKelas({ tujuan, asal, kelasAsal, kelasTujuan }: 
                                                                         />
                                                                         {s.nama}
                                                                         {tinggal[s.id] && (
-                                                                            <span className="text-xs text-amber-700 dark:text-amber-400">
+                                                                            <span className="text-xs text-sekolah-tertunda">
                                                                                 tinggal kelas → {kelasTujuan.find((t) => t.id === tinggal[s.id])?.nama}
                                                                             </span>
                                                                         )}

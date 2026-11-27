@@ -149,7 +149,7 @@ export default function PendaftaranIndex({ pendaftaran, filter, kegiatan, kelasP
                                                 <td className="p-3">
                                                     {p.kegiatan}
                                                     {p.perlu_assign && (
-                                                        <div className="text-xs text-amber-600">Belum di-assign kelas paralel</div>
+                                                        <div className="text-xs text-sekolah-tertunda">Belum di-assign kelas paralel</div>
                                                     )}
                                                 </td>
                                                 <td className="p-3 text-muted-foreground">{p.orang_tua ?? '–'}</td>
@@ -419,7 +419,7 @@ function DialogAssign({
                                 </select>
 
                                 {penuh && (
-                                    <label className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300">
+                                    <label className="flex items-center gap-2 text-sm text-sekolah-tertunda">
                                         <input type="checkbox" name="abaikan_kuota" value="1" className="size-4 accent-primary" />
                                         Kuota {kelasTujuan.nama} penuh, tetap assign
                                     </label>

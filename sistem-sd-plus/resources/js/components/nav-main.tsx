@@ -12,7 +12,7 @@ import type { NavItem } from '@/types';
 
 export function NavMain({
         items,
-        label = 'Platform',
+        label = 'Menu',
     }: {
         items: NavItem[];
         label?: string;
@@ -25,10 +25,12 @@ export function NavMain({
                 <SidebarMenu>
                     {items.map((item) => (
                         <SidebarMenuItem key={item.title}>
+                            {/* Menu aktif sesuai referensi desain: latar cokelat muda + garis kiri cokelat (PRD #56) */}
                             <SidebarMenuButton
                                 asChild
                                 isActive={isCurrentUrl(item.href)}
                                 tooltip={{ children: item.title }}
+                                className="border-l-4 border-transparent data-[active=true]:border-sidebar-primary data-[active=true]:text-sidebar-accent-foreground group-data-[collapsible=icon]:border-l-0"
                             >
                                 <Link href={item.href} prefetch>
                                     {item.icon && <item.icon />}

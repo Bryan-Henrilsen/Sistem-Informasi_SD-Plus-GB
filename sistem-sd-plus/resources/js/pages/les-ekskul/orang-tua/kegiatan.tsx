@@ -79,7 +79,7 @@ export default function KegiatanAnak({ anak, wajib, diikuti, pilihan, periode, p
                 </div>
 
                 {errors.kegiatan && (
-                    <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+                    <div className="rounded-md border border-sekolah-bahaya/40 bg-sekolah-bahaya/10 p-3 text-sm text-sekolah-bahaya">
                         {errors.kegiatan}
                     </div>
                 )}
@@ -109,7 +109,7 @@ export default function KegiatanAnak({ anak, wajib, diikuti, pilihan, periode, p
 
                 {periode ? (
                     <Bagian judul="Daftar kegiatan">
-                        <p className="flex items-center gap-1.5 text-sm text-emerald-700 dark:text-emerald-400">
+                        <p className="flex items-center gap-1.5 text-sm text-sekolah-sukses">
                             <CalendarClock className="size-4" />
                             Pendaftaran dibuka sampai {tanggal(periode.tanggal_selesai)}
                         </p>
@@ -137,7 +137,7 @@ export default function KegiatanAnak({ anak, wajib, diikuti, pilihan, periode, p
                                         Daftar
                                     </Button>
                                 </div>
-                                {p.alasan_tidak_bisa && <p className="text-xs text-amber-700 dark:text-amber-400">{p.alasan_tidak_bisa}</p>}
+                                {p.alasan_tidak_bisa && <p className="text-xs text-sekolah-tertunda">{p.alasan_tidak_bisa}</p>}
                             </div>
                         ))}
                     </Bagian>

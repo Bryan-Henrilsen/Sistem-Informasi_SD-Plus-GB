@@ -187,7 +187,7 @@ export default function HasilJadwal({
                     </div>
                 ))}
                 {dampingItems.map((item) => (
-                    <div key={item.id} className="rounded bg-purple-500/10 px-2 py-1 text-xs text-purple-800 dark:text-purple-300">
+                    <div key={item.id} className="rounded bg-peran-ortu/10 px-2 py-1 text-xs text-peran-ortu">
                         Damping: {item.guru.nama}
                     </div>
                 ))}
@@ -313,12 +313,12 @@ export default function HasilJadwal({
                                             </thead>
                                             <tbody className="divide-y divide-border bg-card">
                                                 {classRows.map(({ day, slot, main, damping }) => (
-                                                    <tr key={`${day.id}-${slot.id}`} className={slot.jenis_kegiatan === 'istirahat' ? 'bg-orange-500/10' : 'hover:bg-muted/50'}>
+                                                    <tr key={`${day.id}-${slot.id}`} className={slot.jenis_kegiatan === 'istirahat' ? 'bg-sekolah-tertunda/10' : 'hover:bg-muted/50'}>
                                                         <td className="whitespace-nowrap px-4 py-3 font-semibold">{day.name}</td>
                                                         <td className="px-4 py-3 text-center">{slot.jam_ke ?? '–'}</td>
                                                         <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{formatRange(slot)}</td>
                                                         {slot.jenis_kegiatan !== 'kbm' ? (
-                                                            <td colSpan={3} className="px-4 py-3 text-center font-bold uppercase tracking-wide text-orange-800 dark:text-orange-300">{slot.nama}</td>
+                                                            <td colSpan={3} className="px-4 py-3 text-center font-bold uppercase tracking-wide text-sekolah-tertunda">{slot.nama}</td>
                                                         ) : (
                                                             <>
                                                                 <td className="px-4 py-3">{main.length ? main.map((item) => <div key={item.id}>{item.guru.nama}</div>) : <span className="text-muted-foreground italic">Belum dijadwalkan</span>}</td>
@@ -340,7 +340,7 @@ export default function HasilJadwal({
                                                 {days.map((day) => <div key={day.id} className="rounded-lg border border-border bg-card py-2 text-center text-sm font-bold">{day.name}</div>)}
                                                 {sortedSlots.map((slot) => (
                                                     <React.Fragment key={slot.id}>
-                                                        <div className={`flex flex-col items-center justify-center rounded-lg border p-2 text-center ${slot.jenis_kegiatan === 'istirahat' ? 'border-orange-500/30 bg-orange-500/10' : 'border-border bg-card'}`}>
+                                                        <div className={`flex flex-col items-center justify-center rounded-lg border p-2 text-center ${slot.jenis_kegiatan === 'istirahat' ? 'border-sekolah-tertunda/30 bg-sekolah-tertunda/10' : 'border-border bg-card'}`}>
                                                             <span className="font-bold">{slot.jam_ke ?? slot.nama}</span>
                                                             <span className="mt-1 text-[10px] text-muted-foreground">{formatTime(slot.jam_mulai)}<br />{formatTime(slot.jam_selesai)}</span>
                                                         </div>
@@ -351,8 +351,8 @@ export default function HasilJadwal({
                                                             const damping = entries.filter((item) => item.jenis_tugas.kode === 'damping');
 
                                                             return (
-                                                                <div key={`${slot.id}-${day.id}`} className={`min-h-20 rounded-lg border p-2 ${!applies ? 'border-border bg-muted/60' : slot.jenis_kegiatan === 'istirahat' ? 'border-orange-500/20 bg-orange-500/10' : 'border-border bg-card'}`}>
-                                                                    {!applies ? <span className="text-xs text-muted-foreground/50">–</span> : slot.jenis_kegiatan !== 'kbm' ? <div className="pt-3 text-center text-[10px] font-bold uppercase text-orange-800 dark:text-orange-300">{slot.nama}</div> : renderMainAndDamping(main, damping)}
+                                                                <div key={`${slot.id}-${day.id}`} className={`min-h-20 rounded-lg border p-2 ${!applies ? 'border-border bg-muted/60' : slot.jenis_kegiatan === 'istirahat' ? 'border-sekolah-tertunda/20 bg-sekolah-tertunda/10' : 'border-border bg-card'}`}>
+                                                                    {!applies ? <span className="text-xs text-muted-foreground/50">–</span> : slot.jenis_kegiatan !== 'kbm' ? <div className="pt-3 text-center text-[10px] font-bold uppercase text-sekolah-tertunda">{slot.nama}</div> : renderMainAndDamping(main, damping)}
                                                                 </div>
                                                             );
                                                         })}
@@ -419,13 +419,13 @@ export default function HasilJadwal({
                                             </thead>
                                             <tbody className="divide-y divide-border bg-card">
                                                 {teacherRows.map(({ day, slot, schedule }) => (
-                                                    <tr key={`${day.id}-${slot.id}`} className={slot.jenis_kegiatan === 'istirahat' ? 'bg-orange-500/10' : 'hover:bg-muted/50'}>
+                                                    <tr key={`${day.id}-${slot.id}`} className={slot.jenis_kegiatan === 'istirahat' ? 'bg-sekolah-tertunda/10' : 'hover:bg-muted/50'}>
                                                         <td className="whitespace-nowrap px-4 py-3 font-semibold">{day.name}</td>
                                                         <td className="px-4 py-3 text-center">{slot.jam_ke ?? '–'}</td>
                                                         <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{formatRange(slot)}</td>
                                                         {slot.jenis_kegiatan !== 'kbm' ? (
                                                             <td colSpan={2} className="px-4 py-3 text-center">
-                                                                <div className="font-bold uppercase tracking-wide text-orange-800 dark:text-orange-300">{slot.nama}</div>
+                                                                <div className="font-bold uppercase tracking-wide text-sekolah-tertunda">{slot.nama}</div>
                                                                 {schedule && <div className="mt-1 text-left text-xs text-foreground">{classLabel(schedule.kelas)} · {schedule.jenis_tugas.kode === 'piket' ? 'Piket' : schedule.mata_pelajaran?.nama ?? schedule.jenis_tugas.nama ?? 'Tugas'}</div>}
                                                             </td>
                                                         ) : (
@@ -448,7 +448,7 @@ export default function HasilJadwal({
                                                 {days.map((day) => <div key={day.id} className="rounded-lg border border-border bg-card py-2 text-center text-sm font-bold">{day.name}</div>)}
                                                 {sortedSlots.map((slot) => (
                                                     <React.Fragment key={slot.id}>
-                                                        <div className={`flex flex-col items-center justify-center rounded-lg border p-2 text-center ${slot.jenis_kegiatan === 'istirahat' ? 'border-orange-500/30 bg-orange-500/10' : 'border-border bg-card'}`}>
+                                                        <div className={`flex flex-col items-center justify-center rounded-lg border p-2 text-center ${slot.jenis_kegiatan === 'istirahat' ? 'border-sekolah-tertunda/30 bg-sekolah-tertunda/10' : 'border-border bg-card'}`}>
                                                             <span className="font-bold">{slot.jam_ke ?? slot.nama}</span>
                                                             <span className="mt-1 text-[10px] text-muted-foreground">{formatTime(slot.jam_mulai)}<br />{formatTime(slot.jam_selesai)}</span>
                                                         </div>
@@ -457,8 +457,8 @@ export default function HasilJadwal({
                                                             const schedule = jadwal.find((item) => item.guru.id === selectedGuru.id && item.hari === day.id && item.waktu_pelajaran_id === slot.id) ?? null;
 
                                                             return (
-                                                                <div key={`${slot.id}-${day.id}`} className={`min-h-20 rounded-lg border p-2 ${!applies ? 'border-border bg-muted/60' : slot.jenis_kegiatan === 'istirahat' ? 'border-orange-500/20 bg-orange-500/10' : 'border-border bg-card'}`}>
-                                                                    {!applies ? <span className="text-xs text-muted-foreground/50">–</span> : slot.jenis_kegiatan !== 'kbm' ? <div className="space-y-1 pt-2 text-center"><div className="text-[10px] font-bold uppercase text-orange-800 dark:text-orange-300">{slot.nama}</div>{schedule && <div className="text-left">{renderTeacherSchedule(schedule)}</div>}</div> : renderTeacherSchedule(schedule)}
+                                                                <div key={`${slot.id}-${day.id}`} className={`min-h-20 rounded-lg border p-2 ${!applies ? 'border-border bg-muted/60' : slot.jenis_kegiatan === 'istirahat' ? 'border-sekolah-tertunda/20 bg-sekolah-tertunda/10' : 'border-border bg-card'}`}>
+                                                                    {!applies ? <span className="text-xs text-muted-foreground/50">–</span> : slot.jenis_kegiatan !== 'kbm' ? <div className="space-y-1 pt-2 text-center"><div className="text-[10px] font-bold uppercase text-sekolah-tertunda">{slot.nama}</div>{schedule && <div className="text-left">{renderTeacherSchedule(schedule)}</div>}</div> : renderTeacherSchedule(schedule)}
                                                                 </div>
                                                             );
                                                         })}

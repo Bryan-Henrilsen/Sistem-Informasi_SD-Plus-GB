@@ -139,7 +139,7 @@ export default function LaporanHarianIndex({ daftarPeriode, periode, laporan, ti
                 </div>
 
                 {tindakan && (
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-sky-300 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-sekolah-info/40 bg-sekolah-info/10 p-3 text-sm text-sekolah-info">
                         <span>
                             Menampilkan {laporan.length} laporan yang perlu tindakan Anda dari semua periode yang belum ditutup
                             {tu && ' (belum diajukan, atau ada transfer yang perlu diverifikasi)'}

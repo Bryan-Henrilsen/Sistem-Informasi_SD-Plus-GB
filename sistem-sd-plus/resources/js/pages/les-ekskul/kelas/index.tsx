@@ -92,7 +92,7 @@ export default function KelasLes({ tahunAjaran, daftarTahun, kelas, guru, sumber
                 </div>
 
                 {sumberSalinan && (
-                    <Card className="border-sky-300 py-4 dark:border-sky-800">
+                    <Card className="border-sekolah-info/40 py-4">
                         <CardContent className="flex flex-wrap items-center justify-between gap-3 px-4 text-sm">
                             <p>
                                 Tahun ajaran {tahunAjaran.nama} belum punya kelas. Salin kelas dan biaya les dari {sumberSalinan.nama}; wali kelas perlu diisi lagi
@@ -106,7 +106,7 @@ export default function KelasLes({ tahunAjaran, daftarTahun, kelas, guru, sumber
                 )}
 
                 {tanpaWali > 0 && (
-                    <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                    <p className="rounded-md border border-sekolah-tertunda/40 bg-sekolah-tertunda/10 p-3 text-sm text-sekolah-tertunda">
                         {tanpaWali} kelas belum punya wali kelas. Honor les kelas itu belum bisa dihitung sampai wali kelasnya diisi.
                     </p>
                 )}
@@ -141,7 +141,7 @@ export default function KelasLes({ tahunAjaran, daftarTahun, kelas, guru, sumber
                                         <tr key={k.id} className="border-t">
                                             <td className="p-3 font-medium whitespace-nowrap">{k.nama_lengkap}</td>
                                             <td className="p-3">
-                                                {k.wali_kelas ?? <span className="text-amber-700 dark:text-amber-400">Belum diisi</span>}
+                                                {k.wali_kelas ?? <span className="text-sekolah-tertunda">Belum diisi</span>}
                                                 <DaftarRiwayat riwayat={k.riwayat_wali} />
                                             </td>
                                             <td className="p-3 text-right tabular-nums">{k.jumlah_siswa}</td>
@@ -431,7 +431,7 @@ function FormKelas({ kelas, guru, tahunAjaranId, onSelesai }: { kelas: Kelas | n
                             onChange={(e) => form.setData('biaya_les', e.target.value === '' ? null : Number(e.target.value))}
                         />
                         {biayaBerubah && (
-                            <p className="text-xs text-amber-700 dark:text-amber-400">
+                            <p className="text-xs text-sekolah-tertunda">
                                 Biaya baru hanya berlaku untuk tagihan yang dibuat sesudah disimpan. Tagihan yang sudah ada tetap memakai biaya lama.
                             </p>
                         )}

@@ -121,7 +121,7 @@ export default function AkunStaf({ akun, saya, mapel }: { akun: Akun[]; saya: nu
                                         <span
                                             className={cn(
                                                 'rounded-full px-2 py-0.5 text-xs whitespace-nowrap',
-                                                a.aktif ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-muted text-muted-foreground',
+                                                a.aktif ? 'bg-sekolah-sukses/15 text-sekolah-sukses' : 'bg-muted text-muted-foreground',
                                             )}
                                         >
                                             {a.aktif ? 'Aktif' : 'Nonaktif'}
@@ -144,7 +144,7 @@ export default function AkunStaf({ akun, saya, mapel }: { akun: Akun[]; saya: nu
                                                     <Button
                                                         size="sm"
                                                         variant="ghost"
-                                                        className="text-red-600"
+                                                        className="text-sekolah-bahaya"
                                                         onClick={() =>
                                                             aksi(AkunStafController.nonaktifkan.url(a.id), `Nonaktifkan ${a.nama}? Akun tidak bisa login lagi dan data gurunya ikut nonaktif.`)
                                                         }

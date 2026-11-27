@@ -64,7 +64,7 @@ export default function AkunOrangTuaIndex({ orangTua, cari, kelas, passwordBaru 
                 />
 
                 {passwordBaru && (
-                    <div className="rounded-md border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+                    <div className="rounded-md border border-sekolah-sukses/40 bg-sekolah-sukses/10 p-4 text-sm text-sekolah-sukses">
                         <p>
                             Password sementara untuk <b>{passwordBaru.nama}</b> ({passwordBaru.no_hp}):
                         </p>
